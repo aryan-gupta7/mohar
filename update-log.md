@@ -76,13 +76,16 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - Added a test for the device's step guard. 630 steps uses 89,146 of 90,000 gas. 645 steps fails in frame 0 with `out_of_gas`.
 - 26 of 26 integration tests passed.
 
-### 23:55 to 00:00 Documents written
+### 23:52 to 23:57 Documents written
 - Wrote `mechanism.md` (what's built, plus manual tests), `dev-plan.md` (phases, expectations, tests) and this log.
 - Added a correction notice to `../plan.md`.
 - Ran the one manual command not yet tried (`cast rpc eth_getTransactionReceipt`). It works, and it showed my expected gas range was too narrow, so that was corrected.
 
-### About 00:00 Local git repository created
-- Created the repo in `mohar/` on branch `dev`, with commits for each stage of the work so far. Nothing is pushed. See `git log`.
+### 23:58 Local git repository created
+- Created the repo in `mohar/` on branch `dev`. Scanned first: no keys in any tracked file. Nothing is pushed.
+- Commits: `0befea9` scaffold, `89fb210` local chain, `677af2d` board benchmark, `04c9bb3` devnet probes, `41af208` WOTS signer and account, `d1456a2` paymaster and integration tests, `ba4d03a` documents.
+- Rechecked the public faucet: still empty.
+- Stopped the local chain and block producer, so manual tests start clean.
 
 ---
 

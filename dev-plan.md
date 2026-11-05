@@ -81,7 +81,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | ESP8266: 1,137 hashes per second, 883 ms for 1,005 hashes, 51,560 bytes free heap | Board, Wi-Fi off | **Verified** |
 | Devnet TLS 1.2 works with `ECDHE-ECDSA-AES128-GCM-SHA256`; plain HTTP redirects | `openssl` and `curl` from the laptop | **Verified** from a laptop |
 | The smaller TLS fragment option wasn't negotiated | Same | **Verified** from a laptop |
-| The public faucet is empty | Live response, last checked at 23:50 | **Verified**, can change |
+| The public faucet is empty | Live response, last checked at 23:58 | **Verified**, can change |
 | `mohar.eth` is available on Sepolia, at 8.000021 test USDC per year | Live `isAvailable` and `getRegisterPrice` | **Verified** at 23:40, can change |
 | Sepolia's test USDC accepts `mint` from anyone, and it's an accepted payment token | Live `eth_call`, `isPaymentToken` | **Verified** by simulation |
 | 0G mainnet router speaks TLS 1.2 | `openssl` | **Verified** from a laptop |
