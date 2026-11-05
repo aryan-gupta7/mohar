@@ -1,0 +1,21 @@
+{
+  "name": "mohar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Machines that sign for themselves: hash-based device accounts on EIP-8141 frame transactions",
+  "license": "MIT",
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "build": "node contracts/build-yul.ts",
+    "test": "node --test \"signer/test/*.test.ts\"",
+    "test:integration": "node --test --test-concurrency=1 \"signer/test/integration/*.test.ts\""
+  },
+  "dependencies": {
+    "@forshtat/hegota-support": "0.0.1",
+    "viem": "^2.57.10",
+    "@noble/hashes": "^1.8.0"
+  }
+}

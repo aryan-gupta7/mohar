@@ -1,0 +1,24 @@
+# Dependencies and build output
+node_modules/
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+firmware/**/.pio/
+firmware/**/.vscode/
+
+# Secrets and local state. Never commit these.
+.secrets/
+.state/
+*.key
+.env
+.env.*
+firmware/**/secrets.h
+
+# Device key material and flash dumps
+*.bin
+!firmware/**/*.bin.keep
+
+# OS and editor
+.DS_Store
+*.log
+devnet/genesis.local.json
