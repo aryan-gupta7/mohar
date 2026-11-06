@@ -63,7 +63,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 18 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 22:00 | ✅ Done Fri ~15:20 (T1, T3, T4-equivalent; T2, T5 open) |
 | 19 | [ENS-4](#ens-4-the-device-reads-its-policy-from-ens) | Device reads ENS policy | Sat 00:00 | Optional |
 | 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | ✅ T1–T3, T6 on the public devnet Fri ~15:45; T4, T5, T7, T8, T9 open |
-| 21 | [0G-4](#0g-4-episode-log-and-replay) | Episode log and replay | Sat 03:00 | ✅ Pipeline done Fri ~15:00; redo on real data after 0G-3 |
+| 21 | [0G-4](#0g-4-episode-log-and-replay) | Episode log and replay | Sat 03:00 | ✅ Done Fri ~16:20 on real data (4 of 4 records match the chain) |
 | 22 | [REL-1](#rel-1-full-rehearsal) | Full rehearsal, following the [demo story](#demo-story) | Sat 05:30 | |
 | 23 | [REL-2](#rel-2-submission) | Submission | **Sat 08:00** | |
 
@@ -1137,7 +1137,7 @@ Also seen: **a fixed check fires without calling 0G** (a glitching line gave `IN
 
 ## 0G-4: Episode log and replay
 
-**Status:** ✅ The pipeline is built and tested by an agent (T1, T3, T4, T5 pass; T2 partial; T6 is a hook until the ENS record is wired). **To redo on real data after 0G-3.** Evidence: [docs/evidence/0g-4.json](docs/evidence/0g-4.json), notes: [docs/handoff/0g-4.md](docs/handoff/0g-4.md) · **Needs from you:** nothing (the 0.1 0G arrived)
+**Status:** ✅ Done. The pipeline passes T1 to T6. **T2 now passes on real data (Fri ~16:20):** reports 19 to 22 of the public ledger were uploaded as one batch (root `0xc70e600a…42f7`, 2,800 bytes, 0.0053 0G gas), downloaded with proof verification, and compared with the chain: **4 of 4 MATCH, each with its real 0G request ID.** The uploader then wrote `0g://0xc70e…` into `meter-001.mohar.eth`'s `mohar.log` using the restricted uploader key (T6). Evidence: [docs/evidence/0g-4.json](docs/evidence/0g-4.json), notes: [docs/handoff/0g-4.md](docs/handoff/0g-4.md) · **Needs from you:** nothing (the 0.1 0G arrived)
 
 | Test | Result |
 |---|---|

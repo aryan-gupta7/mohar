@@ -233,12 +233,22 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - **ENS-2 (agent): all eight tests pass on Sepolia.** The maintenance key edits maintenance status and is refused on the cryptographic root; the uploader key edits only the log pointer; a second meter's resolver refuses the first meter's key. **One surprise: a transfer is refused with `TransferUnsafeUntilRegistryIsEmancipated`, not `TransferDisallowed`, so I will not claim a per-name non-transferable role.** The agent also found why its first run read empty: the RPC returned a stale zero resolver right after registration.
 - **0G-4 (agent):** the upload / proof-verified download / replay / tamper-detection / crash-safe-batching pipeline passes T1, T3, T4, T5. It is built on test data (injected decisions), so it is redone on the live run's data.
 
+### About 15:50 to 16:25 The first soak, and what it found
+- **30-minute soak on the public devnet:** 19 checkpoints, 17 reports mined (ledger sequence 22), each with a real 0G decision except the glitch cycle, which the fixed check handled without calling 0G. Heap never fell below 37.4 KB.
+- **It did not pass:** the board **reset 6 times** (each recovered by itself: key loaded in milliseconds, the next checkpoint a normal mined report, no leaf reused), and in the last three minutes it sat in `SAFE_STOP` (chain unreachable).
+- **Two causes:** (1) The phone hotspot **flipped back to 5 GHz** (channel 124) again; the ESP8266 cannot join it. (2) For the resets I suspect the TLS handshake: it computes for about 3 s without yielding, close to the 3.2 s software watchdog. I've disabled the software watchdog around the handshake (the 8 s hardware one stays on) and added reset-reason logging so the next soak says why. **Not yet confirmed**: a second soak was started and had to be stopped when the hotspot went 5 GHz again.
+- **A real bug found on the way:** a board that was power-cycled never reconnected to Wi-Fi by itself (only my test command did). It now connects on demand and rejoins after a drop. That matters for the laptop-off demo.
+- **0G Storage log on real data:** reports 19 to 22 of the public ledger uploaded (one batch, 0.0053 0G), downloaded back with proof verification, and compared with the chain: **4 of 4 match, with their real request IDs**. The root is now in `meter-001.mohar.eth`'s `mohar.log`, written by the restricted uploader key.
+- **ENS now points at the live contracts:** `mohar.ledger`, `mohar.paymaster` and the chain-1337 address of `meter-001.mohar.eth` are the public-devnet contracts the board reports to.
+- **Dashboard against real data (agent): 14 of 14 headless checks pass** — name → ENS → public ledger → status and decoded reports with request IDs, the root-mismatch warning, a dead RPC giving "Cannot read the chain", and 400 px. Not yet run with the real boards over Web Serial (needs you in Chrome) or with a real wallet.
+- **Added:** README, LICENSE, a timed demo script with pre-flight and fallbacks, and manual tests 8f to 8k.
+
 ---
 
 ## Current state
 
 **Done:** DEV-0 to DEV-6, most of DEV-7, EF-1 and EF-2 on the public devnet, 0G-1, ENS-1, and the 0G Storage log pipeline.
-**In progress:** the Mohar Console (agent), ENS-2 (agent). **Mine:** 0G-2 and 0G-3 on the board (needs the hotspot).
+**Open:** a clean 30-minute soak (needs the hotspot held on 2.4 GHz), the pulse-wire unplug test, the laptop-off run (EF-3), Web Serial test of the dashboard with the boards, rehearsal, video.
 
 **Blocked on you:**
 1. Devnet ETH for `0xcfb296f635254A4B3281D2e285174E98D643Ef60`.
