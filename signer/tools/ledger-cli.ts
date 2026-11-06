@@ -26,7 +26,7 @@ if (cmd === "deploy") {
   const account = await deployAccount({ key, target: ledger, selector: REPORT_SELECTOR, stake: STAKE });
   await send(ledger, LEDGER_ABI, "bindMachine", [account]);
   const paymaster = await deployPaymaster({ stake: STAKE, funding: 10n ** 17n });
-  await send(paymaster, PAYMASTER_ABI, "setPolicy", [account, 200n, 3_000_000n]);
+  await send(paymaster, PAYMASTER_ABI, "setPolicy", [account, 2000n, 3_000_000n]);
   console.log(JSON.stringify({ account, ledger, paymaster }));
 } else if (cmd === "status") {
   console.log(JSON.stringify(await status(a as Address)));
