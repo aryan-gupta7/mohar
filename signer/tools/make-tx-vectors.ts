@@ -76,6 +76,7 @@ const out = cases.map((c) => {
       txHash: hashOf(withSig),
       // Signed with the test key at leaf nonce-1. Only valid for the test seed.
       signedRaw: hexNo0x(rawTx(signTx(tx, testKey))),
+      signedWire: toWire(signTx(tx, testKey)),
     },
   };
 });

@@ -58,3 +58,38 @@ if what == "report":
     if out["result"] == "OK":
         out["raw"] = "0x" + read_line("RAW ", 30).split(" ", 1)[1]
     print(json.dumps(out))
+
+if what == "submit":
+    # submit <host> <port> <tls> <report args...>: the board signs and sends the transaction itself over Wi-Fi.
+    s.write(b"wifi\n")
+    wifi = read_line("WIFI", 60)
+    if "ok=1" not in wifi:
+        print(json.dumps({"error": "wifi: " + wifi}))
+        sys.exit(1)
+    s.write(("submit " + " ".join(sys.argv[3:]) + "\n").encode())
+    # The board answers SUBMIT on success, or RESULT <refusal> / ERROR <why> instead.
+    first = None
+    t_end = time.time() + 90
+    while first is None and time.time() < t_end:
+        pending_chunk = s.read(4096)
+        pending += pending_chunk
+        while b"\n" in pending:
+            line, pending = pending.split(b"\n", 1)
+            text = line.decode("utf-8", "replace").strip()
+            if text.startswith(("SUBMIT", "RESULT", "ERROR")):
+                first = text
+                break
+    if first is None:
+        print(json.dumps({"error": "no answer from the board"})); sys.exit(1)
+    if not first.startswith("SUBMIT"):
+        print(json.dumps({"error": first})); sys.exit(1)
+    out = {"submit": dict(p.split("=", 1) for p in first.split() if "=" in p)}
+    out["localHash"] = read_line("LOCALHASH", 10).split()[1]
+    b = read_line("BODY", 10).split(" ", 1)
+    out["body"] = b[1] if len(b) > 1 else ""
+    print(json.dumps(out))
+
+if what == "reset":
+    # Test setup only (dev firmware): forget the key-safety state, for a freshly deployed account.
+    s.write(b"state-reset\n")
+    print(json.dumps({"reset": read_line("OK", 10)}))

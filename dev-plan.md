@@ -50,7 +50,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 5 | [DEV-4](#dev-4-firmware-keys-and-signing) | Device keys and signing | Fri 12:00 | ✅ Done Fri ~09:15 |
 | 6 | [EF-2L](#ef-2l-alt-mempool-rules-on-a-local-sidecar) | Alt mempool rules, local sidecar | Fri 12:00 | ✅ Done Fri 08:55 |
 | 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | ✅ Done Fri 10:25, all tests |
-| 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | Wi-Fi received |
+| 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | ✅ T1–T6 passed Fri ~11:45 (T4 on the public devnet, see below); T7 soak with DEV-7 |
 | 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | Needs funds |
 | 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | ✅ T1–T5 passed Fri ~09:45; T6–T8 open |
 | 11 | [EF-2](#ef-2-the-alt-mempool-proof) | Alt mempool proof, public | After EF-1 | Needs funds |
@@ -427,7 +427,21 @@ First boot with no key generated one in 245 s. Both builds are in `firmware/moha
 
 ## DEV-6: Firmware networking
 
-**Status:** Not started · **Target:** Fri 16:00 · **Depends on:** DEV-5 · **Needs from you:** nothing (Wi-Fi details received Fri 08:20)
+**Status:** ✅ T1 to T6 passed Fri ~11:45 on the real board. T7 (30-minute soak) runs with the DEV-7 checkpoint loop. · **Needs from you:** nothing
+
+| Test | Result |
+|---|---|
+| T1 | Joined Wi-Fi in about 4 s; prints IP and heap |
+| T2 | TLS 1.2 read from the public gateway: chain `0x539`, handshake 2.2 to 3.2 s, lowest heap 14.7 KB |
+| T3 | **50 of 50** reads, no reset; lowest heap 12.5 KB, heap back to about 40 KB after |
+| T4 | **Changed, see below.** The board signed and sent a real transaction over TLS to the **public** gateway in 11 s (heap low 11.6 KB). The node decoded it and judged it: `Nonce mismatch: expected 0, got 1`, since that account doesn't exist there. The mined-on-local-chain half is DEV5-T9 (USB forwarding) |
+| T5 | The streamed request body equals the library's JSON-RPC body (6,418 bytes) |
+| T6 | Wi-Fi dropped: the call failed cleanly (`-1`). Reconnected in 3.9 s, the next call worked, no reset |
+| T7 | Pending: runs as part of the DEV-7 loop |
+
+**Why T4 changed:** the board couldn't open any TCP connection to the laptop over the phone hotspot, while reaching the internet fine. That's consistent with client isolation, though a laptop firewall can't be ruled out without root. Hosting a laptop access point needs `dnsmasq`, which isn't installed. So the board's own submission was tested against the public node, which needs no laptop at all.
+
+**Bugs found on the board and fixed:** single-byte TLS writes made each byte its own TLS record (88 s for 6.4 KB, now 11 s); the signature wasn't copied out for streaming; and a 2.4 KB buffer was held permanently (heap at TLS time is now 2.1 KB higher).
 
 **Why:** this is the biggest hardware unknown. The chip has about 51 KB free before Wi-Fi, TLS needs a large buffer, and the devnet is HTTPS only.
 

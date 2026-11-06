@@ -23,7 +23,8 @@ struct IntentInfo {
 };
 
 // Builds the signed transaction for `req` at the chain's current nonce (req.nonce). Fills raw (0x06 || rlp).
-IntentResult intent_sign(const ReportParams &req, uint8_t *raw, size_t cap, size_t *rawLen, ReportParams *used, IntentInfo *info);
+// If sigOut is not null (2,400 bytes), the signature is copied there too, so the JSON form can be streamed later.
+IntentResult intent_sign(const ReportParams &req, uint8_t *raw, size_t cap, size_t *rawLen, ReportParams *used, IntentInfo *info, uint8_t *sigOut = nullptr);
 
 void intent_state(uint32_t *nextLeaf, bool *hasIntent, uint64_t *intentNonce);
 void intent_set_next_leaf(uint32_t v);  // tests only

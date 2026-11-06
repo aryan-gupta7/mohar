@@ -111,10 +111,88 @@ static void handle(char *cmd) {
     return;
   }
 #ifdef MOHAR_DEV
+  if (strcmp(cmd, "wifi-drop") == 0) { WiFi.disconnect(false); delay(500); Serial.printf("DROPPED connected=%d\n", net_wifi_up()); return; }
   if (strcmp(cmd, "wifi") == 0) {
     uint32_t t0 = millis();
     bool ok = net_wifi_connect(30000);
-    Serial.printf("WIFI ok=%d ms=%u ip=%s rssi=%d heap=%u\n", ok, millis() - t0, WiFi.localIP().toString().c_str(), WiFi.RSSI(), ESP.getFreeHeap());
+    Serial.printf("WIFI ok=%d ms=%u ip=%s rssi=%d heap=%u uptime=%u\n", ok, millis() - t0, WiFi.localIP().toString().c_str(), WiFi.RSSI(), ESP.getFreeHeap(), millis());
+    return;
+  }
+  if (strncmp(cmd, "body ", 5) == 0) {  // body <report args>: sign, then print the exact request body the network code would send
+    ReportParams p;
+    if (!parseReport(cmd + 5, &p)) { Serial.println("ERROR bad_report_args"); return; }
+    uint8_t *sig = (uint8_t *)malloc(WOTS_SIG_BYTES), *raw = (uint8_t *)malloc(FRAMETX_MAX_RAW);
+    if (!sig || !raw) { free(sig); free(raw); Serial.println("ERROR out_of_memory"); return; }
+    size_t n = 0;
+    ReportParams used;
+    IntentInfo info;
+    IntentResult r = intent_sign(p, raw, FRAMETX_MAX_RAW, &n, &used, &info, sig);
+    free(raw);
+    if (r != INTENT_OK) { Serial.printf("RESULT %s\n", intent_name(r)); free(sig); return; }
+    Serial.print("BODY ");
+    net_print_submit_body(Serial, used, sig, WOTS_SIG_BYTES);
+    Serial.println();
+    free(sig);
+    return;
+  }
+  if (strncmp(cmd, "submit ", 7) == 0) {  // submit <host> <port> <tls 0|1> <report args>: sign, then send over Wi-Fi
+    char *host = strtok(cmd + 7, " "), *port = strtok(nullptr, " "), *tls = strtok(nullptr, " ");
+    char *rest = tls ? tls + strlen(tls) + 1 : nullptr;
+    ReportParams p;
+    if (!host || !port || !tls || !rest || !parseReport(rest, &p)) { Serial.println("ERROR usage: submit <host> <port> <0|1> <report args>"); return; }
+    uint8_t *sig = (uint8_t *)malloc(WOTS_SIG_BYTES);
+    uint8_t *raw = (uint8_t *)malloc(FRAMETX_MAX_RAW);
+    if (!sig || !raw) { free(sig); free(raw); Serial.println("ERROR out_of_memory"); return; }
+    size_t n = 0;
+    ReportParams used;
+    IntentInfo info;
+    IntentResult r = intent_sign(p, raw, FRAMETX_MAX_RAW, &n, &used, &info, sig);
+    if (r != INTENT_OK) { Serial.printf("RESULT %s\n", intent_name(r)); free(sig); free(raw); return; }
+    uint8_t h[32];
+    keccak256(raw, n, h);  // the transaction hash the node must return
+    free(raw);             // only the signature is kept while the connection is open
+    static char resp[512];
+    NetStats st;
+    int status = net_submit_frame_tx(host, atoi(port), atoi(tls), "/rpc", used, sig, WOTS_SIG_BYTES, resp, sizeof(resp), &st, 30000);
+    free(sig);
+    Serial.printf("SUBMIT status=%d resent=%d leaf=%u connectMs=%u totalMs=%u heapBefore=%u heapLowest=%u\n", status, info.resent, info.leaf, st.connectMs, st.totalMs, st.heapBefore, st.heapLowest);
+    Serial.print("LOCALHASH 0x"); printHex(h, 32); Serial.println();
+    Serial.printf("BODY %s\n", resp);
+    return;
+  }
+  if (strncmp(cmd, "tcp ", 4) == 0) {  // tcp <host> <port>: can the board open a plain TCP connection? (diagnostic)
+    char *sp = strchr(cmd + 4, ' ');
+    if (!sp) { Serial.println("ERROR usage: tcp <host> <port>"); return; }
+    *sp = 0;
+    WiFiClient c;
+    c.setTimeout(8000);
+    uint32_t t0 = millis();
+    IPAddress ip;
+    bool resolved = WiFi.hostByName(cmd + 4, ip);
+    bool ok = resolved && c.connect(ip, atoi(sp + 1));
+    Serial.printf("TCP resolved=%d ip=%s connected=%d ms=%u wifi=%d rssi=%d\n", resolved, ip.toString().c_str(), ok, millis() - t0, WiFi.status(), WiFi.RSSI());
+    c.stop();
+    return;
+  }
+  if (strncmp(cmd, "rpc-loop ", 9) == 0) {  // rpc-loop <host> <count>: repeated eth_chainId, to look for leaks and resets
+    char *sp = strchr(cmd + 9, ' ');
+    if (!sp) { Serial.println("ERROR usage: rpc-loop <host> <count>"); return; }
+    *sp = 0;
+    int n = atoi(sp + 1), ok = 0;
+    uint32_t lowest = 0xffffffff, sumMs = 0, maxMs = 0;
+    static char resp[256];
+    const char *body = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_chainId\",\"params\":[]}";
+    for (int i = 0; i < n; i++) {
+      NetStats st;
+      int status = net_post_json(cmd + 9, 443, "/rpc", body, strlen(body), resp, sizeof(resp), &st, 20000);
+      bool good = status == 200 && strstr(resp, "0x539");
+      ok += good;
+      if (st.heapLowest < lowest) lowest = st.heapLowest;
+      sumMs += st.totalMs; if (st.totalMs > maxMs) maxMs = st.totalMs;
+      if (!good) Serial.printf("  call %d failed: status=%d\n", i + 1, status);
+      yield();
+    }
+    Serial.printf("RPCLOOP ok=%d/%d avgMs=%u maxMs=%u heapLowest=%u heapNow=%u uptimeMs=%u\n", ok, n, n ? sumMs / n : 0, maxMs, lowest, ESP.getFreeHeap(), millis());
     return;
   }
   if (strncmp(cmd, "rpc ", 4) == 0) {  // rpc <host> <method>  : JSON-RPC with no params to https://host/rpc

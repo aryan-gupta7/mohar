@@ -195,12 +195,18 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - **First attempt reverted with empty data**, after minting USDC and approving (harmless). Found by simulating that the factory itself works, and the `initialize` call fails. **The deployed contracts are an older version than the source repo:** extracting the selectors from their bytecode showed `initialize((address,uint256)[])`, a name-based resolver, and `grantSetterRoles(bytes,address)`. The registrar's `register` and `makeCommitment` selectors do match.
 - Fixed the script, reran: minted, approved, deployed the fleet resolver and registry through the factory, committed, waited 63 s, registered. **ENS1-T1 to T5 pass.** Cost: about 0.00000001 Sepolia ETH of gas. Balance is still 0.0999999… ETH.
 
+### About 11:00 to 11:45 DEV-6 on the real board
+- The hotspot came up on 2.4 GHz (channel 6). **The board joined Wi-Fi and did TLS 1.2 to the public devnet: chain `0x539`.** 50 of 50 reads, no reset, lowest heap 12.5 KB.
+- **The board couldn't reach the laptop over the hotspot:** no TCP connection got through either way, though both reach the internet. Probably the hotspot isolates its clients; I can't check the laptop firewall without root. Joined the laptop to the hotspot with internet kept on Ethernet (`mohar-hotspot` connection, never the default route).
+- So T4 was run against the public gateway: the board signed and sent a transaction, and the node decoded and judged it (`Nonce mismatch`, since that account isn't on the public chain).
+- **Three bugs of mine, found on the board and fixed:** byte-at-a-time TLS writes (88 s down to 11 s); the signature wasn't copied for streaming; a 2.4 KB buffer was allocated permanently. Two earlier edits had silently not applied after a failed `cd`.
+
 ---
 
 ## Current state
 
 **Done:** DEV-0 to DEV-5 (including the power pulls) and EF-2L on the local chain, 0G-1, ENS-1 on Sepolia, pulse counting on real hardware.
-**Next:** ENS-2 (per-meter identity and permissions). **DEV-6 waits for the hotspot to broadcast on 2.4 GHz.**
+**Next (your priority: hardware first):** DEV-7 checkpoint loop (windows in reports, modes, LEDs), then 0G-2 and 0G-3 on the board.
 
 **Blocked on you:**
 1. Devnet ETH for `0xcfb296f635254A4B3281D2e285174E98D643Ef60`.

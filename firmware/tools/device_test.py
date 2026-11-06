@@ -239,6 +239,51 @@ def t_leaf_safety(dev):
     check(st["nextLeaf"] == "0" and st["hasIntent"] == "0", "DEV5 a state reset survives a reboot")
 
 
+# ----------------------------------------------------------------------------- DEV-6
+def t_net(dev):
+    cases = tx_vectors()
+    c = cases[0]
+    # T5: the request body the network code streams equals the library's JSON, byte-for-byte as parsed JSON
+    dev.cmd("state-reset", "OK", 5)
+    dev.s.reset_input_buffer(); dev.buf = b""
+    dev.s.write(("body " + c["command"] + "\n").encode())
+    body = dev.read_until("BODY ", 30).split(" ", 1)[1]
+    expect = {"jsonrpc": "2.0", "id": 1, "method": "eth_sendFrameTransaction", "params": [c["expect"]["signedWire"]]}
+    check(json.loads(body) == expect, "DEV6-T5 streamed request body equals the library's JSON-RPC body")
+    check(body.count('"signature":"0x') == 1 and len(body) > 5000, f"DEV6-T5 body is {len(body)} bytes, with one 2,400-byte signature")
+
+    # T1/T2: Wi-Fi and TLS read from the public gateway
+    w = fields(dev.cmd("wifi", "WIFI", 60))
+    check(w["ok"] == "1" and w["ip"] != "(IP", f"DEV6-T1 joined Wi-Fi in {w['ms']} ms, ip {w['ip']}, heap {w['heap']}")
+    r = fields(dev.cmd("rpc altmempoolgateway.forshtat.com eth_chainId", "RPC ", 60))
+    b = dev.read_until("BODY", 10)
+    check(r["status"] == "200" and '"0x539"' in b, f"DEV6-T2 TLS read: chain 0x539, handshake {r['connectMs']} ms, lowest heap {r['heapLowest']}")
+
+    # T4 (public): the board signs and sends a real transaction over TLS; the node must parse it and judge it
+    dev.cmd("state-reset", "OK", 5)
+    dev.s.reset_input_buffer(); dev.buf = b""
+    dev.s.write(("submit altmempoolgateway.forshtat.com 443 1 " + c["command"] + "\n").encode())
+    sub = fields(dev.read_until("SUBMIT", 90))
+    lh = dev.read_until("LOCALHASH", 10)
+    parts = dev.read_until("BODY", 10).split(" ", 1)
+    body = parts[1] if len(parts) > 1 else ""
+    print(f"     SUBMIT line: {sub}")
+    print(f"     board sent it over TLS in {sub['totalMs']} ms, heap low {sub['heapLowest']}; node answered: {body[:240]}")
+    j = json.loads(body) if body.startswith("{") else {}
+    check(sub["status"] == "200" and ("error" in j or "result" in j), "DEV6-T4 (public) the node received and processed the board's transaction")
+
+    # T6: Wi-Fi drops and comes back; calls fail cleanly in between; no reset
+    up0 = int(fields(dev.cmd("wifi", "WIFI", 30))["uptime"])
+    d = dev.cmd("wifi-drop", "DROPPED", 10)
+    r2 = fields(dev.cmd("rpc altmempoolgateway.forshtat.com eth_chainId", "RPC ", 30))
+    dev.read_until("BODY", 5)
+    check(r2["status"] == "-1", "DEV6-T6 with Wi-Fi down the call fails cleanly (status -1), no crash")
+    w2 = fields(dev.cmd("wifi", "WIFI", 60))
+    r3 = fields(dev.cmd("rpc altmempoolgateway.forshtat.com eth_chainId", "RPC ", 60))
+    dev.read_until("BODY", 5)
+    check(w2["ok"] == "1" and r3["status"] == "200" and int(w2["uptime"]) > up0, f"DEV6-T6 reconnected in {w2['ms']} ms and the next call works, no reset")
+
+
 if __name__ == "__main__":
     port, test = sys.argv[1], sys.argv[2]
     dev = Dev(port)
@@ -261,6 +306,8 @@ if __name__ == "__main__":
         t_seed_leak(json.load(open(f"{VEC}/wots.json"))["seed"])
     elif test == "tx":
         boot(dev, 60); t_tx_vectors(dev)
+    elif test == "net":
+        boot(dev, 60); t_net(dev)
     elif test == "safety":
         boot(dev, 60); t_leaf_safety(dev)
     elif test == "all":

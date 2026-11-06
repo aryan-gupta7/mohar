@@ -116,7 +116,7 @@ void intent_reset() {
   save();
 }
 
-IntentResult intent_sign(const ReportParams &req, uint8_t *raw, size_t cap, size_t *rawLen, ReportParams *used, IntentInfo *info) {
+IntentResult intent_sign(const ReportParams &req, uint8_t *raw, size_t cap, size_t *rawLen, ReportParams *used, IntentInfo *info, uint8_t *sigOut) {
   memset(info, 0, sizeof(*info));
   if (!keystore::ready()) return INTENT_NO_KEY;
   if (!loaded) load();
@@ -163,10 +163,13 @@ IntentResult intent_sign(const ReportParams &req, uint8_t *raw, size_t cap, size
   }
 
 sign:
-  static uint8_t sig[WOTS_SIG_BYTES];
-  if (!keystore::sign(info->leaf, digest, sig)) return INTENT_FS_ERROR;
+  uint8_t *sig = (uint8_t *)malloc(WOTS_SIG_BYTES);
+  if (!sig) return INTENT_FS_ERROR;
+  if (!keystore::sign(info->leaf, digest, sig)) { free(sig); return INTENT_FS_ERROR; }
   crashPoint("after_sign");
   *rawLen = frametx_encode(p, sig, WOTS_SIG_BYTES, raw, cap);
+  if (sigOut) memcpy(sigOut, sig, WOTS_SIG_BYTES);
+  free(sig);
   *used = p;
   return *rawLen ? INTENT_OK : INTENT_FS_ERROR;
 }
