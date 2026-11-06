@@ -148,12 +148,28 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - Refused as expected: unstaked paymaster (`unstaked payer accessed payer slot`), over quota and revoked device (frame 1, at submission), replay (`Nonce mismatch`).
 - The same code reads the public devnet with `MOHAR_NET=public`. Evidence: `docs/evidence/ef-2-local-alt.json`.
 
+### About 08:57 to 09:10 DEV-4: device firmware written and tested on the ESP8266
+- Wrote `firmware/mohar` (Keccak, WOTS, key store, serial console) and two builds: `dev` with test commands, `release` without.
+- Added Keccak and WOTS reference vectors from the TypeScript signer, and `firmware/tools/device_test.py`.
+- First boot generated its own key: **245 s**, no reset. Keccak 7 of 7 and the 20 signatures matched byte for byte; the slowest took 906 ms, leaving 47,592 bytes of heap. Reload after reset: **5 ms**.
+- **Test-tool bugs, not firmware bugs:** my script discarded buffered serial data, and opening the serial port resets this board, so commands sent right away were lost. Both fixed; tools now wait for the board.
+
+### About 09:08 **DEV4-T8 passed: the ESP8266 signed a transaction the alt mempool admitted**
+- `signer/tools/device-sign.ts` deployed an account for the board's own public key, the board signed report 1 in 523 ms, and the real sidecar code admitted it. Mined with all four frames `0x1`, account balance 0.
+- Release build: `sign`, `keccak`, `wipe` and `keygen-fixed` all answer `UNKNOWN`.
+
+### About 09:19 DEV4-T5 passed: two wipes, two different keys (246 s each)
+
+### About 09:12 Other prepared work (nothing needed from you)
+- Wrote `firmware/mohar/src/meter.*`, the pulse counter for D6 (GPIO12). **Not compiled into the firmware or flashed yet:** it waits for the wires.
+- Found the `/v1/decisions` request format in the 0G docs. `laya` is priced at zero, which may mean it needs only a key. Wrote `signer/tools/0g-eval.ts` and 14 labelled scenarios (`firmware/sim/scenarios.json`), ready to run when a key exists.
+
 ---
 
 ## Current state
 
-**Done:** DEV-0 to DEV-3 and EF-2L on the local chain. Pico meter simulator on the board.
-**Next:** DEV-4 (keys and signing on the ESP8266).
+**Done:** DEV-0 to DEV-4 and EF-2L on the local chain. Pico meter simulator on the board.
+**Next:** DEV-5 (the board builds and signs transactions itself, with key-safety rules).
 
 **Blocked on you:**
 1. Devnet ETH for `0xcfb296f635254A4B3281D2e285174E98D643Ef60`.

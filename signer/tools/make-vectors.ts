@@ -34,3 +34,34 @@ const vectors = {
 };
 fs.writeFileSync(path.join(OUT, "report.json"), JSON.stringify(vectors, null, 2) + "\n");
 console.log(`wrote ${vectors.cases.length} report vectors to firmware/vectors/report.json`);
+
+// ---- DEV-4: Keccak and WOTS vectors ----
+import { WotsKey } from "../src/wots.ts";
+const pattern = (n: number) => Uint8Array.from({ length: n }, (_, i) => (i * 7 + 3) & 255);
+const hex = (b: Uint8Array) => Buffer.from(b).toString("hex");
+const keccakCases = [
+  { name: "empty", hex: "", len: 0 },
+  { name: "abc", hex: hex(new TextEncoder().encode("abc")), len: 3 },
+  ...[64, 135, 136, 137, 2144].map((len) => ({ name: `pattern ${len}`, pattern: len, len })),
+].map((c: any) => ({
+  ...c,
+  expect: hex(keccak_256(c.pattern !== undefined ? pattern(c.pattern) : Uint8Array.from(Buffer.from(c.hex, "hex")))),
+}));
+fs.writeFileSync(path.join(OUT, "keccak.json"), JSON.stringify({ description: "keccak256 test inputs. `pattern N` means N bytes with byte i = (i*7+3) & 255.", cases: keccakCases }, null, 2) + "\n");
+
+const testSeed = keccak_256(new TextEncoder().encode("mohar device test seed v1"));
+const key = new WotsKey(testSeed);
+const digests: Record<string, Uint8Array> = {
+  zeros: new Uint8Array(32),
+  ones: new Uint8Array(32).fill(0xff),
+  random1: keccak_256(new TextEncoder().encode("digest one")),
+  random2: keccak_256(new TextEncoder().encode("digest two")),
+};
+const signCases = [0, 1, 127, 128, 255].flatMap((leaf) =>
+  Object.entries(digests).map(([name, d]) => ({ leaf, digestName: name, digest: hex(d), signature: hex(key.sign(d, leaf)) })),
+);
+fs.writeFileSync(
+  path.join(OUT, "wots.json"),
+  JSON.stringify({ description: "TEST SEED ONLY. Never use for a real device.", seed: hex(testSeed), root: hex(key.root), pubSeed: hex(key.pubSeed), cases: signCases }, null, 2) + "\n",
+);
+console.log(`wrote ${keccakCases.length} keccak vectors and ${signCases.length} wots vectors (root ${hex(key.root).slice(0, 16)}…)`);

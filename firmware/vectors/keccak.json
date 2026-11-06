@@ -1,0 +1,47 @@
+{
+  "description": "keccak256 test inputs. `pattern N` means N bytes with byte i = (i*7+3) & 255.",
+  "cases": [
+    {
+      "name": "empty",
+      "hex": "",
+      "len": 0,
+      "expect": "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+    },
+    {
+      "name": "abc",
+      "hex": "616263",
+      "len": 3,
+      "expect": "4e03657aea45a94fc7d47ba826c8d667c0d1e6e33a64a036ec44f58fa12d6c45"
+    },
+    {
+      "name": "pattern 64",
+      "pattern": 64,
+      "len": 64,
+      "expect": "0251cf13aa5b18f1cbda7cddbe85f3dc536fc93df590c2d20ca9b28af1ed2c39"
+    },
+    {
+      "name": "pattern 135",
+      "pattern": 135,
+      "len": 135,
+      "expect": "00ef96af9cf4b24c7f269d922294444a197d0a33638c2e56634c57e892103a8f"
+    },
+    {
+      "name": "pattern 136",
+      "pattern": 136,
+      "len": 136,
+      "expect": "742061bcad767ed4c4f5883b1dcb1aad11afdcc140dc469d953759b127b9f9ed"
+    },
+    {
+      "name": "pattern 137",
+      "pattern": 137,
+      "len": 137,
+      "expect": "e3371f61e770abf254c34239c3b0099ad90594507415bc81dd0a10b9692bbf2a"
+    },
+    {
+      "name": "pattern 2144",
+      "pattern": 2144,
+      "len": 2144,
+      "expect": "1348bd446501fa70eb0f8206e41fc2b816b8ea4fda2dca1552a4854005ab235b"
+    }
+  ]
+}

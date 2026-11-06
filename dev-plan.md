@@ -3,7 +3,7 @@
 We build in phases, one at a time. Each phase below says exactly what gets built, how it must behave, and which tests prove it.
 
 **Deadline:** Saturday, November 7, 2026, 9:00 AM IST
-**Last updated:** Friday, November 6, 2026, 09:00 IST
+**Last updated:** Friday, November 6, 2026, 09:15 IST
 
 **Story (changed Friday 08:20):** Mohar is a **prepaid electricity meter that signs its own readings**. A Raspberry Pi Pico H plays the meter's impulse output, and the ESP8266 counts the pulses, decides, signs and reports. There is **no servo** and nothing physically disconnects a supply: the ledger records consumption, credit, arrears and inspection holds. Contracts, WOTS signing, the quota paymaster and the ENS identity design are unchanged.
 **Related:** [mechanism.md](mechanism.md) explains what's built. [update-log.md](update-log.md) records every step. The product plan is `plan.md` in the parent folder, outside this repo. **Where they differ, this file and mechanism.md are correct**, because they come from testing.
@@ -46,10 +46,10 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 1 | [DEV-0](#dev-0-tooling-local-chain-and-baseline) | Tooling, local chain, board baseline | | ✅ Done |
 | 2 | [DEV-1](#dev-1-wots-signer-and-machine-account) | WOTS signer and account | | ✅ Done locally |
 | 3 | [DEV-2](#dev-2-quota-paymaster) | Quota paymaster | | ✅ Done locally |
-| 4 | [DEV-3](#dev-3-machine-ledger) | Machine ledger | Fri 01:00 | ✅ Done locally, Fri 09:00 |
-| 5 | [DEV-4](#dev-4-firmware-keys-and-signing) | Device keys and signing | Fri 12:00 | Next |
+| 4 | [DEV-3](#dev-3-machine-ledger) | Machine ledger | Fri 01:00 | ✅ Done locally, Fri 08:40 |
+| 5 | [DEV-4](#dev-4-firmware-keys-and-signing) | Device keys and signing | Fri 12:00 | ✅ Done Fri ~09:15 |
 | 6 | [EF-2L](#ef-2l-alt-mempool-rules-on-a-local-sidecar) | Alt mempool rules, local sidecar | Fri 12:00 | ✅ Done Fri 08:55 |
-| 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | |
+| 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | Next |
 | 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | Wi-Fi received |
 | 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | Needs funds |
 | 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | Needs API key |
@@ -67,7 +67,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 22 | [REL-1](#rel-1-full-rehearsal) | Full rehearsal, following the [demo story](#demo-story) | Sat 05:30 | |
 | 23 | [REL-2](#rel-2-submission) | Submission | **Sat 08:00** | |
 
-The schedule was moved on Friday 09:00: the work started again at 08:20, and the public funds still haven't arrived. EF-2L was added so alt mempool rules can be tested before funds come.
+The schedule was moved on Friday 08:46: the work started again at 08:20, and the public funds still haven't arrived. EF-2L was added so alt mempool rules can be tested before funds come.
 
 ---
 
@@ -206,7 +206,7 @@ All run with `npm run test:integration`: 26 of 26 passed.
 
 ## DEV-3: Machine ledger
 
-**Status:** ✅ Done on the local chain, Fri 09:00. All 12 ledger tests and the 26 earlier tests pass against it. · **Needs from you:** nothing
+**Status:** ✅ Done on the local chain, Fri 08:40. All 12 ledger tests and the 26 earlier tests pass against it. · **Needs from you:** nothing
 
 **Changes from the original spec, and why**
 
@@ -262,7 +262,7 @@ Modes: `0 RUN`, `1 INSPECT`, `2 CREDIT_STOP`, `3 SAFE_STOP`.
 8. `bindMachine` works once, so a machine can't be swapped later.
 9. The account's getters don't weaken validation. Frame calls have empty calldata and take the same path as before.
 
-**Tests:** run `npm run test:integration`. Every item must pass. **Result: all passed, Fri 09:00.**
+**Tests:** run `npm run test:integration`. Every item must pass. **Result: all passed, Fri 08:40.**
 
 | ID | Pass only if |
 |---|---|
@@ -289,7 +289,25 @@ Modes: `0 RUN`, `1 INSPECT`, `2 CREDIT_STOP`, `3 SAFE_STOP`.
 
 ## DEV-4: Firmware keys and signing
 
-**Status:** Not started · **Target:** Fri 03:00 · **Depends on:** DEV-1 · **Needs from you:** nothing; the board is connected
+**Status:** ✅ Done Fri ~09:15 (T5 result below). · **Needs from you:** nothing
+
+**Results (dev firmware, the real ESP8266):**
+
+| Test | Result |
+|---|---|
+| T1 | 7 Keccak inputs match Node: empty, `abc`, and 64, 135, 136, 137, 2,144 bytes |
+| T2 | Root and pubSeed from the fixed test seed equal the TypeScript values (`0x6c0937ea…`). Generation took 245.5 s, no reset |
+| T3 | 20 of 20 signatures byte-identical (leaves 0, 1, 127, 128, 255 × 4 digests) |
+| T4 | After reset: loaded in **5 ms**, same root, no rebuild |
+| T5 | `wipe` twice, generating each time: two different roots, 246 s each |
+| T6 | The test seed never appears in the serial output. Random seeds can't be checked this way, but no command prints a seed |
+| T7 | Slowest signature **906 ms** (all-`ff` digest); free heap during signing **47,592 bytes** |
+| T8 | **The board signed a transaction that the local alt mempool sidecar admitted and mined: all four frames `0x1`, account balance 0.** Signing took 523 ms |
+| T9 | Release build answers `UNKNOWN` to `sign`, `keccak`, `wipe` and `keygen-fixed`; `info` says `dev=0` |
+
+First boot with no key generated one in 245 s. Both builds are in `firmware/mohar` (`pio run -e dev` and `-e release`); the 20-vector test is `firmware/tools/device_test.py`.
+
+**Known limit:** the dev `sign` command doesn't stop a leaf being used twice. DEV-5 adds that guard, and the release build has no `sign` command at all.
 
 **Why:** this is the first time the chip itself holds keys and signs. Its output has to match the contract exactly.
 
@@ -391,7 +409,7 @@ Modes: `0 RUN`, `1 INSPECT`, `2 CREDIT_STOP`, `3 SAFE_STOP`.
 
 ## DEV-6: Firmware networking
 
-**Status:** Not started · **Target:** Fri 09:00 · **Depends on:** DEV-5 · **Needs from you:** 2.4 GHz Wi-Fi details
+**Status:** Not started · **Target:** Fri 16:00 · **Depends on:** DEV-5 · **Needs from you:** nothing (Wi-Fi details received Fri 08:20)
 
 **Why:** this is the biggest hardware unknown. The chip has about 51 KB free before Wi-Fi, TLS needs a large buffer, and the devnet is HTTPS only.
 
@@ -436,7 +454,7 @@ Modes: `0 RUN`, `1 INSPECT`, `2 CREDIT_STOP`, `3 SAFE_STOP`.
 
 ## DEV-7: Meter signal acquisition and device behaviour
 
-**Status:** Pico side ✅ built and tested on the board. ESP side not started · **Target:** Fri 18:00 · **Depends on:** DEV-5 for reports; counting can start now · **Needs from you:** the two wires below
+**Status:** Pico side ✅ built and tested on the board. ESP side: counting code written (`firmware/mohar/src/meter.*`), **not yet flashed or tested** until the wires are in · **Target:** Fri 18:00 · **Depends on:** DEV-5 for reports; counting can start now · **Needs from you:** the two wires below
 
 **Why:** this makes it a real metering device. Real pulses are generated, counted and reported, and the device's state visibly follows the ledger and its own checks. **No servo:** it isn't needed, and it caused power-supply problems.
 
@@ -889,7 +907,11 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 | `laya` through `POST /v1/decisions` | A dedicated decision model, listed at zero cost and TEE-attested, returning typed answers with probabilities. Small responses suit the ESP | **Untested.** It may not reason well about numbers, and its input is limited to 512 tokens for English |
 | `0gm-1.0-35b-a3b` through `/v1/chat/completions` | 0G's own model, TEE-attested, supports JSON mode | Thinking is on by default, so it may be slow and verbose |
 
-**Endpoint:** `https://router-api.0g.ai/v1`. The testnet router failed its TLS handshake when checked.
+**Endpoint:** `https://router-api.0g.ai/v1`. The testnet router (`router-api-testnet.integratenetwork.work`) did not negotiate TLS 1.2 when checked, so the device uses mainnet.
+
+**Request format (from the 0G docs):** `POST /v1/decisions` with `{"model":"laya","state":"<text>","questions":{"inspect":{"type":"noul","instructions":"…","criteria":{"true":"…","false":"…"}}}}`. The answer is `answers.inspect.noul`, the probability that the answer is true, and `x_0g_trace.request_id`. **`laya` is listed at price 0 and "a request for a model priced at zero skips the balance gate"** (router docs), so it may need only a key, not a deposit. Its input limit is 512 tokens. `vela-2.0-9b` is the paid alternative (about $0.00000004 per 1M input tokens, 16,384 tokens).
+
+**Ready to run:** `signer/tools/0g-eval.ts` reads the key from `.secrets/0g-api.key`, runs the 14 labelled scenarios in `firmware/sim/scenarios.json` (7 run, 7 inspect, with borderline cases) 10 times each, and prints each test's result. Run: `node signer/tools/0g-eval.ts laya 10 0.5`.
 
 **How it must behave**
 

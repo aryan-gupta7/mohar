@@ -2,7 +2,7 @@
 
 This describes only what is **built and tested so far**. For what comes next, see [dev-plan.md](dev-plan.md). For the history of each step, see [update-log.md](update-log.md).
 
-**Last updated:** Friday, November 6, 2026, 09:00 IST
+**Last updated:** Friday, November 6, 2026, 09:15 IST
 
 ---
 
@@ -18,6 +18,7 @@ This describes only what is **built and tested so far**. For what comes next, se
 | Local chain | [devnet/](devnet/) | Working: same client build as the public devnet |
 | Board benchmark | [firmware/bench/](firmware/bench/) | Working on the real ESP8266 |
 | Meter simulator | [firmware/pico-meter/](firmware/pico-meter/) | Working on the real Pico H; not yet wired to the ESP8266 |
+| Device firmware (keys, signing) | [firmware/mohar/](firmware/mohar/) | Working on the real ESP8266: signs transactions the chain accepts |
 
 ### Proven and not yet proven
 
@@ -30,7 +31,8 @@ This describes only what is **built and tested so far**. For what comes next, se
 | The alt mempool's rules admit our transaction, and the canonical rules refuse the same bytes | **Proven with the real sidecar code, on our local chain** | EF-2L; [evidence](docs/evidence/ef-2-local-alt.json). Not yet on the public devnet |
 | An unstaked paymaster is refused | **Proven, same setup** | `unstaked payer accessed payer slot 0x…01` |
 | Anything on the public devnet with our contracts | **Not proven** | Same funding block |
-| The ESP8266 can sign these transactions | **Not proven** | Its speed is measured, but the signing firmware isn't written |
+| The ESP8266 holds its own key and signs transactions the alt mempool accepts | **Proven on the local chain** | DEV4-T8: board-signed report, admitted by the real sidecar code, mined, 4 frames succeeded |
+| The ESP8266 builds the transaction itself, keeps leaf safety across power loss, and reaches the network | **Not proven** | DEV-5 and DEV-6 |
 | ENS and 0G integrations | **Not started** | Docs and endpoints checked only |
 
 **Local mining proves execution, not mempool admission.** The local node has no sidecar, so tests submit through its privileged route, which skips mempool rules.
@@ -267,6 +269,20 @@ Creating a storage slot costs about **98,600 gas** on this devnet (measured), cl
 
 ---
 
+## 7b. Device firmware (DEV-4)
+
+[firmware/mohar](firmware/mohar): C++ on the Arduino core for the ESP8266, built with PlatformIO. `keccak.*` is Keccak-256, `wots.*` is the same scheme as section 3, `keystore.*` holds the key, `console.*` is a serial command line.
+
+- **First boot, no key:** a 32-byte seed from the hardware random generator (radio on, mixed with timing and chip ID), then all 256 leaves and the Merkle tree are built, which takes **about 245 s**. Boot prints `KEY READY root=0x… pubSeed=0x… ms=… source=generated`.
+- **Later boots:** the key loads in **5 ms** (`source=loaded`).
+- **Files:** `/seed.bin` is 32 bytes. `/tree.bin` is 511 nodes × 32 bytes = 16,352 bytes (256 leaves, then 128, 64 … 1, the root last). Writes go to a temporary file and are renamed, so power loss can't leave half a file. A seed with no valid tree is rebuilt from the same seed on the next boot.
+- **Signing:** the 67 chain values are recomputed from the seed, and the 8 Merkle siblings are read from `tree.bin`. It takes up to 906 ms and leaves 47,592 bytes of heap.
+- **The seed never leaves the device:** no command prints it. The one exception is the test command that accepts a seed as *input*.
+- **Two builds.** `dev` adds `keccak`, `keygen-fixed`, `sign` and `wipe` for tests. **`release` answers only `info`.** In release, nothing can ask the board to sign, because DEV-5 makes the board build and sign its own transactions.
+- **Opening the serial port resets the board** (the USB chip wires DTR/RTS to reset). The test tools wait for it to boot.
+
+---
+
 ## 8. Measured numbers
 
 All are from the local client, build `9aa3645d`, the same build the public devnet reports.
@@ -332,7 +348,7 @@ Measured on your ESP8266EX at 160 MHz with Wi-Fi off:
 | Hash rate, 64-byte input | 1,137 per second |
 | 536 chain hashes (about an average signature) | 471 ms |
 | 1,005 chain hashes (worst case) | 883 ms |
-| 256 keys, chain hashes only | About 226 s (calculated from the above) |
+| Generating the full key (256 leaves + tree) | **245 s measured** (226 s calculated) |
 | Free heap | 51,560 bytes |
 | Flash | 4 MB |
 
@@ -567,6 +583,25 @@ EF2-T6 second report over quota: {"refused":true,"error":"... validation frame 1
 EF2-T9 revoked device: {"refused":true,"error":"... validation frame 1: reverted"}
 ```
 Evidence is written to `docs/evidence/ef-2-local-alt.json`. Stop the sidecar with `Ctrl+C`.
+
+### Test 8b: Device firmware on the ESP8266
+
+Use the fixed port name from Test 8. Put `ESP=…` in your shell first.
+```sh
+cd firmware/mohar
+pio run -e dev -t upload --upload-port $ESP        # test build
+cd ../..
+uv run --no-project --with pyserial python firmware/tools/device_test.py $ESP all   # about 10 minutes
+```
+**Expected:** `first boot: generated 245 s` (or `loaded` if a key already exists), then `PASS` lines for Keccak (7), root and pubSeed, 20 signatures byte-identical, reload in under 2000 ms, and the seed-leak check. A quick rerun on a board that already holds the test key: `... device_test.py $ESP rest`.
+
+**Board-signed transaction, with the chain and sidecar from Tests 3 and 8a running:**
+```sh
+MOHAR_NET=local-alt node signer/tools/device-sign.ts $ESP
+```
+**Expected:** `account 0x… root() equals the board's root`, `board signed in ~500 ms`, `MINED status 0x1, frames ["0x1","0x1","0x1","0x1"], account balance 0`, `DEV4-T8 PASS`. It uses leaf 0 of the board's key, so a second run on the same key fails (the account's nonce would line up with a used leaf): run `device_test.py $ESP wipe-twice` or send `wipe` first to get a fresh key.
+
+**By hand:** `pio device monitor --port $ESP --baud 115200`, press RST, and watch `KEY READY`. Type `info` and Enter. In the release build (`pio run -e release -t upload ...`), `sign` answers `UNKNOWN`.
 
 ### Test 9: Pico meter simulator
 
