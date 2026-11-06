@@ -3,7 +3,7 @@
 // Nothing is sent and no key is involved. If a wallet is present it can send the real edit, signed by the wallet.
 import { useEffect, useState } from "react";
 import { useStore } from "../store";
-import { Badge, Card, H, Mono, Row } from "../components/ui";
+import { Button, Card, H, Mono, Tag, inputCls } from "../components/ui";
 import { ENS, ENS_FALLBACKS } from "../lib/ens";
 import { ethCall, RpcDead, RpcError, encodeCall, dnsEncode, explainRevert } from "../lib/abi.js";
 
@@ -79,35 +79,30 @@ export function Permissions() {
   };
   return (
     <Card>
-      <div className="flex flex-wrap items-center gap-2"><H>Who can change what</H><Badge k="SEPOLIA" /></div>
-      <p className="text-xs text-mute -mt-1">These are <b>Sepolia identity records</b> for {E?.name ?? "the meter"}. ENS permissions control these records only. They do not control the meter’s contracts on the Mohar devnet.</p>
-      <div className="mt-2 overflow-x-auto"><table className="w-full text-sm">
-        <thead><tr className="text-left text-mute"><th className="py-1 pr-3 font-normal">Record</th>{["Owner", "Maintenance", "Uploader", "Stranger"].map((h) => <th key={h} className="px-2 font-normal">{h}</th>)}</tr></thead>
-        <tbody>{TABLE.map((r) => <tr key={r.key} className="border-t border-line"><td className="py-1.5 pr-3"><Mono>{r.key}</Mono><div className="text-xs text-mute">{r.why}</div></td>
-          {["owner", "maintenance", "uploader", "stranger"].map((p) => <td key={p} className="px-2" aria-label={`${p}: ${r.who.includes(p) ? "may edit" : "may not edit"}`}>{r.who.includes(p) ? <span className="text-lime">may edit</span> : <span className="text-mute">no</span>}</td>)}</tr>)}</tbody>
+      <H right={<Tag k="Sepolia" />}>Who can change what</H>
+      <div className="overflow-x-auto"><table className="w-full text-sm">
+        <thead><tr className="text-left text-xs text-faint"><th className="py-1 pr-3 font-normal">Record</th>{["Owner", "Maintenance", "Uploader", "Stranger"].map((h) => <th key={h} className="px-2 font-normal">{h}</th>)}</tr></thead>
+        <tbody>{TABLE.map((r) => <tr key={r.key} className="border-t border-line"><td className="py-2.5 pr-3"><Mono>{r.key.replace("mohar.", "")}</Mono></td>
+          {["owner", "maintenance", "uploader", "stranger"].map((p) => <td key={p} className="px-2" aria-label={`${p}: ${r.who.includes(p) ? "may edit" : "may not edit"}`}>{r.who.includes(p) ? <span className="text-ok">●</span> : <span className="text-faint">–</span>}</td>)}</tr>)}</tbody>
       </table></div>
-      <p className="text-xs text-mute mt-2">The table is what ENS-2 set up. The panel below doesn’t trust it: it asks the live resolver.</p>
 
-      <div className="mt-3 text-sm font-medium">Try this edit</div>
-      <div className="mt-1 flex flex-wrap gap-2">{PRESETS.map((p) => <button key={p.label} disabled={!E || busy} onClick={() => { setWho(p.who); setKey(p.key); run(p.who, p.key); }} className="rounded-xl border border-line bg-mid px-3 py-1.5 text-xs">{p.label}</button>)}</div>
-      <div className="mt-2 grid gap-2 sm:grid-cols-3">
-        <select aria-label="Account to test as" value={who} onChange={(e) => setWho(e.target.value)} className="rounded-xl border border-line bg-mid px-3 py-2 text-sm">{personas.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
-        <select aria-label="Record" value={key} onChange={(e) => setKey(e.target.value)} className="rounded-xl border border-line bg-mid px-3 py-2 text-sm">{TABLE.map((t) => <option key={t.key}>{t.key}</option>)}</select>
-        <input aria-label="New value" value={val} onChange={(e) => setVal(e.target.value)} className="rounded-xl border border-line bg-mid px-3 py-2 text-sm" />
+      <div className="mt-6 text-sm font-medium">Try an edit</div>
+      <div className="mt-3 flex flex-wrap gap-2">{PRESETS.map((p) => <button key={p.label} disabled={!E || busy} onClick={() => { setWho(p.who); setKey(p.key); run(p.who, p.key); }} className="rounded-full px-3 py-1.5 text-xs shadow-[inset_0_0_0_1px_var(--line)] hover:bg-fg/5 disabled:opacity-40">{p.label}</button>)}</div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <select aria-label="Account to test as" value={who} onChange={(e) => setWho(e.target.value)} className={inputCls}>{personas.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
+        <select aria-label="Record" value={key} onChange={(e) => setKey(e.target.value)} className={inputCls}>{TABLE.map((t) => <option key={t.key}>{t.key}</option>)}</select>
+        <input aria-label="New value" value={val} onChange={(e) => setVal(e.target.value)} className={inputCls} />
       </div>
-      <div className="mt-1 text-xs text-mute">Testing as <Mono>{from || "…"}</Mono></div>
-      <button disabled={!E || busy || !from} onClick={() => run()} className="mt-2 rounded-xl bg-lime px-4 py-2 text-sm font-medium text-ink disabled:opacity-50">{busy ? "Asking the live contract…" : "Try this edit"}</button>
-      {res && <div role="status" className={`mt-2 rounded-xl p-3 text-sm ${res.ok ? "bg-lime/15 text-lime" : "bg-bad/15 text-bad"}`} data-testid="edit-result">
-        <b>{res.ok ? "ALLOWED" : "REJECTED"}</b> · {res.message}{res.selector && <> <Mono>{res.selector}</Mono></>}
-        <div className="text-xs opacity-80 mt-1">Simulated against the live contract (eth_call on Sepolia at {res.at}). Nothing is sent.</div></div>}
-      {eth && <div className="mt-3 border-t border-line pt-2">
-        <div className="text-sm font-medium">Make the real edit with your wallet</div>
-        <p className="text-xs text-mute">Signed by your wallet; this page never sees a key. The dashboard first asks the resolver whether your account is permitted and only then asks the wallet to sign.</p>
-        {!wallet ? <button onClick={connect} className="mt-1 rounded-xl border border-line bg-mid px-3 py-1.5 text-sm">Connect wallet</button>
-          : <div className="mt-1 flex flex-wrap items-center gap-2"><Mono>{wallet}</Mono><button disabled={busy} onClick={sendReal} className="rounded-xl bg-lime px-3 py-1.5 text-sm text-ink">Send the edit above from this wallet</button></div>}
-        {tx && <div className="mt-1 text-sm">Sent: <Mono>{tx}</Mono></div>}
+      <Button disabled={!E || busy || !from} onClick={() => run()} className="mt-3">{busy ? "Asking the contract…" : "Try this edit"}</Button>
+      {res && <div role="status" className={`mt-4 text-sm ${res.ok ? "text-ok" : "text-bad"}`} data-testid="edit-result">
+        <b>{res.ok ? "Allowed" : "Rejected"}</b> · {res.message}{res.selector && <> <Mono>{res.selector}</Mono></>}
+        <div className="mt-1 text-xs text-faint">Simulated on Sepolia at {res.at}. Nothing is sent.</div></div>}
+      {eth && <div className="mt-6 border-t border-line pt-4">
+        <div className="text-sm font-medium">Send it from your wallet</div>
+        {!wallet ? <Button variant="ghost" onClick={connect} className="mt-2">Connect wallet</Button>
+          : <div className="mt-2 flex flex-wrap items-center gap-2"><Mono>{wallet}</Mono><Button disabled={busy} onClick={sendReal}>Send edit</Button></div>}
+        {tx && <div className="mt-2 text-sm">Sent <Mono>{tx}</Mono></div>}
       </div>}
-      <Row k="Why this matters">A maintenance key can record a service visit but cannot change the device’s cryptographic root; the contract refuses it, in public.</Row>
     </Card>
   );
 }

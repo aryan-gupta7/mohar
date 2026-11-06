@@ -1,61 +1,74 @@
 import type { ReactNode } from "react";
-import { AlertTriangle, CircleDashed, Loader2, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import { ChevronRight } from "lucide-react";
 import type { Status } from "../lib/events";
 
 export const PULSES_PER_KWH = 3200;
 export const kwh = (pulses: number) => pulses / PULSES_PER_KWH;
 export const fmtKwh = (pulses: number) => kwh(pulses).toFixed(3);
 export const short = (s?: string | null, a = 8, b = 6) => (s ? (s.length > a + b + 3 ? `${s.slice(0, a)}…${s.slice(-b)}` : s) : "—");
-export const ago = (t: number, now: number) => { if (!t) return "never"; const s = Math.max(0, Math.round((now - t) / 1000)); return s < 2 ? "just now" : s < 90 ? `${s} s ago` : `${Math.round(s / 60)} min ago`; };
+export const ago = (t: number, now: number) => { if (!t) return "never"; const s = Math.max(0, Math.round((now - t) / 1000)); return s < 2 ? "just now" : s < 90 ? `${s}s ago` : `${Math.round(s / 60)}m ago`; };
 
-export type BadgeKind = "SIMULATED INPUT" | "LIVE HARDWARE" | "DERIVED" | "AI RESPONSE" | "LOCAL POLICY" | "SIGNED" | "MEMPOOL ACCEPTED" | "ON-CHAIN CONFIRMED" | "ARCHIVED" | "REPLAY" | "ESTIMATED" | "SEPOLIA" | "MOHAR DEVNET" | "TESTING ONLY" | "STALE";
-const BADGE: Record<BadgeKind, string> = {
-  "SIMULATED INPUT": "bg-sky/15 text-sky border-sky/30", "LIVE HARDWARE": "bg-lime/15 text-lime border-lime/30", DERIVED: "bg-sky/10 text-sky border-sky/25",
-  "AI RESPONSE": "bg-lav/15 text-lav border-lav/30", "LOCAL POLICY": "bg-graph text-text border-line", SIGNED: "bg-lime/10 text-lime border-lime/25",
-  "MEMPOOL ACCEPTED": "bg-lime/10 text-lime border-lime/25", "ON-CHAIN CONFIRMED": "bg-lime/20 text-lime border-lime/40", ARCHIVED: "bg-lav/15 text-lav border-lav/30",
-  REPLAY: "bg-warn/15 text-warn border-warn/40", ESTIMATED: "bg-sky/10 text-sky border-sky/25", SEPOLIA: "bg-lav/10 text-lav border-lav/25", "MOHAR DEVNET": "bg-sky/10 text-sky border-sky/25",
-  "TESTING ONLY": "bg-warn/15 text-warn border-warn/40", STALE: "bg-warn/15 text-warn border-warn/40",
-};
-export const Badge = ({ k, title }: { k: BadgeKind; title?: string }) => (
-  <span title={title} className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide whitespace-nowrap ${BADGE[k]}`}>{k}</span>
+/** Small provenance tag. Used only where the source changes the meaning of a number. */
+export type TagKind = "Simulated" | "Replay" | "Stale" | "Sepolia" | "Devnet" | "Estimated" | "Archived" | "Testing";
+const TAG: Record<TagKind, string> = { Simulated: "text-mute", Replay: "text-warn", Stale: "text-warn", Sepolia: "text-mute", Devnet: "text-mute", Estimated: "text-mute", Archived: "text-ok", Testing: "text-warn" };
+export const Tag = ({ k, title }: { k: TagKind; title?: string }) => (
+  <span title={title} className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium shadow-[inset_0_0_0_1px_var(--line)] ${TAG[k]}`}>{k}</span>
 );
 
 export const Card = ({ children, className = "", onClick }: { children: ReactNode; className?: string; onClick?: () => void }) => (
-  <div onClick={onClick} className={`card p-4 ${className}`}>{children}</div>
+  <div onClick={onClick} className={`surface p-5 ${className}`}>{children}</div>
 );
 export const H = ({ children, right }: { children: ReactNode; right?: ReactNode }) => (
-  <div className="flex items-center justify-between gap-2 mb-3"><h2 className="text-sm font-semibold text-mute uppercase tracking-wider">{children}</h2>{right}</div>
+  <div className="mb-4 flex items-center justify-between gap-2"><h2 className="text-sm font-medium">{children}</h2>{right}</div>
+);
+export const Page = ({ title, aside, children }: { title: ReactNode; aside?: ReactNode; children: ReactNode }) => (
+  <div className="mx-auto w-full max-w-4xl space-y-6">
+    <div className="flex flex-wrap items-center gap-3"><h1 className="text-2xl font-semibold tracking-tight">{title}</h1>{aside}</div>
+    {children}
+  </div>
 );
 
-export function Stat({ label, value, unit, note, badge, tone }: { label: string; value: ReactNode; unit?: string; note?: ReactNode; badge?: BadgeKind; tone?: string }) {
+export function Stat({ label, value, unit, note, tone }: { label: string; value: ReactNode; unit?: string; note?: ReactNode; tone?: string }) {
   return (
-    <Card>
-      <div className="flex items-start justify-between gap-2"><div className="text-xs text-mute">{label}</div>{badge && <Badge k={badge} />}</div>
-      <div className={`metric mt-2 text-3xl font-semibold ${tone ?? ""}`}>{value}{unit && <span className="ml-1 text-sm font-medium text-mute">{unit}</span>}</div>
-      {note && <div className="mt-1 text-xs text-mute">{note}</div>}
-    </Card>
+    <div className="min-w-0">
+      <div className="text-[13px] text-mute">{label}</div>
+      <div className={`num mt-1 text-3xl font-semibold ${tone ?? ""}`}>{value}{unit && <span className="ml-1 text-sm font-normal text-mute">{unit}</span>}</div>
+      {note && <div className="mt-1 truncate text-xs text-faint">{note}</div>}
+    </div>
   );
 }
 
-export const StatusIcon = ({ s, size = 16 }: { s: Status; size?: number }) => {
-  if (s === "COMPLETED") return <CheckCircle2 size={size} className="text-lime" />;
-  if (s === "PROCESSING") return <Loader2 size={size} className="text-lav animate-spin" />;
-  if (s === "FAILED") return <XCircle size={size} className="text-bad" />;
-  if (s === "UNAVAILABLE") return <MinusCircle size={size} className="text-mute" />;
-  return <CircleDashed size={size} className="text-mute" />;
-};
+export const StatusDot = ({ s }: { s: Status }) => (
+  <span className={`relative inline-block h-2 w-2 shrink-0 rounded-full ${s === "COMPLETED" ? "bg-ok" : s === "FAILED" ? "bg-bad" : s === "PROCESSING" ? "bg-fg" : "bg-transparent shadow-[inset_0_0_0_1.5px_var(--faint)]"}`}>
+    {s === "PROCESSING" && <span className="absolute -inset-1 animate-ping rounded-full bg-fg/30" />}
+  </span>
+);
 
 export const ModePill = ({ mode }: { mode?: string }) => {
   const m = mode ?? "—";
-  const c = m === "RUN" ? "bg-lime text-black" : m === "INSPECT" ? "bg-warn text-black" : m === "CREDIT_STOP" ? "bg-sky text-black" : m === "SAFE_STOP" ? "bg-bad text-black" : "bg-line text-mute";
-  return <span className={`inline-block rounded-full px-3 py-1 text-xs font-bold tracking-wide ${c}`}>{m}</span>;
+  const c = m === "RUN" ? "text-ok" : m === "INSPECT" ? "text-warn" : m === "CREDIT_STOP" ? "text-warn" : m === "SAFE_STOP" ? "text-bad" : "text-mute";
+  const label = m === "CREDIT_STOP" ? "Credit stop" : m === "SAFE_STOP" ? "Safe stop" : m === "—" ? m : m[0] + m.slice(1).toLowerCase();
+  return <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${c}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{label}</span>;
 };
 
 export const ErrorBox = ({ title, children }: { title: string; children?: ReactNode }) => (
-  <div className="card p-4 border-bad/40"><div className="flex items-center gap-2 text-bad font-semibold"><AlertTriangle size={16} />{title}</div>{children && <div className="mt-1 text-sm text-mute">{children}</div>}</div>
+  <div className="surface flex gap-3 p-4 text-bad"><AlertTriangle size={16} className="mt-0.5 shrink-0" /><div><div className="text-sm font-medium">{title}</div>{children && <div className="mt-0.5 text-sm text-mute">{children}</div>}</div></div>
 );
-export const Empty = ({ children }: { children: ReactNode }) => <div className="card p-6 text-center text-sm text-mute">{children}</div>;
+export const Empty = ({ children }: { children: ReactNode }) => <div className="py-8 text-center text-sm text-mute">{children}</div>;
 export const Mono = ({ children, className = "" }: { children: ReactNode; className?: string }) => <span className={`font-mono text-xs break-all ${className}`}>{children}</span>;
 export const Row = ({ k, children }: { k: string; children: ReactNode }) => (
-  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 border-b border-line/60 py-2 last:border-0"><span className="text-xs text-mute">{k}</span><span className="text-sm text-right">{children}</span></div>
+  <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-0.5 border-t border-line py-2.5 first:border-0"><span className="text-sm text-mute">{k}</span><span className="text-right text-sm">{children}</span></div>
+);
+export const Button = ({ variant = "solid", className = "", ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "solid" | "ghost" }) => (
+  <button {...p} className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40 ${variant === "solid" ? "bg-accent text-bg hover:opacity-85" : "shadow-[inset_0_0_0_1px_var(--line)] hover:bg-fg/5"} ${className}`} />
+);
+export const inputCls = "w-full rounded-lg bg-transparent px-3 py-2 text-sm shadow-[inset_0_0_0_1px_var(--line)] placeholder:text-faint";
+
+export const Long = ({ text }: { text: string }) => (
+  <Collapsible className="max-w-[60ch] text-right">
+    <CollapsibleTrigger className="group inline-flex items-center gap-1 text-xs text-mute hover:text-fg"><ChevronRight size={12} className="transition-transform group-data-[state=open]:rotate-90" />{text.slice(0, 40)}…</CollapsibleTrigger>
+    <CollapsibleContent className="mt-1 text-left font-mono text-[11px] leading-relaxed text-mute">{text}</CollapsibleContent>
+  </Collapsible>
 );

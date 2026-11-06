@@ -255,6 +255,11 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - **Result: 0 resets over the whole 20-minute soak**, against 6 resets in 11 minutes before. Lowest heap 35.5 KB, lowest free stack 2.7 KB. **But 4 of its 12 checkpoints couldn't complete** (chain unreachable, or a resend rejected), each recovering on the next one; I don't yet know whether that is the public gateway, the hotspot or Wi-Fi. It is the next thing to chase. The first soak's 6 resets were most likely this same overflow; the watchdog theory was a symptom, not the cause.
 - **ENS-3 (agent):** the dashboard's Identity page dry-runs each edit as the maintenance key, the uploader key and a stranger against the live Sepolia resolver and shows the contract's real answer (allowed, or the real `EACUnauthorizedAccountRoles` revert). No key is in the browser. All five ENS3 checks pass.
 
+### Dashboard redesign (Fri, after 17:30)
+- Rebuilt the Console UI for less clutter: light-first warm neutral palette with one dark theme, Inter and JetBrains Mono, hairline-ring cards in the shadcn style, a React Bits-style count-up on the headline number, and pill controls. No gradients or glow.
+- Ten pages became five plus Settings: Overview, Console, Ledger, Identity, Activity. Live Meter, Verified Report and AI Insights are folded into Overview, Console and Activity; Usage is dropped (it only drew a chart once enough history exists). Uppercase provenance badges are now a few plain tags (Replay, Simulated, Stale, Sepolia, Devnet) used only where the source changes a number's meaning. Explanatory paragraphs and tooltips are removed.
+- Data, store, chain, ENS and serial code are unchanged. **Not rerun:** `dashboard/test/e2e.py` still names the old pages and labels, so it needs updating before it counts as evidence. Checked only by build, typecheck and a replay in the browser.
+
 ---
 
 ## Current state (Fri 17:30)
