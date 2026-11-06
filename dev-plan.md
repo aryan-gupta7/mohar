@@ -52,10 +52,10 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | ✅ Done Fri ~09:55, except T6 (your power pull) |
 | 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | Wi-Fi received |
 | 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | Needs funds |
-| 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | Needs API key |
+| 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | ✅ T1–T5 passed Fri ~09:45; T6–T8 open |
 | 11 | [EF-2](#ef-2-the-alt-mempool-proof) | Alt mempool proof, public | After EF-1 | Needs funds |
 | 12 | [ENS-1](#ens-1-fleet-name-and-registry) | Fleet name and registry | Fri 16:00 | Needs Sepolia ETH |
-| 13 | [DEV-7](#dev-7-meter-signal-acquisition-and-device-behaviour) | Meter signal acquisition and device behaviour | Fri 18:00 | Needs Pico wired to ESP |
+| 13 | [DEV-7](#dev-7-meter-signal-acquisition-and-device-behaviour) | Meter signal acquisition and device behaviour | Fri 18:00 | Partly done: counting T1–T4, T13 passed; T5–T12 open |
 | 14 | [EF-3](#ef-3-device-signed-transaction-with-the-laptop-off) | Device-signed, laptop off | Fri 19:00 | |
 | 15 | [ENS-2](#ens-2-machine-identity-and-permissions) | Machine identity and roles | Fri 19:00 | |
 | 16 | [DEV-8](#dev-8-dashboard) | Dashboard | Fri 21:00 | |
@@ -472,7 +472,7 @@ First boot with no key generated one in 245 s. Both builds are in `firmware/moha
 
 ## DEV-7: Meter signal acquisition and device behaviour
 
-**Status:** Pico side ✅ built and tested on the board. ESP side: counting code written (`firmware/mohar/src/meter.*`), **not yet flashed or tested** until the wires are in · **Target:** Fri 18:00 · **Depends on:** DEV-5 for reports; counting can start now · **Needs from you:** the two wires below
+**Status:** Pico simulator ✅. ESP pulse counting ✅ on real hardware: T1, T2, T3, T4 and T13 passed Fri ~09:40. **Open:** T5 (unplug the wire), and T6 to T12, which need windows, modes, LEDs and checkpoint reports built into the firmware. · **Needs from you:** nothing now · **Target:** Fri 18:00 · **Depends on:** DEV-5 for reports; counting can start now · **Needs from you:** the two wires below
 
 **Why:** this makes it a real metering device. Real pulses are generated, counted and reported, and the device's state visibly follows the ledger and its own checks. **No servo:** it isn't needed, and it caused power-supply problems.
 
@@ -905,7 +905,9 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 
 ## 0G-1: Choose and test the decision model
 
-**Status:** Blocked: needs API key · **Target:** Fri 12:00 · **Depends on:** nothing · **Needs from you:** `sk-…` key and credits
+**Status:** ✅ T1 to T5 passed Fri ~09:45 with `qwen3.8-flash`. **T6 (`verify_tee`), T7 (error codes) and T8 (freeze the request format) are still open.** · **Needs from you:** nothing now
+
+**Result:** `laya` and `vela-2.0-9b` failed. `qwen3.8-flash` with `enable_thinking: false` passed 19 of 19 scenarios at 5 of 5 runs, p95 latency 1.2 s, no timeouts, request IDs matching 95 of 95. Evidence in `docs/evidence/0g-1-*.json`; details and caveats in [mechanism.md](mechanism.md) section 7b.
 
 **Why:** we don't yet know that a model can judge these readings reliably. Find out before building firmware around it.
 
