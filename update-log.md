@@ -268,6 +268,11 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - **Test-harness fix:** board tests now switch the checkpoint loop off after boot (a provisioned board interleaved its own traffic and made the transaction-vector test time out). Safety test T9a needs the fixed test key, so the board is given the fixed key for the test and a real key afterwards.
 - **Frontend connections checked:** the dashboard talks only to the chain RPC (local 18545 or the EF devnet), four Sepolia RPCs for ENS, and the boards over Web Serial; all three RPC kinds send CORS `*`, so a browser can call them. No hard-coded addresses or keys; no text claims a disconnection.
 
+### Entry page (Sat)
+- Added a landing page at the dashboard's root (no hash). Mohar is presented as the method that makes any IoT device verifiable; the prepaid meter is the demo device. Sections: a 3D meter (three.js, boxes and cylinders, flat shading, drag to turn, click to open the demo), the problem, the eight-step flow, one scroll-driven section per track (Ethereum Foundation, ENS, 0G) with what the track asks and what we did, measured numbers, honest limits, and the demo link.
+- Every claim on it comes from mechanism.md or dev-plan.md. Where a test is still open (0G3-T4, blocking 0G on the board) the page says so. The `#overview` route and the rest of the dashboard are unchanged.
+- Style: square corners, paper and ink with one orange accent, hairlines, no glow or gradients. Motion ideas from UIarc (In-view title wipe) and OriginKit (3D text unfold, Scroll progress outline), written for this page.
+
 ---
 
 ## Current state (Fri 17:30)

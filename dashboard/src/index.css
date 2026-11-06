@@ -22,3 +22,8 @@ body { margin: 0; background: var(--bg); color: var(--fg); font-family: "Inter V
 .train { height: 18px; background-image: repeating-linear-gradient(90deg, var(--fg) 0 4px, transparent 4px 28px); background-size: 28px 100%; animation: train var(--d, 1s) linear infinite; }
 .train[data-idle="true"] { animation: none; opacity: .25; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Landing page: its own tokens, square corners, hairlines. */
+.land { --bg: #ecebe6; --card: #f6f5f1; --fg: #111111; --mute: #5d5c57; --faint: #8f8e88; --line: rgba(17,17,17,.16); --accent: #ff4a1c; --ok: #0b7a4b; --bad: #d4220f; background: var(--bg); color: var(--fg); }
+.land *, .land *::before, .land *::after { border-radius: 0 !important; }
+.land-root, .land-root body { background: #ecebe6; }

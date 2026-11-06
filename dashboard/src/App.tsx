@@ -6,6 +6,7 @@ import { Overview } from "./pages/Overview";
 import { Ledger, Identity, Activity } from "./pages/More";
 import { Button, Card, H, Page, inputCls } from "./components/ui";
 import { Segmented } from "./components/motion";
+import { Landing } from "./landing/Landing";
 import { TooltipProvider } from "./components/ui/tooltip";
 
 const PAGES = [
@@ -73,10 +74,11 @@ function Settings() {
 }
 
 function Shell() {
-  const [page, setPage] = useState<string>(location.hash.slice(1) || "overview");
+  const [page, setPage] = useState<string>(location.hash.slice(1));
   const s = useStore();
-  useEffect(() => { const h = () => setPage(location.hash.slice(1) || "overview"); window.addEventListener("hashchange", h); return () => window.removeEventListener("hashchange", h); }, []);
+  useEffect(() => { const h = () => setPage(location.hash.slice(1)); window.addEventListener("hashchange", h); return () => window.removeEventListener("hashchange", h); }, []);
   const go = (id: string) => { setPage(id); location.hash = id; };
+  if (!page) return <Landing />;
   const el = { overview: <Overview />, console: <Console />, ledger: <Ledger />, identity: <Identity />, activity: <Activity />, settings: <Settings /> }[page] ?? <Overview />;
   const dark = s.settings.theme === "dark";
   const live = s.mode === "replay" ? "bg-warn" : s.mode === "live" || s.chain.status === "ok" ? "bg-ok" : s.chain.status === "error" ? "bg-bad" : "bg-faint";
@@ -84,7 +86,7 @@ function Shell() {
     <div className="min-h-full">
       <header className="sticky top-0 z-10 bg-bg/85 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-4xl items-center gap-6 px-4">
-          <a href="#overview" onClick={() => go("overview")} className="flex items-center gap-2 text-[15px] font-semibold tracking-tight"><span className="h-2.5 w-2.5 rounded-full bg-fg" />mohar</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); history.pushState(null, "", location.pathname + location.search); setPage(""); window.scrollTo(0, 0); }} className="flex items-center gap-2 text-[15px] font-semibold tracking-tight"><span className="h-2.5 w-2.5 rounded-full bg-fg" />mohar</a>
           <nav aria-label="Pages" className="-mx-2 flex flex-1 gap-1 overflow-x-auto">
             {PAGES.map((p) => <button key={p.id} aria-current={page === p.id ? "page" : undefined} onClick={() => go(p.id)} className={`rounded-full px-3 py-1.5 text-sm transition-colors ${page === p.id ? "bg-fg/[.07] text-fg" : "text-mute hover:text-fg"}`}>{p.label}</button>)}
           </nav>
