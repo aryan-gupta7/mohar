@@ -20,7 +20,7 @@ const PAGES = [
 const NETS = [{ value: "https://altmempool.forshtat.com", label: "EF devnet" }, { value: "http://127.0.0.1:18545", label: "Local chain" }];
 
 function Settings() {
-  const { settings, setSettings, ens, chain, ids, refreshEns } = useStore();
+  const { settings, setSettings, ens, chain, ids, refreshEns, resetMeter } = useStore();
   const [link, setLink] = useState(""), [note, setNote] = useState<string>(), [copied, setCopied] = useState(false);
   const f = (k: keyof typeof settings, label: string, ph?: string) => (
     <label className="block text-sm"><span className="text-mute">{label}</span><input value={settings[k] as string} placeholder={ph} onChange={(e) => setSettings({ [k]: e.target.value } as any)} className={`${inputCls} mt-1.5 font-mono text-xs`} /></label>
@@ -54,7 +54,7 @@ function Settings() {
         {note && <div className="mt-2 text-xs text-mute">{note}</div>}
         <div className="mt-5 grid gap-4 sm:grid-cols-3">{f("manualLedger", "Ledger", "0x…")}{f("manualAccount", "Account", "0x…")}{f("manualPaymaster", "Paymaster", "0x…")}</div>
         <label className="mt-4 flex items-center gap-2 text-sm text-mute"><input type="checkbox" checked={(settings as any).forceManual === "1"} onChange={(e) => setSettings({ forceManual: e.target.checked ? "1" : "" } as any)} />Use these addresses instead of the meter's name</label>
-        <div className="mt-5 flex flex-wrap gap-2"><Button variant="ghost" onClick={share}>{copied ? "Copied" : "Copy setup link"}</Button></div>
+        <div className="mt-5 flex flex-wrap gap-2"><Button variant="ghost" onClick={resetMeter}>Reset to default meter</Button><Button variant="ghost" onClick={share}>{copied ? "Copied" : "Copy setup link"}</Button></div>
         <div className="mt-3 text-xs text-faint">Addresses in use: {ids.from === "none" ? "none" : ids.from === "ens" ? "from the name" : "entered above"}</div>
       </Card>
       <Card>

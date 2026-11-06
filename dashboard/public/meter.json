@@ -1,0 +1,7 @@
+{
+  "chainRpc": "https://altmempool.forshtat.com",
+  "manualLedger": "0x3fdec3e95601c36b4b9d5ad9dec10dbee4ba5741",
+  "manualAccount": "0x7eb63c0acd9ef3e494b5de676f63feaaed522291",
+  "manualPaymaster": "0x3f98eb9ed81bf51cda95f7d6fab4ad322dcf5164",
+  "forceManual": "1"
+}
