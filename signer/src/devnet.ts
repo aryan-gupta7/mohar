@@ -84,17 +84,21 @@ export async function ensureFunded(address: Address, min: bigint): Promise<bigin
   return getBalance(address);
 }
 
-/** A legacy transaction from the deployer: contract creation and plain calls. */
-export async function sendLegacy(tx: { to: Address | null; value?: bigint; data?: Hex; gas: bigint }): Promise<any> {
-  const account = privateKeyToAccount(deployerKey());
+/** A legacy transaction for contract creation and plain calls. Signed by the deployer unless `key` is given. */
+export async function sendLegacy(tx: { to: Address | null; value?: bigint; data?: Hex; gas?: bigint; key?: Hex }): Promise<any> {
+  const account = privateKeyToAccount(tx.key ?? deployerKey());
   const nonce = Number(await getNonce(account.address, "pending"));
+  // New accounts and storage slots cost far more than on mainnet here, so estimate when no limit is given.
+  const gas =
+    tx.gas ??
+    (BigInt(await rpc<Hex>("eth_estimateGas", [{ from: account.address, to: tx.to ?? undefined, value: `0x${(tx.value ?? 0n).toString(16)}`, data: tx.data ?? "0x" }])) * 12n) / 10n;
   const raw = await account.signTransaction({
     chainId: CHAIN_ID,
     nonce,
     to: tx.to,
     value: tx.value ?? 0n,
     data: tx.data ?? "0x",
-    gas: tx.gas,
+    gas,
     gasPrice: 2_000_000n, // 0.002 gwei; the devnet base fee is 7 wei
     type: "legacy",
   });

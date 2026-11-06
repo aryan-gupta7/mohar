@@ -4,7 +4,7 @@ import { profile } from "@forshtat/hegota-support/profiles/ethrex-eip8141-tracer
 import { encodeTx, frame, newTx, sigHash, txHash } from "@forshtat/hegota-support/tx";
 import { toWire } from "@forshtat/hegota-support/rpc";
 import { concat, encodeAbiParameters, encodeFunctionData, parseAbi, type Address, type Hex } from "viem";
-import { CHAIN_ID, ETHREX_URL, NETWORK, STAKING_REGISTRY, rpc, sendLegacy } from "./devnet.ts";
+import { CHAIN_ID, ETHREX_URL, NETWORK, STAKING_REGISTRY, deployerAddress, rpc, sendLegacy } from "./devnet.ts";
 import { WotsKey, fromHex, toHex, verifySteps } from "./wots.ts";
 
 /** Measured on the client: validation frame gas = 17,218 + 114 per hash step, before account frame checks. */
@@ -37,13 +37,77 @@ export const PAYMASTER_ABI = parseAbi([
   "function deposit() payable",
 ]);
 
+export const LEDGER_ABI = parseAbi([
+  "constructor(address owner, address operator, uint256 tariffWeiPerPulse)",
+  "function bindMachine(address account)",
+  "function report(uint64 seq, uint64 total, uint8 mode, uint8 reason, uint8 confidence, uint8 model, uint32 salt, bytes32 sensors, string requestId)",
+  "function topUp() payable",
+  "function clearHold()",
+  "function setOperator(address operator)",
+  "function withdraw(address to, uint256 amount)",
+  "function ledgerMode() view returns (uint8)",
+  "function status() view returns (uint256 credit, bool hold, uint64 lastSeq, uint64 lastTotal, uint256 tariff, uint256 earned, uint256 arrears, uint8 lastMode, uint8 ledgerMode)",
+  "function machine() view returns (address)",
+  "function operator() view returns (address)",
+  "function owner() view returns (address)",
+  "event Report(uint64 indexed seq, uint64 total, uint64 usage, uint256 charged, uint256 owed, uint8 mode, uint8 reason, uint8 confidence, uint8 model, uint32 salt, bytes32 sensors, string requestId)",
+  "event HoldSet(uint64 indexed seq)",
+  "event HoldCleared(address indexed by)",
+  "event TopUp(address indexed from, uint256 amount, uint256 paidArrears, uint256 credit)",
+  "error NotOwner()",
+  "error NotOperator()",
+  "error NotMachine()",
+  "error AlreadyBound()",
+  "error ZeroAddress()",
+  "error StaleSeq()",
+  "error TotalWentDown()",
+  "error BadMode()",
+  "error BadConfidence()",
+  "error RequestIdTooLong()",
+  "error NoHold()",
+  "error NothingSent()",
+  "error OverEarned()",
+  "error Overflow()",
+  "error TransferFailed()",
+]);
+
+/** report(uint64,uint64,uint8,uint8,uint8,uint8,uint32,bytes32,string) */
+export const REPORT_SELECTOR = 0x6e5141ban;
+
+export const MODE = { RUN: 0, INSPECT: 1, CREDIT_STOP: 2, SAFE_STOP: 3 } as const;
+
+export type Report = {
+  seq: bigint;
+  total: bigint;
+  mode: number;
+  reason: number;
+  confidence: number;
+  model: number;
+  salt: number;
+  sensors: Hex;
+  requestId: string;
+};
+
+export const encodeReport = (r: Report): Hex =>
+  encodeFunctionData({
+    abi: LEDGER_ABI,
+    functionName: "report",
+    args: [r.seq, r.total, r.mode, r.reason, r.confidence, r.model, r.salt, r.sensors, r.requestId],
+  });
+
+/** Yul artifacts come from contracts/build-yul.ts, Solidity ones from Forge. */
 export function artifact(name: string): Hex {
-  const file = new URL(`../../contracts/out/${name}.yul/${name}.json`, import.meta.url);
-  return JSON.parse(fs.readFileSync(file, "utf8")).bytecode.object as Hex;
+  for (const ext of ["yul", "sol"]) {
+    const file = new URL(`../../contracts/out/${name}.${ext}/${name}.json`, import.meta.url);
+    if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, "utf8")).bytecode.object as Hex;
+  }
+  throw new Error(`No build output for ${name}. Run npm run build.`);
 }
 
 async function deploy(data: Hex, value: bigint, label: string): Promise<Address> {
-  const { hash, receipt } = await sendLegacy({ to: null, data, value, gas: 5_000_000n });
+  // Stored code costs about 1,670 gas per byte on this chain (measured), not mainnet's 200, so estimate first.
+  const estimate = BigInt(await rpc<Hex>("eth_estimateGas", [{ from: deployerAddress(), data, value: `0x${value.toString(16)}` }]));
+  const { hash, receipt } = await sendLegacy({ to: null, data, value, gas: (estimate * 12n) / 10n });
   if (receipt.status !== "0x1" || !receipt.contractAddress) throw new Error(`${label} deployment ${hash} reverted`);
   return receipt.contractAddress as Address;
 }
@@ -58,6 +122,11 @@ export function deployAccount(a: { key: WotsKey; target: Address; selector: bigi
     [toHex(a.key.root), toHex(a.key.pubSeedWord), a.target, a.selector, STAKING_REGISTRY, stake, UNSTAKE_DELAY],
   );
   return deploy(concat([artifact("MoharAccount"), args]), stake + (a.value ?? 0n), "MoharAccount");
+}
+
+export function deployLedger(a: { owner: Address; operator: Address; tariffWeiPerPulse: bigint }): Promise<Address> {
+  const args = encodeAbiParameters([{ type: "address" }, { type: "address" }, { type: "uint256" }], [a.owner, a.operator, a.tariffWeiPerPulse]);
+  return deploy(concat([artifact("MachineLedger"), args]), 0n, "MachineLedger");
 }
 
 export function deployPaymaster(a: { stake?: bigint; funding: bigint }): Promise<Address> {

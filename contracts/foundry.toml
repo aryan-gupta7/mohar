@@ -5,7 +5,10 @@ test = "test"
 solc_version = "0.8.28"
 evm_version = "cancun"
 optimizer = true
-optimizer_runs = 100000
+optimizer_runs = 200
+# The ledger emits an event with many fields; the IR pipeline avoids "stack too deep".
+# 200 runs keeps the code small: stored code costs about 1,670 gas per byte on this devnet.
+via_ir = true
 
 [lint]
 lint_on_build = false

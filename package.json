@@ -9,7 +9,7 @@
     "node": ">=23.6"
   },
   "scripts": {
-    "build": "node contracts/build-yul.ts",
+    "build": "forge build --root contracts && node contracts/build-yul.ts",
     "test": "node --test \"signer/test/*.test.ts\"",
     "test:integration": "node --test --test-concurrency=1 \"signer/test/integration/*.test.ts\""
   },

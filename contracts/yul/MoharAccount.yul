@@ -48,6 +48,17 @@ object "MoharAccount" {
             function txparam(p) -> v { v := verbatim_1i_1o(hex"b0", p) }
             function frameparam(i, p) -> v { v := verbatim_2i_1o(hex"b3", i, p) }
 
+            // Read-only getters, so a dashboard can compare the key with the one published in ENS.
+            // A frame transaction calls this account with empty calldata, so validation never enters this
+            // branch. Anything else non-empty, and any call carrying value, is refused.
+            if calldatasize() {
+                if callvalue() { revert(0, 0) }
+                switch shr(224, calldataload(0))
+                case 0xebf0c717 { mstore(0, loadimmutable("root")) return(0, 0x20) }    // root()
+                case 0x63e71ad4 { mstore(0, loadimmutable("pubSeed")) return(0, 0x20) } // pubSeed()
+                default { revert(0, 0) }
+            }
+
             // Reject any malformed transaction. Everything below is also covered by SIG_HASH, except
             // the signature bytes, so these checks matter when the device key itself has been stolen.
             if iszero(eq(txparam(0x0b), 1)) { revert(0, 0) }                      // exactly one signature
