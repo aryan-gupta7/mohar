@@ -49,7 +49,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 4 | [DEV-3](#dev-3-machine-ledger) | Machine ledger | Fri 01:00 | ✅ Done locally, Fri 08:40 |
 | 5 | [DEV-4](#dev-4-firmware-keys-and-signing) | Device keys and signing | Fri 12:00 | ✅ Done Fri ~09:15 |
 | 6 | [EF-2L](#ef-2l-alt-mempool-rules-on-a-local-sidecar) | Alt mempool rules, local sidecar | Fri 12:00 | ✅ Done Fri 08:55 |
-| 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | ✅ Done Fri ~09:55, except T6 (your power pull) |
+| 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | ✅ Done Fri 10:25, all tests |
 | 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | Wi-Fi received |
 | 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | Needs funds |
 | 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | ✅ T1–T5 passed Fri ~09:45; T6–T8 open |
@@ -355,7 +355,7 @@ First boot with no key generated one in 245 s. Both builds are in `firmware/moha
 
 ## DEV-5: Firmware transactions and key safety
 
-**Status:** ✅ Done Fri ~09:55 except **T6, which needs you to pull the power** (steps in mechanism.md Test 8c) · **Needs from you:** T6 only
+**Status:** ✅ Done Fri 10:25, including the power pull (T6) · **Needs from you:** nothing
 
 **Results (dev firmware, real ESP8266, local chain and sidecar):**
 
@@ -366,7 +366,7 @@ First boot with no key generated one in 245 s. Both builds are in `firmware/moha
 | T3 | Different content at a used leaf: `LEAF_USED` |
 | T4 | Same content: byte-identical output |
 | T5 | Crash after saving the intent, and after signing: the intent is on flash, and the board rebuilds the identical transaction |
-| T6 | **Not run: needs a real power pull** |
+| T6 | **Three real power pulls**, while the board was signing: at leaf 15, leaf 15 and leaf 6. Each time the intent was already on flash, the board resent the identical transaction twice, then signed the next report normally. (Rounds 1 and 2 landed at the same point, so they are two samples of one moment, not two different moments) |
 | T7 | All 8 rows of the reboot and nonce table behave as specified, with injected nonces |
 | T8 | Leaf 255 signs, byte-identical to TypeScript; the next request gets `KEYS_EXHAUSTED` |
 | T9 | **Three transactions built and signed entirely by the board were admitted by the sidecar and mined, four frames each. The laptop only forwarded bytes.** Report 2's `INSPECT` set the hold on the ledger |

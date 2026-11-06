@@ -177,11 +177,20 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - **DEV5-T9 passed:** three transactions built and signed by the board, admitted by the sidecar, mined, four frames each. Hold set on the ledger by the second report.
 - The board dropped off USB once during flashing (it re-enumerated at 09:40) and the upload failed; retrying worked.
 
+### About 10:05 Benchmark rerun, as you asked
+- Flashed `firmware/bench` and captured it: Keccak self-test PASS, 1,137 hashes/s, worst-case signing 884 ms, 51,560 bytes free heap, key generation estimate 226 s. Identical to the first night. Restored the real firmware: **the saved key survived** (same root `0x6c0937ea…`).
+
+### 10:12 to 10:25 DEV5-T6: three real power pulls
+- Run with you at the cable. Each pull cut the power while the board was signing, mid-stream. Round 1 landed on leaf 15, round 2 on leaf 15 again (same moment, so it counts as one sample), round 3 on leaf 6.
+- Every time: the intent was already on flash (saved before the signature existed), the board resent the identical transaction twice, and then signed the next report normally with a new leaf. No key was reused.
+- Confirmed healthy afterwards: all 18 leaf-safety checks pass.
+- Sepolia: you sent 0.1 ETH; verified on-chain at 10:00.
+
 ---
 
 ## Current state
 
-**Done:** DEV-0 to DEV-5 (except the T6 power pull) and EF-2L on the local chain, 0G-1, pulse counting on real hardware.
+**Done:** DEV-0 to DEV-5 (including the power pulls) and EF-2L on the local chain, 0G-1, pulse counting on real hardware.
 **Next:** DEV-6 (Wi-Fi, TLS and RPC on the board).
 
 **Blocked on you:**

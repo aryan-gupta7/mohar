@@ -34,7 +34,7 @@ This describes only what is **built and tested so far**. For what comes next, se
 | An unstaked paymaster is refused | **Proven, same setup** | `unstaked payer accessed payer slot 0x…01` |
 | Anything on the public devnet with our contracts | **Not proven** | Same funding block |
 | The ESP8266 holds its own key and signs transactions the alt mempool accepts | **Proven on the local chain** | DEV4-T8: board-signed report, admitted by the real sidecar code, mined, 4 frames succeeded |
-| The ESP8266 builds the whole transaction itself and keeps one-time-key safety across crashes | **Proven** (crash points injected) | DEV5-T1 to T5, T7 to T9: 31 vectors byte-identical; three device-built transactions mined. **A real power pull (T6) is yours to run** |
+| The ESP8266 builds the whole transaction itself and keeps one-time-key safety across crashes | **Proven**, including three real power pulls | DEV5-T1 to T9: 31 vectors byte-identical; three device-built transactions mined; crash points injected; power pulled mid-signing three times |
 | The ESP8266 counts a meter's pulses exactly | **Proven on the real Pico and ESP8266** | DEV7-T1 to T4 and T13: counts equal, glitches separate |
 | `qwen3.8-flash` makes reliable inspect or run decisions on meter windows | **Proven on 19 labelled scenarios, 5 runs each** | `docs/evidence/0g-1-qwen3.8-flash.json`. The policy text was written after the first 14 scenarios; 5 more were added after |
 | The ESP8266 reaches the network, holds TLS, and talks to 0G | **Not proven** | DEV-6, 0G-2 |
@@ -689,11 +689,15 @@ MOHAR_NET=local-alt node signer/tools/device-report.ts                          
 ```
 **Expected:** `PASS DEV5-T1 31 vectors match …`, `PASS DEV5-T2 …`, then `PASS` for T9a, T4, T3, T5 (both crash points), eight T7 lines, T8 (two lines) and the reset-survives-reboot line. Last: `report 1 … 0x1 0x1 0x1 0x1`, `ledger: lastSeq 3, lastTotal 120, hold true … account balance 0` and `DEV5-T9 PASS`.
 
-**The power pull (T6), which only you can do:**
+**The power pull (T6), which needs a person at the cable.** Two terminals' worth, but one at a time:
 ```sh
-uv run --no-project --with pyserial python firmware/tools/powerpull.py $ESP
+uv run --no-project --with pyserial python firmware/tools/powerpull.py $ESP start   # streams reports; leave it running
 ```
-It streams reports, each using a new key. **Unplug the board's USB cable at any moment**, plug it back in, and press Enter. **Expected:** it prints the saved state, then either resends the saved intent (`resent=1`) or says no intent was pending, then signs the next report normally and prints `PASS`. Do it three times (the plan says three), unplugging at different moments. Run `device_test.py $ESP safety` afterwards to see the board is healthy. Press RST if the board doesn't come back.
+While it prints `reports done: N`, **unplug the board's USB cable**, wait about 3 seconds and plug it back in. `start` then prints `STOPPED`. Then:
+```sh
+uv run --no-project --with pyserial python firmware/tools/powerpull.py $ESP check
+```
+**Expected:** `STATE … hasIntent=1`, `resend 1: RESULT OK resent=1 …` and `resend 2:` identical, `PASS: the saved intent was resent …`, then `next new report: RESULT OK … cleared=1` and `PASS: the board signs normally after the pull`. Repeat three times, and pull at a different moment each time (right away, a few seconds in, later). Run on 6 November at 10:25: three pulls, three passes. The board must hold the test key (`device_test.py $ESP keygen-fixed`).
 
 ### Test 8d: Pulse counting, Pico to ESP8266
 
