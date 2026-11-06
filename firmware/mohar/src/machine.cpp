@@ -38,6 +38,7 @@ void machine_begin() {
   digitalWrite(STATUS_LED, HIGH);
   digitalWrite(PULSE_LED, HIGH);
   haveCfg = config_load(&cfg);
+  if (haveCfg) frametx_set_format(cfg.format);
   nextCheckpoint = millis() + 10000;
   Serial.printf("MACHINE config=%s mode=SAFE_STOP (until the first full check)\n", haveCfg ? "present" : "missing: run provision");
 }
@@ -244,7 +245,7 @@ static void checkpoint() {
   free(raw);
   if (r == INTENT_KEYS_EXHAUSTED) { mode = MODE_SAFE_STOP; reason = R_KEYS_EXHAUSTED; }
   const char *sent = "no";
-  char txHash[80] = "";
+  char txHash[200] = "";
   if (r == INTENT_OK) {
     char *resp = (char *)malloc(400);
     if (!resp) { free(sig); Serial.println("CP error=out_of_memory"); return; }
@@ -260,7 +261,7 @@ static void checkpoint() {
       strncpy(txHash, node, sizeof(txHash) - 1);
     } else {
       sent = "rejected";
-      strncpy(txHash, resp, 60); txHash[60] = 0;
+      strncpy(txHash, resp, 190); txHash[190] = 0;
     }
     free(resp);
   }

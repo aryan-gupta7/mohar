@@ -53,6 +53,8 @@ export const LEDGER_ABI = parseAbi([
   "function operator() view returns (address)",
   "function owner() view returns (address)",
   "event Report(uint64 indexed seq, uint64 total, uint64 usage, uint256 charged, uint256 owed, uint8 mode, uint8 reason, uint8 confidence, uint8 model, uint32 salt, bytes32 sensors, string requestId)",
+  "event ReportPacked(uint64 indexed seq, uint64 total, uint64 usage, uint256 charged, uint256 owed, uint8 mode, uint8 reason, uint8 model, uint32 salt, bytes20 sensors, bytes16 requestId)",
+  "error BadPacked()",
   "event HoldSet(uint64 indexed seq)",
   "event HoldCleared(address indexed by)",
   "event TopUp(address indexed from, uint256 amount, uint256 paidArrears, uint256 credit)",
@@ -72,6 +74,27 @@ export const LEDGER_ABI = parseAbi([
   "error Overflow()",
   "error TransferFailed()",
 ]);
+
+/** The compact report's 4-byte selector, ASCII "MPR1". The ledger takes it through its fallback, so there is no ABI padding. */
+export const PACKED_SELECTOR = 0x4d505231n;
+export const PACKED_BYTES = 63;
+
+/** A 0G request id is a UUID: 16 raw bytes, not 36 characters. Anything else (empty, "dev-injected") becomes zeros, meaning "none". */
+export const uuidBytes16 = (id: string): string => (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id.replace(/-/g, "").toLowerCase() : "00".repeat(16));
+export const bytes16Uuid = (hex: string): string => {
+  const h = hex.replace(/^0x/, "").slice(0, 32);
+  return /^0+$/.test(h) ? "" : `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
+};
+
+/**
+ * Compact report, 63 bytes: selector(4) | seq(8) | total(8) | mode(1) | reason(1) | model(1) | salt(4) | sensors(20) | requestId(16).
+ * `confidence` is not carried (the model gives none). The 20 sensor bytes are the first 20 of the 32-byte window word; the rest
+ * of that word was a copy of `total` and zeros. Must match firmware/mohar/src/frametx.cpp byte for byte.
+ */
+export function encodeReportPacked(r: Report): Hex {
+  const u = (v: bigint | number, bytes: number) => BigInt(v).toString(16).padStart(bytes * 2, "0");
+  return `0x${u(PACKED_SELECTOR, 4)}${u(r.seq, 8)}${u(r.total, 8)}${u(r.mode, 1)}${u(r.reason, 1)}${u(r.model, 1)}${u(r.salt, 4)}${r.sensors.slice(2, 42)}${uuidBytes16(r.requestId)}` as Hex;
+}
 
 /** report(uint64,uint64,uint8,uint8,uint8,uint8,uint32,bytes32,string) */
 export const REPORT_SELECTOR = 0x6e5141ban;

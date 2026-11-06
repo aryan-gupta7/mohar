@@ -13,6 +13,7 @@ struct DeviceConfig {
   uint16_t checkpointS;   // seconds between checkpoints
   uint32_t sanctionedW;   // the connection's sanctioned load, for the decision model
   uint64_t maxPrio, maxFee;
+  uint8_t format;         // 0 = ABI report, 1 = compact report
 };
 bool config_load(DeviceConfig *c);
 bool config_save(const DeviceConfig &c);

@@ -206,6 +206,34 @@ test("only the owner changes the operator or withdraws, and never more than earn
   await solvent(logic);
 });
 
+test("compact report: 63 bytes in, the same accounting as the ABI report, the full request id in the event", async () => {
+  const { PACKED_SELECTOR, encodeReportPacked, bytes16Uuid } = await import("../../src/mohar.ts");
+  const fresh = await deployLedger({ owner: deployerAddress(), operator, tariffWeiPerPulse: TARIFF });
+  await send(fresh, "bindMachine", [machineEoa]);
+  await send(fresh, "topUp", [], { value: 100n * TARIFF });
+  const uuid = "e44e6d2c-a218-4e75-b422-041096bba39f";
+  const r = report(1n, 30n, MODE.INSPECT, { reason: 4, model: 1, salt: 77, sensors: `0x${"ab".repeat(32)}`, requestId: uuid });
+  const data = encodeReportPacked(r);
+  assert.equal((data.length - 2) / 2, 63, "63 bytes");
+  assert.equal(data.slice(0, 10), "0x4d505231");
+  const strangerTx = rpc("eth_call", [{ from: stranger, to: fresh, data }, "latest"]);
+  await reverts(strangerTx, "NotMachine");
+  await reverts(rpc("eth_call", [{ from: machineEoa, to: fresh, data: data.slice(0, -2) as Hex }, "latest"]), "BadPacked");
+  await reverts(rpc("eth_call", [{ from: machineEoa, to: fresh, data: ("0xdeadbeef" + data.slice(10)) as Hex }, "latest"]), "BadPacked");
+  await reverts(rpc("eth_call", [{ from: machineEoa, to: fresh, data: (data.slice(0, 42) + "09" + data.slice(44)) as Hex }, "latest"]), "BadMode");
+  const { hash, receipt } = await sendLegacy({ to: fresh, data, key: machineKey });
+  assert.equal(receipt.status, "0x1", hash);
+  const [ev] = parseEventLogs({ abi: LEDGER_ABI, logs: receipt.logs, eventName: "ReportPacked" }) as any[];
+  assert.deepEqual([ev.args.seq, ev.args.total, ev.args.usage, ev.args.charged, ev.args.owed, ev.args.mode, ev.args.reason, ev.args.model, ev.args.salt], [1n, 30n, 30n, 30n * TARIFF, 0n, MODE.INSPECT, 4, 1, 77]);
+  assert.equal(ev.args.sensors, `0x${"ab".repeat(20)}`);
+  assert.equal(bytes16Uuid(ev.args.requestId), uuid, "the full request id is on chain");
+  const s = await status(fresh);
+  assert.deepEqual([s.credit, s.earned, s.arrears, s.hold, s.lastSeq, s.lastTotal], [70n * TARIFF, 30n * TARIFF, 0n, true, 1n, 30n]);
+  await reverts(rpc("eth_call", [{ from: machineEoa, to: fresh, data: encodeReportPacked(report(1n, 31n)) }, "latest"]), "StaleSeq");
+  await reverts(rpc("eth_call", [{ from: machineEoa, to: fresh, data: encodeReportPacked(report(2n, 29n)) }, "latest"]), "TotalWentDown");
+  await solvent(fresh);
+});
+
 test("DEV3-T12: the account's root() and pubSeed() return its key, and it refuses anything else", async () => {
   assert.equal(await rpc("eth_call", [{ to: account, data: "0xebf0c717" }, "latest"]), toHex(key.root));
   assert.equal(await rpc("eth_call", [{ to: account, data: "0x63e71ad4" }, "latest"]), toHex(key.pubSeedWord));

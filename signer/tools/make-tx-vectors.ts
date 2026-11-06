@@ -5,13 +5,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { keccak_256 } from "@noble/hashes/sha3.js";
 import { toWire } from "@forshtat/hegota-support/rpc";
-import { buildTx, digestOf, encodeReport, hashOf, rawTx, steps, DEVICE_STEP_LIMIT, type Report } from "../src/mohar.ts";
+import { buildTx, digestOf, encodeReport, encodeReportPacked, hashOf, rawTx, steps, DEVICE_STEP_LIMIT, type Report } from "../src/mohar.ts";
 import { WotsKey, toHex } from "../src/wots.ts";
 import { signTx } from "../src/mohar.ts";
 import type { Address, Hex } from "viem";
 
 // The firmware tests use this seed's key (firmware/vectors/wots.json), so signed bytes can be compared too.
 const testKey = new WotsKey(keccak_256(new TextEncoder().encode("mohar device test seed v1")));
+const PACKED = process.env.FORMAT === "packed"; // FORMAT=packed writes tx-packed.json
+const dataOf = (r: Report) => (PACKED ? encodeReportPacked(r) : encodeReport(r));
 const addr = (label: string) => toHex(keccak_256(new TextEncoder().encode(label)).slice(0, 20)) as Address;
 const sender = addr("vector sender"), ledger = addr("vector ledger"), paymaster = addr("vector paymaster");
 const patternSig = toHex(Uint8Array.from({ length: 2400 }, (_, i) => (i * 13 + 5) & 255)) as Hex;
@@ -48,7 +50,7 @@ cases.push({ name: "all zero except nonce", nonce: 1n, prio: 0n, maxFee: 0n, rep
 const guardBase: Report = { seq: 9n, total: 0n, mode: 0, reason: 0, confidence: 0, model: 0, salt: 0, sensors: sensorsOf(99), requestId: "" };
 let guardTotal = 0n;
 for (; guardTotal < 2_000_000n; guardTotal++) {
-  const t = buildTx({ account: sender, nonce: 7n, target: ledger, data: encodeReport({ ...guardBase, total: guardTotal }), paymaster, fees: { maxFeePerGas: 2_000_000_000n, maxPriorityFeePerGas: 1_000_000n } });
+  const t = buildTx({ account: sender, nonce: 7n, target: ledger, data: dataOf({ ...guardBase, total: guardTotal }), paymaster, fees: { maxFeePerGas: 2_000_000_000n, maxPriorityFeePerGas: 1_000_000n } });
   if (steps(t) > DEVICE_STEP_LIMIT) break;
 }
 cases.push({ name: "step guard: first digest above 630 steps", nonce: 7n, prio: 1_000_000n, maxFee: 2_000_000_000n, report: { ...guardBase, total: guardTotal } });
@@ -56,7 +58,7 @@ cases.push({ name: "step guard: first digest above 630 steps", nonce: 7n, prio: 
 const out = cases.map((c) => {
   // The device's guard: raise the salt until the digest fits.
   let report = c.report;
-  const make = (r: Report) => buildTx({ account: sender, nonce: c.nonce, target: ledger, data: encodeReport(r), paymaster, fees: { maxFeePerGas: c.maxFee, maxPriorityFeePerGas: c.prio } });
+  const make = (r: Report) => buildTx({ account: sender, nonce: c.nonce, target: ledger, data: dataOf(r), paymaster, fees: { maxFeePerGas: c.maxFee, maxPriorityFeePerGas: c.prio } });
   let tx = make(report);
   const firstSteps = steps(tx);
   while (steps(tx) > DEVICE_STEP_LIMIT) { report = { ...report, salt: (report.salt + 1) >>> 0 }; tx = make(report); }
@@ -69,7 +71,7 @@ const out = cases.map((c) => {
     expect: {
       steps: steps(tx),
       salt: report.salt,
-      calldata: hexNo0x(encodeReport(report)),
+      calldata: hexNo0x(dataOf(report)),
       digest: hexNo0x(toHex(digestOf(tx))),
       raw: hexNo0x(rawTx(withSig)),
       json: toWire(withSig),
@@ -80,6 +82,6 @@ const out = cases.map((c) => {
     },
   };
 });
-const file = path.resolve(import.meta.dirname, "../../firmware/vectors/tx.json");
+const file = path.resolve(import.meta.dirname, PACKED ? "../../firmware/vectors/tx-packed.json" : "../../firmware/vectors/tx.json");
 fs.writeFileSync(file, JSON.stringify({ description: "Report transaction vectors. `command` is the dev console's build arguments; signature is the stand-in pattern byte i = (i*13+5)&255.", sender, ledger, paymaster, cases: out }, (_, v) => (typeof v === "bigint" ? v.toString() : v), 1) + "\n");
 console.log(`${out.length} tx vectors; ${out.filter((o) => o.firstSteps > DEVICE_STEP_LIMIT).length} need the step guard (guard case total=${guardTotal}); raw sizes ${Math.min(...out.map((o) => o.expect.raw.length / 2))}..${Math.max(...out.map((o) => o.expect.raw.length / 2))} bytes`);

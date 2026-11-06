@@ -1,5 +1,6 @@
 // Turns a ledger's `Report` events into episode-log records. The chain is the source of truth: every record can be
 // rebuilt from the chain alone, and replay.ts does exactly that to check a downloaded log.
+import { bytes16Uuid } from "../signer/src/mohar.ts";
 import { parseEventLogs, type Address, type Hex } from "viem";
 import { rpc } from "../signer/src/devnet.ts";
 import { LEDGER_ABI } from "../signer/src/mohar.ts";
@@ -65,8 +66,19 @@ export type ChainReport = { seq: number; tx: Hex; block: number; args: any; logI
 
 export async function readReports(rpcUrl: string, ledger: Address, fromSeq = 0): Promise<ChainReport[]> {
   const logs = await rpc<any[]>("eth_getLogs", [{ address: ledger, fromBlock: "0x0", toBlock: "latest" }], rpcUrl);
-  const parsed = parseEventLogs({ abi: LEDGER_ABI, eventName: "Report", logs: logs as any });
-  return parsed
+  // Both report formats: the ABI `Report` (request id as a string) and the compact `ReportPacked` (request id as 16 raw bytes, and a
+  // 20-byte sensors word; the 32-byte word's cumulative count is the report's own `total`). Normalised to one shape.
+  const full = parseEventLogs({ abi: LEDGER_ABI, eventName: "Report", logs: logs as any }) as any[];
+  const compact = (parseEventLogs({ abi: LEDGER_ABI, eventName: "ReportPacked", logs: logs as any }) as any[]).map((l) => ({
+    ...l,
+    args: {
+      ...l.args,
+      confidence: 0,
+      requestId: bytes16Uuid(l.args.requestId),
+      sensors: `0x${l.args.sensors.slice(2)}${BigInt(l.args.total).toString(16).padStart(16, "0")}00000000` as Hex,
+    },
+  }));
+  return [...full, ...compact]
     .map((l: any) => ({ seq: Number(l.args.seq), tx: l.transactionHash as Hex, block: Number(l.blockNumber), args: l.args, logIndex: Number(l.logIndex) }))
     .filter((r) => r.seq > fromSeq)
     .sort((a, b) => a.seq - b.seq);

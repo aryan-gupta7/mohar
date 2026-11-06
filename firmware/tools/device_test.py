@@ -129,8 +129,11 @@ def t_seed_leak(secret_hex):
 
 
 # ----------------------------------------------------------------------------- DEV-5
+FORMAT = "abi"
+
+
 def tx_vectors():
-    return json.load(open(f"{VEC}/tx.json"))["cases"]
+    return json.load(open(f"{VEC}/tx.json" if FORMAT == "abi" else f"{VEC}/tx-packed.json"))["cases"]
 
 
 def with_nonce(cmd, nonce):
@@ -154,6 +157,16 @@ def read_build(dev):
 
 
 def t_tx_vectors(dev):
+    global FORMAT
+    for fmt in ("abi", "packed"):
+        FORMAT = fmt
+        dev.cmd("format " + ("1" if fmt == "packed" else "0"), "OK", 5)
+        print(f"  -- {fmt} report format")
+        _t_tx_vectors(dev)
+    FORMAT = "packed"; dev.cmd("format 1", "OK", 5)
+
+
+def _t_tx_vectors(dev):
     bad = 0
     for c in tx_vectors():
         dev.s.reset_input_buffer(); dev.buf = b""
@@ -186,6 +199,7 @@ def cmd_for(nonce_case):
 
 
 def t_leaf_safety(dev):
+    dev.cmd("format 0", "OK", 5)  # the signed-byte vectors in tx.json are for the ABI report
     cases = tx_vectors()
     n1 = cases[0]          # nonce 1
     cmd1 = n1["command"]

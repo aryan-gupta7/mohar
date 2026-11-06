@@ -110,12 +110,12 @@ static void handle(char *cmd) {
   if (strcmp(cmd, "info") == 0) { cmdInfo(); return; }
   if (strncmp(cmd, "provision ", 10) == 0) {
     // provision <sender> <ledger> <paymaster> <transport 0|1> <host> <port> <checkpointS> <sanctionedW> <maxPrio> <maxFee>
-    char *tok[10];
+    char *tok[11];
     int n = 0;
-    for (char *t = strtok(cmd + 10, " "); t && n < 10; t = strtok(nullptr, " ")) tok[n++] = t;
+    for (char *t = strtok(cmd + 10, " "); t && n < 11; t = strtok(nullptr, " ")) tok[n++] = t;
     DeviceConfig c;
     memset(&c, 0, sizeof(c));
-    if (n != 10 || !parseHex20(tok[0], c.sender) || !parseHex20(tok[1], c.ledger) || !parseHex20(tok[2], c.paymaster) || strlen(tok[4]) >= sizeof(c.host)) { Serial.println("ERROR usage: provision <sender> <ledger> <paymaster> <0|1> <host> <port> <checkpointS> <sanctionedW> <maxPrio> <maxFee>"); return; }
+    if ((n != 10 && n != 11) || !parseHex20(tok[0], c.sender) || !parseHex20(tok[1], c.ledger) || !parseHex20(tok[2], c.paymaster) || strlen(tok[4]) >= sizeof(c.host)) { Serial.println("ERROR usage: provision <sender> <ledger> <paymaster> <0|1> <host> <port> <checkpointS> <sanctionedW> <maxPrio> <maxFee>"); return; }
     c.transport = atoi(tok[3]);
     strcpy(c.host, tok[4]);
     c.port = atoi(tok[5]);
@@ -123,8 +123,10 @@ static void handle(char *cmd) {
     c.sanctionedW = atoi(tok[7]);
     c.maxPrio = strtoull(tok[8], nullptr, 10);
     c.maxFee = strtoull(tok[9], nullptr, 10);
+    c.format = n == 11 ? atoi(tok[10]) : 1;  // the compact report unless told otherwise
     if (!config_save(c)) { Serial.println("ERROR config_write_failed"); return; }
     machine_reload_config();
+    frametx_set_format(c.format);
     Serial.println("PROVISIONED");
     return;
   }
@@ -301,6 +303,7 @@ static void handle(char *cmd) {
   if (strcmp(cmd, "state-reset") == 0) { intent_reset(); Serial.println("OK"); return; }
   if (strncmp(cmd, "crash-at", 8) == 0) { intent_crash_at(cmd[8] == ' ' ? cmd + 9 : ""); Serial.println("OK"); return; }
   if (strncmp(cmd, "zgblock ", 8) == 0) { zerog_set_blackhole(strcmp(cmd + 8, "on") == 0); Serial.println("OK"); return; }
+  if (strncmp(cmd, "format ", 7) == 0) { frametx_set_format(atoi(cmd + 7)); Serial.println("OK"); return; }
   if (strncmp(cmd, "loop ", 5) == 0) { machine_enable(strcmp(cmd + 5, "on") == 0); Serial.println("OK"); return; }
   if (strcmp(cmd, "checkpoint-now") == 0) { machine_checkpoint_now(); Serial.println("OK"); return; }
   if (strncmp(cmd, "inject ", 7) == 0) {  // inject none|run|inspect|fail: stands in for 0G in tests. Dev builds only.

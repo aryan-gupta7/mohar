@@ -70,7 +70,41 @@ static void frame(Buf &b, uint8_t mode, uint8_t flags, const uint8_t *target, ui
   listEnd(b, f);
 }
 
+static uint8_t g_format = 1;
+void frametx_set_format(uint8_t f) { g_format = f ? 1 : 0; }
+uint8_t frametx_format() { return g_format; }
+
+static int hexv(uint8_t c) { return c >= '0' && c <= '9' ? c - '0' : (c | 32) >= 'a' && (c | 32) <= 'f' ? (c | 32) - 'a' + 10 : -1; }
+// A 0G request id is a UUID (36 characters). Packs it into 16 bytes; anything else becomes zeros, meaning "none".
+static void uuid16(const uint8_t *id, size_t len, uint8_t out[16]) {
+  memset(out, 0, 16);
+  if (len != 36) return;
+  uint8_t tmp[16];
+  int n = 0;
+  for (size_t i = 0; i < 36; i++) {
+    if (i == 8 || i == 13 || i == 18 || i == 23) { if (id[i] != '-') return; continue; }
+    int hi = hexv(id[i]);
+    if (hi < 0 || i + 1 >= 36) return;
+    int lo = hexv(id[i + 1]);
+    if (lo < 0) return;
+    tmp[n++] = (hi << 4) | lo;
+    i++;
+  }
+  if (n == 16) memcpy(out, tmp, 16);
+}
+
 size_t frametx_calldata(const ReportParams &p, uint8_t *out, size_t cap) {
+  if (g_format == 1) {  // selector "MPR1" | seq(8) | total(8) | mode | reason | model | salt(4) | sensors(20) | request id (16)
+    if (cap < 63) return 0;
+    uint8_t *w = out;
+    w[0] = 0x4d; w[1] = 0x50; w[2] = 0x52; w[3] = 0x31;
+    for (int i = 0; i < 8; i++) { w[4 + i] = (p.seq >> (56 - 8 * i)) & 0xff; w[12 + i] = (p.total >> (56 - 8 * i)) & 0xff; }
+    w[20] = p.mode; w[21] = p.reason; w[22] = p.model;
+    w[23] = p.salt >> 24; w[24] = p.salt >> 16; w[25] = p.salt >> 8; w[26] = p.salt;
+    memcpy(w + 27, p.sensors, 20);
+    uuid16(p.reqId, p.reqLen, w + 47);
+    return 63;
+  }
   size_t padded = ((size_t)p.reqLen + 31) / 32 * 32;
   size_t total = 4 + 9 * 32 + 32 + padded;
   if (total > cap) return 0;
