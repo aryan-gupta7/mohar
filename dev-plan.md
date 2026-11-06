@@ -54,7 +54,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | Needs funds |
 | 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | ✅ T1–T5 passed Fri ~09:45; T6–T8 open |
 | 11 | [EF-2](#ef-2-the-alt-mempool-proof) | Alt mempool proof, public | After EF-1 | Needs funds |
-| 12 | [ENS-1](#ens-1-fleet-name-and-registry) | Fleet name and registry | Fri 16:00 | Needs Sepolia ETH |
+| 12 | [ENS-1](#ens-1-fleet-name-and-registry) | Fleet name and registry | Fri 16:00 | ✅ Done Fri ~10:55 |
 | 13 | [DEV-7](#dev-7-meter-signal-acquisition-and-device-behaviour) | Meter signal acquisition and device behaviour | Fri 18:00 | Partly done: counting T1–T4, T13 passed; T5–T12 open |
 | 14 | [EF-3](#ef-3-device-signed-transaction-with-the-laptop-off) | Device-signed, laptop off | Fri 19:00 | |
 | 15 | [ENS-2](#ens-2-machine-identity-and-permissions) | Machine identity and roles | Fri 19:00 | |
@@ -774,7 +774,19 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 
 ## ENS-1: Fleet name and registry
 
-**Status:** Blocked: needs Sepolia ETH · **Target:** Fri 14:00 · **Depends on:** nothing · **Needs from you:** 0.05 Sepolia ETH
+**Status:** ✅ Done Fri ~10:55, on Sepolia · **Needs from you:** nothing
+
+**Result:** `mohar.eth` is registered to our deployer address for 28 days (0.61 test USDC). Evidence: [docs/evidence/ens-1.json](docs/evidence/ens-1.json), with every transaction hash.
+
+| Test | Result |
+|---|---|
+| T1 | `isAvailable("mohar")` is now false |
+| T2 | `getSubregistry("mohar")` = `0x53AD…eA01` and `getResolver("mohar")` = `0x7c07…B6ab`, both the contracts we deployed |
+| T3 | The Universal Resolver (`0xeEeE…EeEe`) finds `0x7c07…B6ab` as the resolver of `mohar.eth` |
+| T4 | The script waited the 60 s commit age (63 s) before registering |
+| T5 | Hashes saved in the evidence file |
+
+**What the Sepolia contracts are really like (found by testing, not from the docs):** the deployed `UserRegistry` and `PermissionedResolver` are an older version than the `contracts-v2` repo head. Both initialize with a list of `(account, roles)` pairs, and the resolver is **name-based** (`setText(bytes name, string key, string value)`, `setAddress(bytes name, uint256 coinType, bytes value)`, `grantSetterRoles(bytes name, address)`, `initialize((address,uint256)[], bytes[])`). The first registration attempt reverted with empty data until I read the real selectors from the deployed bytecode. ENS-2 must use these ABIs, and test each call on the live contracts.
 
 **What gets built:** `ens/config.ts`, `ens/01-register.ts`, `docs/evidence/ens-1.md`.
 

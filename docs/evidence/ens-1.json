@@ -1,0 +1,19 @@
+{
+  "network": "sepolia",
+  "label": "mohar",
+  "owner": "0xcfb296f635254A4B3281D2e285174E98D643Ef60",
+  "startedAt": "2026-11-06T06:32:42.526Z",
+  "price": "0.613701 test USDC for 28 days",
+  "sepoliaBalanceWei": "99999999994225603",
+  "tx mint test USDC": "0x5d78d27da9342e7b3e28b026825ed6a830238aca209862d65991bf9126dcbb73",
+  "tx approve registrar": "0x79e105e4039eb140de1400fedcf54f2b0029ca07ccf48c6509e532a27b99f11e",
+  "tx deploy fleet PermissionedResolver": "0xe892cf4afbf611f0864c910956de2c6eab18159f17f8a590f1e5e6cdd688f488",
+  "tx deploy fleet UserRegistry": "0x8f565933bf931d0144a022f5a4f495bf06d198e068d80c4eb1d559300a5ac6b0",
+  "fleetResolver": "0x7c0768Ca185865Ab3A10D65e5CFD8Fc29288B6ab",
+  "fleetRegistry": "0x53AD330F425412DCFFf888d58d7CB21f28BEeA01",
+  "tx commit": "0x267d8499df52d3a90bb52d33110e21dbd8b3cc6c3ee9b1ba493c616d390bf859",
+  "tx register": "0x717ed9a4a5155a019eb6e1fa79d238d03dc4bcf09b779d2e878af04e6a41b3fa",
+  "registeredInBlock": "12074832",
+  "ENS1-T1 isAvailable now": false,
+  "finishedAt": "2026-11-06T06:35:15.469Z"
+}

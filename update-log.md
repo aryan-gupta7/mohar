@@ -186,12 +186,21 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - Confirmed healthy afterwards: all 18 leaf-safety checks pass.
 - Sepolia: you sent 0.1 ETH; verified on-chain at 10:00.
 
+### About 10:20 DEV-6 first attempt: blocked by the hotspot band
+- Wrote the networking code (`net.cpp`: Wi-Fi, TLS 1.2 via BearSSL, JSON-RPC over HTTPS, timeouts, heap tracking) and console commands `wifi` and `rpc`. It compiles (RAM 45.8%).
+- **The board couldn't join your hotspot.** My scan from the laptop shows it only on 5 GHz (channel 116); the ESP8266 can't see 5 GHz. You switched it to 2.4 GHz at about 10:45; a rescan at 10:50 still showed only 5 GHz. Waiting for it to be toggled.
+
+### 10:30 to 10:55 ENS-1: `mohar.eth` registered on Sepolia
+- Read the ENSv2 deployment table, confirmed every contract has code, `mohar.eth` available at 0.61 test USDC, commit age 60 s, minimum term 28 days.
+- **First attempt reverted with empty data**, after minting USDC and approving (harmless). Found by simulating that the factory itself works, and the `initialize` call fails. **The deployed contracts are an older version than the source repo:** extracting the selectors from their bytecode showed `initialize((address,uint256)[])`, a name-based resolver, and `grantSetterRoles(bytes,address)`. The registrar's `register` and `makeCommitment` selectors do match.
+- Fixed the script, reran: minted, approved, deployed the fleet resolver and registry through the factory, committed, waited 63 s, registered. **ENS1-T1 to T5 pass.** Cost: about 0.00000001 Sepolia ETH of gas. Balance is still 0.0999999… ETH.
+
 ---
 
 ## Current state
 
-**Done:** DEV-0 to DEV-5 (including the power pulls) and EF-2L on the local chain, 0G-1, pulse counting on real hardware.
-**Next:** DEV-6 (Wi-Fi, TLS and RPC on the board).
+**Done:** DEV-0 to DEV-5 (including the power pulls) and EF-2L on the local chain, 0G-1, ENS-1 on Sepolia, pulse counting on real hardware.
+**Next:** ENS-2 (per-meter identity and permissions). **DEV-6 waits for the hotspot to broadcast on 2.4 GHz.**
 
 **Blocked on you:**
 1. Devnet ETH for `0xcfb296f635254A4B3281D2e285174E98D643Ef60`.

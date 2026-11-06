@@ -6,6 +6,8 @@
 #include "meter.h"
 #include "frametx.h"
 #include "intent.h"
+#include "net.h"
+#include <ESP8266WiFi.h>
 
 static char line[560];
 static size_t lineLen = 0;
@@ -109,6 +111,25 @@ static void handle(char *cmd) {
     return;
   }
 #ifdef MOHAR_DEV
+  if (strcmp(cmd, "wifi") == 0) {
+    uint32_t t0 = millis();
+    bool ok = net_wifi_connect(30000);
+    Serial.printf("WIFI ok=%d ms=%u ip=%s rssi=%d heap=%u\n", ok, millis() - t0, WiFi.localIP().toString().c_str(), WiFi.RSSI(), ESP.getFreeHeap());
+    return;
+  }
+  if (strncmp(cmd, "rpc ", 4) == 0) {  // rpc <host> <method>  : JSON-RPC with no params to https://host/rpc
+    char *sp = strchr(cmd + 4, ' ');
+    if (!sp) { Serial.println("ERROR usage: rpc <host> <method>"); return; }
+    *sp = 0;
+    char body[160];
+    snprintf(body, sizeof(body), "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"%s\",\"params\":[]}", sp + 1);
+    static char resp[1024];
+    NetStats st;
+    int status = net_post_json(cmd + 4, 443, "/rpc", body, strlen(body), resp, sizeof(resp), &st, 20000);
+    Serial.printf("RPC status=%d connectMs=%u totalMs=%u heapBefore=%u heapLowest=%u len=%u\n", status, st.connectMs, st.totalMs, st.heapBefore, st.heapLowest, (unsigned)st.respLen);
+    Serial.printf("BODY %s\n", resp);
+    return;
+  }
   if (strncmp(cmd, "build ", 6) == 0 || strncmp(cmd, "report ", 7) == 0) {
     bool isReport = cmd[0] == 'r';
     ReportParams p;
