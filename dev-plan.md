@@ -49,7 +49,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 4 | [DEV-3](#dev-3-machine-ledger) | Machine ledger | Fri 01:00 | ✅ Done locally, Fri 08:40 |
 | 5 | [DEV-4](#dev-4-firmware-keys-and-signing) | Device keys and signing | Fri 12:00 | ✅ Done Fri ~09:15 |
 | 6 | [EF-2L](#ef-2l-alt-mempool-rules-on-a-local-sidecar) | Alt mempool rules, local sidecar | Fri 12:00 | ✅ Done Fri 08:55 |
-| 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | Next |
+| 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | ✅ Done Fri ~09:55, except T6 (your power pull) |
 | 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | Wi-Fi received |
 | 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | Needs funds |
 | 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | Needs API key |
@@ -355,7 +355,25 @@ First boot with no key generated one in 245 s. Both builds are in `firmware/moha
 
 ## DEV-5: Firmware transactions and key safety
 
-**Status:** Not started · **Target:** Fri 05:30 · **Depends on:** DEV-3, DEV-4 · **Needs from you:** nothing
+**Status:** ✅ Done Fri ~09:55 except **T6, which needs you to pull the power** (steps in mechanism.md Test 8c) · **Needs from you:** T6 only
+
+**Results (dev firmware, real ESP8266, local chain and sidecar):**
+
+| Test | Result |
+|---|---|
+| T1 | **31 of 31 vectors** match the library on calldata, digest, raw bytes and JSON. They cross every RLP boundary: nonces 1, 2, 127, 128, 129, 255, 256; request IDs of 0, 16, 36, 64 bytes; fees from 0 to 2^64−1 |
+| T2 | A digest needing 660 steps ended at 480 with salt 1. No signature is made for a rejected digest, since the guard runs before any key is touched |
+| T3 | Different content at a used leaf: `LEAF_USED` |
+| T4 | Same content: byte-identical output |
+| T5 | Crash after saving the intent, and after signing: the intent is on flash, and the board rebuilds the identical transaction |
+| T6 | **Not run: needs a real power pull** |
+| T7 | All 8 rows of the reboot and nonce table behave as specified, with injected nonces |
+| T8 | Leaf 255 signs, byte-identical to TypeScript; the next request gets `KEYS_EXHAUSTED` |
+| T9 | **Three transactions built and signed entirely by the board were admitted by the sidecar and mined, four frames each. The laptop only forwarded bytes.** Report 2's `INSPECT` set the hold on the ledger |
+
+**A bug the tests found:** a state reset restarted the sequence counter at 0, so after a reboot an older, higher-numbered state slot won. Fixed, with a regression test.
+
+**Design as built:** the key-safety state is two alternating checksummed files, so power loss during a write leaves the other intact. The state is tied to the key's root, so a new key starts a fresh counter.
 
 **Why:** so far the laptop builds the digest. If the laptop kept that job, a compromised laptop could get the device to sign anything. The device must build what it signs, and it must never misuse a one-time key, even if power fails at the worst moment.
 

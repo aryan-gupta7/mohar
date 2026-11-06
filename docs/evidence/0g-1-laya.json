@@ -1,0 +1,155 @@
+{
+  "model": "laya",
+  "base": "https://router-api.0g.ai/v1",
+  "runs": 3,
+  "threshold": 0.5,
+  "at": "2026-11-06T03:52:41.739Z",
+  "p95Ms": 852,
+  "maxBytes": 1411,
+  "requestIdMatch": {
+    "matched": 0,
+    "seen": 42
+  },
+  "results": [
+    {
+      "name": "idle standby",
+      "expect": "run",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.5483,
+      "minProb": 0.5483,
+      "maxProb": 0.5483,
+      "sampleRequestId": "b7bf5c18-7644-4ab1-b993-26d4ac8839a8"
+    },
+    {
+      "name": "normal household",
+      "expect": "run",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.5537,
+      "minProb": 0.5537,
+      "maxProb": 0.5537,
+      "sampleRequestId": "1183e603-5f61-4f03-b1a8-fe5794dfd335"
+    },
+    {
+      "name": "normal evening",
+      "expect": "run",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.5399,
+      "minProb": 0.5399,
+      "maxProb": 0.5399,
+      "sampleRequestId": "002dcc29-a9c5-4bab-8a3b-3ef193f32378"
+    },
+    {
+      "name": "heavy but sanctioned",
+      "expect": "run",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.5426,
+      "minProb": 0.5426,
+      "maxProb": 0.5426,
+      "sampleRequestId": "669ad643-3dba-4a4b-a88d-73b289c766f3"
+    },
+    {
+      "name": "busy but within limit",
+      "expect": "run",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.5342,
+      "minProb": 0.5342,
+      "maxProb": 0.5342,
+      "sampleRequestId": "185b8b20-9636-4afe-b4b9-ca3ab6b069ea"
+    },
+    {
+      "name": "above sanctioned load",
+      "expect": "inspect",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.5435,
+      "minProb": 0.5435,
+      "maxProb": 0.5435,
+      "sampleRequestId": "62a0ba59-6b6d-492c-84bd-6132e7bfbd24"
+    },
+    {
+      "name": "far above sanctioned load",
+      "expect": "inspect",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.5465,
+      "minProb": 0.5465,
+      "maxProb": 0.5465,
+      "sampleRequestId": "ebec3630-cefb-4b8a-876d-04917e43e7eb"
+    },
+    {
+      "name": "sudden silence after load",
+      "expect": "inspect",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.5581,
+      "minProb": 0.5581,
+      "maxProb": 0.5581,
+      "sampleRequestId": "7736dbd3-c3bf-4557-a97c-c91770da89c8"
+    },
+    {
+      "name": "one glitch only",
+      "expect": "run",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.617,
+      "minProb": 0.617,
+      "maxProb": 0.617,
+      "sampleRequestId": "6dfee110-0f19-469e-b5b6-47454ff89bd3"
+    },
+    {
+      "name": "repeated glitches",
+      "expect": "inspect",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.5896,
+      "minProb": 0.5896,
+      "maxProb": 0.5896,
+      "sampleRequestId": "88c60e9f-af09-4bdf-b7db-8b8f20ac11c1"
+    },
+    {
+      "name": "stuck low line",
+      "expect": "inspect",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.5923,
+      "minProb": 0.5923,
+      "maxProb": 0.5923,
+      "sampleRequestId": "b801663b-1c24-4636-8bcf-b3a1f83b533f"
+    },
+    {
+      "name": "irregular timing",
+      "expect": "inspect",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.5572,
+      "minProb": 0.5572,
+      "maxProb": 0.5572,
+      "sampleRequestId": "ca54d814-963a-4c91-af19-1a2670ad0a2c"
+    },
+    {
+      "name": "low credit, normal usage",
+      "expect": "run",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.5537,
+      "minProb": 0.5537,
+      "maxProb": 0.5537,
+      "sampleRequestId": "464564af-e53b-4fe0-aa4e-1c7569fb0f67"
+    },
+    {
+      "name": "borderline just over sanction",
+      "expect": "inspect",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.5626,
+      "minProb": 0.5626,
+      "maxProb": 0.5626,
+      "sampleRequestId": "5cabe107-2cee-42f4-b316-834569cb1c78"
+    }
+  ]
+}

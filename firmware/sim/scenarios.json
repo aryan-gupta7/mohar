@@ -282,6 +282,107 @@
         "credit_pulses_left": 2000,
         "hold": false
       }
+    },
+    {
+      "name": "moderate overload",
+      "expect": "inspect",
+      "why": "6.5 kW sustained against a 5 kW sanction",
+      "window": {
+        "window_s": 60,
+        "valid_pulses": 122,
+        "glitches": 0,
+        "stuck_low": 0,
+        "avg_watts": 6500,
+        "peak_watts": 6800,
+        "longest_gap_s": 0.6
+      },
+      "context": {
+        "sanctioned_load_w": 5000,
+        "meter_max_w": 13800,
+        "credit_pulses_left": 2000,
+        "hold": false
+      }
+    },
+    {
+      "name": "load resumes after an outage",
+      "expect": "run",
+      "why": "previous window had no load, now an ordinary 900 W",
+      "window": {
+        "window_s": 60,
+        "valid_pulses": 19,
+        "glitches": 0,
+        "stuck_low": 0,
+        "avg_watts": 900,
+        "peak_watts": 1000,
+        "longest_gap_s": 3.5,
+        "previous_avg_watts": 0
+      },
+      "context": {
+        "sanctioned_load_w": 5000,
+        "meter_max_w": 13800,
+        "credit_pulses_left": 2000,
+        "hold": false
+      }
+    },
+    {
+      "name": "two glitches",
+      "expect": "run",
+      "why": "two short spikes in a minute is within normal interference",
+      "window": {
+        "window_s": 60,
+        "valid_pulses": 28,
+        "glitches": 2,
+        "stuck_low": 0,
+        "avg_watts": 1300,
+        "peak_watts": 1500,
+        "longest_gap_s": 2.4
+      },
+      "context": {
+        "sanctioned_load_w": 5000,
+        "meter_max_w": 13800,
+        "credit_pulses_left": 2000,
+        "hold": false
+      }
+    },
+    {
+      "name": "brief peak within sanction",
+      "expect": "run",
+      "why": "average 1.2 kW, one 4.8 kW burst, all under the sanction",
+      "window": {
+        "window_s": 60,
+        "valid_pulses": 22,
+        "glitches": 0,
+        "stuck_low": 0,
+        "avg_watts": 1200,
+        "peak_watts": 4800,
+        "longest_gap_s": 3
+      },
+      "context": {
+        "sanctioned_load_w": 5000,
+        "meter_max_w": 13800,
+        "credit_pulses_left": 2000,
+        "hold": false
+      }
+    },
+    {
+      "name": "glitchy and irregular",
+      "expect": "inspect",
+      "why": "3 glitches and spacing that does not look like a real load",
+      "window": {
+        "window_s": 60,
+        "valid_pulses": 15,
+        "glitches": 3,
+        "stuck_low": 0,
+        "avg_watts": 700,
+        "peak_watts": 8000,
+        "longest_gap_s": 18
+      },
+      "context": {
+        "sanctioned_load_w": 5000,
+        "meter_max_w": 13800,
+        "credit_pulses_left": 2000,
+        "hold": false
+      }
     }
   ]
 }

@@ -3,6 +3,7 @@
 #include <ESP8266WiFi.h>
 #include "console.h"
 #include "keystore.h"
+#include "meter.h"
 
 static void printHexLine(const uint8_t *b, size_t n) {
   for (size_t i = 0; i < n; i++) Serial.printf("%02x", b[i]);
@@ -26,9 +27,11 @@ void setup() {
   Serial.print("KEY READY root=0x"); printHexLine(keystore::root(), 32);
   Serial.print(" pubSeed=0x"); printHexLine(keystore::pubSeed(), 16);
   Serial.printf(" ms=%u source=%s\n", ms, generated ? "generated" : "loaded");
+  meter_begin();
 }
 
 void loop() {
+  meter_poll();
   console_poll();
   delay(1);
 }

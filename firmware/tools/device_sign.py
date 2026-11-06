@@ -49,3 +49,12 @@ elif what == "sign":
     ms = read_line("SIGMS", 20).split()[1]
     sig = read_line("SIG ", 10).split()[1]
     print(json.dumps({"ms": int(ms), "signature": "0x" + sig}))
+
+if what == "report":
+    # report <args...>: the board builds, saves its intent, signs, and returns the finished transaction.
+    s.write(("report " + " ".join(sys.argv[3:]) + "\n").encode())
+    res = read_line("RESULT", 60)
+    out = {"result": res.split()[1], "fields": dict(p.split("=", 1) for p in res.split() if "=" in p)}
+    if out["result"] == "OK":
+        out["raw"] = "0x" + read_line("RAW ", 30).split(" ", 1)[1]
+    print(json.dumps(out))

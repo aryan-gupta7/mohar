@@ -2,7 +2,7 @@
 
 This describes only what is **built and tested so far**. For what comes next, see [dev-plan.md](dev-plan.md). For the history of each step, see [update-log.md](update-log.md).
 
-**Last updated:** Friday, November 6, 2026, 09:15 IST
+**Last updated:** Friday, November 6, 2026, 09:55 IST
 
 ---
 
@@ -17,8 +17,10 @@ This describes only what is **built and tested so far**. For what comes next, se
 | Transaction builder | [signer/src/mohar.ts](signer/src/mohar.ts) | Working, 38 integration tests pass |
 | Local chain | [devnet/](devnet/) | Working: same client build as the public devnet |
 | Board benchmark | [firmware/bench/](firmware/bench/) | Working on the real ESP8266 |
-| Meter simulator | [firmware/pico-meter/](firmware/pico-meter/) | Working on the real Pico H; not yet wired to the ESP8266 |
-| Device firmware (keys, signing) | [firmware/mohar/](firmware/mohar/) | Working on the real ESP8266: signs transactions the chain accepts |
+| Meter simulator | [firmware/pico-meter/](firmware/pico-meter/) | Working on the real Pico H, wired to the ESP8266 (GP0 to D6) |
+| Device firmware: keys, signing, transactions, key safety | [firmware/mohar/](firmware/mohar/) | Working on the real ESP8266: builds and signs whole transactions the alt mempool admits |
+| Device firmware: pulse counting | [firmware/mohar/src/meter.cpp](firmware/mohar/src/meter.cpp) | Working: counts the Pico's pulses exactly |
+| 0G decision evaluation | [signer/tools/0g-eval.ts](signer/tools/0g-eval.ts) | Run with a real key: `qwen3.8-flash` chosen |
 
 ### Proven and not yet proven
 
@@ -32,7 +34,10 @@ This describes only what is **built and tested so far**. For what comes next, se
 | An unstaked paymaster is refused | **Proven, same setup** | `unstaked payer accessed payer slot 0x…01` |
 | Anything on the public devnet with our contracts | **Not proven** | Same funding block |
 | The ESP8266 holds its own key and signs transactions the alt mempool accepts | **Proven on the local chain** | DEV4-T8: board-signed report, admitted by the real sidecar code, mined, 4 frames succeeded |
-| The ESP8266 builds the transaction itself, keeps leaf safety across power loss, and reaches the network | **Not proven** | DEV-5 and DEV-6 |
+| The ESP8266 builds the whole transaction itself and keeps one-time-key safety across crashes | **Proven** (crash points injected) | DEV5-T1 to T5, T7 to T9: 31 vectors byte-identical; three device-built transactions mined. **A real power pull (T6) is yours to run** |
+| The ESP8266 counts a meter's pulses exactly | **Proven on the real Pico and ESP8266** | DEV7-T1 to T4 and T13: counts equal, glitches separate |
+| `qwen3.8-flash` makes reliable inspect or run decisions on meter windows | **Proven on 19 labelled scenarios, 5 runs each** | `docs/evidence/0g-1-qwen3.8-flash.json`. The policy text was written after the first 14 scenarios; 5 more were added after |
+| The ESP8266 reaches the network, holds TLS, and talks to 0G | **Not proven** | DEV-6, 0G-2 |
 | ENS and 0G integrations | **Not started** | Docs and endpoints checked only |
 
 **Local mining proves execution, not mempool admission.** The local node has no sidecar, so tests submit through its privileged route, which skips mempool rules.
@@ -281,6 +286,75 @@ Creating a storage slot costs about **98,600 gas** on this devnet (measured), cl
 - **Two builds.** `dev` adds `keccak`, `keygen-fixed`, `sign` and `wipe` for tests. **`release` answers only `info`.** In release, nothing can ask the board to sign, because DEV-5 makes the board build and sign its own transactions.
 - **Opening the serial port resets the board** (the USB chip wires DTR/RTS to reset). The test tools wait for it to boot.
 
+### Transactions built on the device (DEV-5)
+
+`frametx.*` builds the standard 4-frame report from a handful of inputs: the device's account, the ledger, the paymaster, the nonce, the fees and the report fields. It has its own RLP encoder and ABI encoder, and gives the same calldata, digest, raw bytes and JSON as the TypeScript library in all 31 vectors ([firmware/vectors/tx.json](firmware/vectors/tx.json)), which cross RLP's length boundaries. It also writes the sidecar's JSON, streamed so the whole body is never in memory.
+
+**Step guard:** before any key is used, the device counts the verifier steps in the digest. Above 630 it raises the report's `salt` and rebuilds. About 0.1% of reports need this.
+
+### One-time-key safety (DEV-5)
+
+[firmware/mohar/src/intent.cpp](firmware/mohar/src/intent.cpp). A leaf must never sign two different messages, even across power loss. The leaf is `nonce − 1`, and the device keeps a counter `nextLeaf` plus at most one pending *intent*.
+
+**Order of events for a new report:** guard → **save the intent to flash** (nonce, final report, digest, `nextLeaf`) → only then sign → return the transaction. The intent is saved before the signature exists, so a crash can never leave a signature that flash doesn't know about.
+
+**State on flash:** two alternating files, each with a sequence number and a checksum. A write goes to the older one, so a power cut mid-write leaves the other intact. The state is tied to the key's root, so a new key starts a fresh counter.
+
+| Situation | Result |
+|---|---|
+| Chain nonce equals saved intent's, same content | Rebuilds and returns the **identical** transaction (`resent`) |
+| Same nonce, different content | `LEAF_USED` |
+| Chain nonce above the intent's | The intent was mined: mark done, carry on |
+| Chain nonce below the intent's | `CHAIN_BEHIND`: refuses to sign |
+| No intent, nonce is `nextLeaf + 1` | Normal |
+| No intent, nonce higher | Jumps forward (`jumped`) |
+| No intent, nonce lower | `CHAIN_BEHIND`: a reset chain or lying RPC can't make the device reuse a key |
+| Nonce 0 | `BAD_NONCE` |
+| Leaf 256 or above | `KEYS_EXHAUSTED` |
+
+**A bug the tests found:** a state reset restarted the sequence number at 0, so after a reboot an older state slot won. The device then refused to sign (safe), but it was wrong. Fixed, with a regression test.
+
+**What this doesn't cover:** a transaction signed and lost before it reaches the network is resent identically; one that is mined and not noticed is detected by the nonce. Flash wear and a flash corrupted outside our files aren't covered.
+
+### Pulse counting (DEV-7)
+
+[firmware/mohar/src/meter.cpp](firmware/mohar/src/meter.cpp). D6 (GPIO12) is `INPUT_PULLUP` with an interrupt on both edges (Pico GP0 to D6, GND to GND). The interrupt only records times and counts.
+
+| Low time | Class |
+|---|---|
+| Under 15 ms | Glitch: counted separately, not energy |
+| 15 to 200 ms | Valid pulse |
+| Over 200 ms | Stuck-low event, counted once, not energy (found in the main loop, since the interrupt can't see a pulse that never ends) |
+
+Power estimate: `W = pulses × 1,125,000 / window ms` (3,200 pulses per kWh). A window gives valid pulses, glitches, stuck-low events, average and peak watts, and the longest gap, packed into the report's 32-byte `sensors` word (big-endian): bytes 0–3 valid pulses, 4–5 glitches, 6–7 stuck-low, 8–9 average watts, 10–11 peak watts, 12–15 window ms, 16–19 longest gap ms, 20–27 cumulative pulses, 28–31 zero.
+
+**Measured, ESP8266 against the Pico, counters read at the same moment:**
+
+| Load | Pico | ESP8266 |
+|---|---:|---:|
+| Normal 900 W, 90 s | 72 pulses | 72 |
+| Surge 12,000 W, 20 s | 215 | 215 |
+| Glitch mode, 40 s | 32 pulses, 25 glitches | 32 pulses, 25 glitches |
+| Off, 20 s | 0 | 0 (line reads high) |
+| Heavy 3,000 W, 30 s | | 2,989 W average, 3,095 W peak |
+
+**Not done yet:** the window isn't yet taken at each checkpoint or put into reports, the cumulative total isn't kept across reboots (it must continue from the ledger's `lastTotal`, or the ledger would reject a lower total), and nothing drives the status LED.
+
+### The decision model (0G-1)
+
+[signer/tools/0g-eval.ts](signer/tools/0g-eval.ts) runs the labelled windows in [firmware/sim/scenarios.json](firmware/sim/scenarios.json) through a model. Results are in `docs/evidence/`.
+
+| Model | Result |
+|---|---|
+| `laya` (free decision model) | Gave P(inspect) of 0.53 to 0.62 for everything. **Can't tell normal from overload** |
+| `vela-2.0-9b` (cheap decision model) | Missed 6 of 7 inspect cases |
+| `qwen3.8-flash`, reasoning on | Right on most clear cases, but 6 to 20 s a call and about 1 in 10 timed out |
+| **`qwen3.8-flash`, `enable_thinking: false` (chosen)** | **19 of 19 scenarios at 5 of 5 runs.** p95 latency 1.2 s, no timeouts, largest response 1,159 bytes, request IDs matching in 95 of 95 |
+
+**How the device asks:** `POST /v1/chat/completions` with `temperature 0`, `max_tokens 16`, `enable_thinking: false`, the owner's policy as the system message and the meter window as plain text. The device accepts only the exact words `RUN` or `INSPECT`, and anything else is no decision. The request ID is `x_0g_trace.request_id`. The router sends two `X-Request-Id` headers, and the UUID one matches the trace.
+
+**Honest caveats:** the policy text (average above the sanctioned load, 3 or more glitches or any stuck-low, silence after load, spacing that doesn't look like a load) was written after seeing the first 14 scenarios. Only the 5 added afterwards are an independent test. The model also applies fixed rules, so the AI's value here is judging combinations of signals; the glitch and overload thresholds are also enforced in code, and **0G can only make the device more cautious.** The key sits in the board's flash once 0G-2 is built, so it must be a low-limit key.
+
 ---
 
 ## 8. Measured numbers
@@ -429,6 +503,7 @@ Frame transactions don't exist on Sepolia, so it isn't an option here. ENS uses 
 - **Physical security:** ESP8266 flash is readable. Nothing here protects a seed from someone holding the board.
 - **Cryptography:** custom and unaudited, and not standards-compliant.
 - **No key migration:** one fixed root and verifier. After 256 transactions the account can't sign. Moving to a new root or scheme is future work.
+- **Pulse total across reboots:** the ESP's pulse count restarts at 0 on reboot; it must continue from the ledger's `lastTotal` (not yet built), or the ledger rejects the lower total.
 - **Sensor truth:** a signature shows the key signed something, not that the reading is correct.
 - **Maturity:** EIP-8141 and ERC-8421 are drafts, and this runs only on devnets.
 - **The meter is simulated:** the Pico generates the pulses a real meter's impulse output would. Nothing measures real electricity, and nothing disconnects a supply.
@@ -602,6 +677,41 @@ MOHAR_NET=local-alt node signer/tools/device-sign.ts $ESP
 **Expected:** `account 0x… root() equals the board's root`, `board signed in ~500 ms`, `MINED status 0x1, frames ["0x1","0x1","0x1","0x1"], account balance 0`, `DEV4-T8 PASS`. It uses leaf 0 of the board's key, so a second run on the same key fails (the account's nonce would line up with a used leaf): run `device_test.py $ESP wipe-twice` or send `wipe` first to get a fresh key.
 
 **By hand:** `pio device monitor --port $ESP --baud 115200`, press RST, and watch `KEY READY`. Type `info` and Enter. In the release build (`pio run -e release -t upload ...`), `sign` answers `UNKNOWN`.
+
+### Test 8c: Device-built transactions and key safety (needs the chain, sidecar, and the board holding the test key)
+
+Put the test key on the board once (4 minutes): `uv run --no-project --with pyserial python firmware/tools/device_test.py $ESP keygen-fixed`.
+
+```sh
+uv run --no-project --with pyserial python firmware/tools/device_test.py $ESP tx       # 31 vectors, about a minute
+uv run --no-project --with pyserial python firmware/tools/device_test.py $ESP safety   # leaf safety, crashes, reboot table, exhaustion
+MOHAR_NET=local-alt node signer/tools/device-report.ts                                 # three device-built transactions mined
+```
+**Expected:** `PASS DEV5-T1 31 vectors match …`, `PASS DEV5-T2 …`, then `PASS` for T9a, T4, T3, T5 (both crash points), eight T7 lines, T8 (two lines) and the reset-survives-reboot line. Last: `report 1 … 0x1 0x1 0x1 0x1`, `ledger: lastSeq 3, lastTotal 120, hold true … account balance 0` and `DEV5-T9 PASS`.
+
+**The power pull (T6), which only you can do:**
+```sh
+uv run --no-project --with pyserial python firmware/tools/powerpull.py $ESP
+```
+It streams reports, each using a new key. **Unplug the board's USB cable at any moment**, plug it back in, and press Enter. **Expected:** it prints the saved state, then either resends the saved intent (`resent=1`) or says no intent was pending, then signs the next report normally and prints `PASS`. Do it three times (the plan says three), unplugging at different moments. Run `device_test.py $ESP safety` afterwards to see the board is healthy. Press RST if the board doesn't come back.
+
+### Test 8d: Pulse counting, Pico to ESP8266
+
+Wires: Pico GP0 (pin 1) to D6, GND to GND. The dev firmware must be on the board.
+```sh
+PICO=/dev/serial/by-id/usb-Raspberry_Pi_Pico_E662588817693B2C-if00
+uv run --no-project --with pyserial python firmware/tools/meter_test.py $ESP $PICO   # about 3 minutes
+```
+**Expected:** `PASS DEV7-T1` (counts equal within 1), `T2`, `T13` (average within 5% of 3,000 W), two `T3` lines (valid pulses equal, glitches counted separately) and `T4`, then `ALL PASS`. **By hand:** the Pico's LED and the ESP's should flash together. With `pio device monitor` on the ESP, type `meter` for raw counts or `window` for the last window.
+
+### Test 8e: The 0G decision model
+
+Your key must be in `.secrets/0g-api.key`. This spends a few cents of credit at most.
+```sh
+node signer/tools/make-scenarios.ts
+node signer/tools/0g-eval.ts qwen3.8-flash 5 0.5     # about 2 minutes
+```
+**Expected:** every scenario `ok 5/5`, `0G1-T3 … PASS`, no timeouts, p95 latency about 1 to 1.5 s, request IDs matching. Rerun with `laya` or `vela-2.0-9b` to see why they weren't chosen.
 
 ### Test 9: Pico meter simulator
 

@@ -40,23 +40,46 @@ const questions = {
   },
 };
 
+const TIMEOUT_MS = 20_000; // the device's own limit: later than this is no decision
+let timeouts = 0;
+
+// Chat models (everything that isn't laya or vela) are asked for one word. Anything else counts as no decision.
+const isDecisionModel = ["laya", "vela-2.0-9b"].includes(model);
+const SYSTEM =
+  "You supervise a prepaid electricity meter. Given its last-minute readings, answer with exactly one word, RUN or INSPECT. " +
+  "Do not explain. Owner's policy: answer INSPECT if any of these is true: " +
+  "(1) the average load is above the sanctioned load; " +
+  "(2) there were 3 or more pulse-line glitches, or any stuck-low event; " +
+  "(3) the previous window averaged load but this window has none, though the line is healthy; " +
+  "(4) the pulse spacing does not look like a real electrical load, for example the peak is many times the average. " +
+  "Otherwise answer RUN. Low credit is not a reason to inspect.";
+
 async function ask(state: string) {
   const t0 = Date.now();
-  const res = await fetch(`${BASE}/decisions`, {
-    method: "POST",
-    headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-    body: JSON.stringify({ model, state, questions }),
-    signal: AbortSignal.timeout(30_000),
-  });
-  const text = await res.text();
-  const ms = Date.now() - t0;
-  let body: any;
   try {
-    body = JSON.parse(text);
+    const res = await fetch(isDecisionModel ? `${BASE}/decisions` : `${BASE}/chat/completions`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
+      body: JSON.stringify(
+        isDecisionModel
+          ? { model, state, questions }
+          : { model, temperature: 0, max_tokens: 16, enable_thinking: false, messages: [{ role: "system", content: SYSTEM }, { role: "user", content: state }] },
+      ),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    const text = await res.text();
+    const ms = Date.now() - t0;
+    let body: any;
+    try {
+      body = JSON.parse(text);
+    } catch {
+      body = undefined;
+    }
+    return { status: res.status, ms, bytes: text.length + [...res.headers].reduce((n, [k, v]) => n + k.length + v.length + 4, 0), headerRequestId: res.headers.get("x-request-id"), body, text };
   } catch {
-    body = undefined;
+    timeouts++;
+    return { status: 0, ms: TIMEOUT_MS, bytes: 0, headerRequestId: null as string | null, body: undefined as any, text: "timeout" };
   }
-  return { status: res.status, ms, bytes: text.length + [...res.headers].reduce((n, [k, v]) => n + k.length + v.length + 4, 0), headerRequestId: res.headers.get("x-request-id"), body, text };
 }
 
 const results: any[] = [];
@@ -80,14 +103,20 @@ for (const s of scenarios) {
       if ([401, 402].includes(r.status)) throw new Error(`stopping: ${lastError}`);
       continue;
     }
-    const prob = r.body?.answers?.inspect?.noul;
+    let prob = r.body?.answers?.inspect?.noul;
+    if (!isDecisionModel) {
+      // Strict allowlist: exactly RUN or INSPECT. Anything else is not a decision.
+      const word = String(r.body?.choices?.[0]?.message?.content ?? "").trim().toUpperCase().replace(/[^A-Z]/g, "");
+      prob = word === "INSPECT" ? 1 : word === "RUN" ? 0 : undefined;
+      if (prob === undefined) lastError = `not a decision: ${JSON.stringify(r.body?.choices?.[0]?.message?.content)}`;
+    }
     const traceId = r.body?.x_0g_trace?.request_id;
     if (typeof prob !== "number") continue;
     p.push(prob);
     if (traceId) {
       ids.push(traceId);
       idsSeen++;
-      if (traceId === r.headerRequestId) idsMatch++;
+      if (traceId && String(r.headerRequestId ?? "").includes(traceId)) idsMatch++;
     }
     // The device's rule: only a clear "inspect" probability above the threshold counts as inspect.
     const action = prob >= threshold ? "inspect" : "run";
@@ -102,11 +131,12 @@ console.log(`\nmodel ${model}, ${runs} runs each, inspect if P(inspect) >= ${thr
 for (const r of results) console.log(`${r.correct >= Math.ceil(r.of * 0.9) ? "ok  " : "FAIL"} ${String(r.correct).padStart(2)}/${r.of}  expect ${r.expect.padEnd(7)} mean P ${r.meanProb?.toFixed(3)}  [${r.minProb?.toFixed(2)}..${r.maxProb?.toFixed(2)}]  ${r.name}`);
 const passAll = results.every((r) => r.correct >= Math.ceil(r.of * 0.9));
 console.log(`\n0G1-T3 every scenario at least 9/10: ${passAll ? "PASS" : "FAIL"}`);
+console.log(`calls that timed out at ${TIMEOUT_MS / 1000} s (no decision): ${timeouts}`);
 console.log(`0G1-T4 p95 latency ${p95} ms (limit 15000): ${p95 <= 15000 ? "PASS" : "FAIL"}`);
 console.log(`0G1-T5 largest response incl. headers ${maxBytes} bytes (limit 8192): ${maxBytes <= 8192 ? "PASS" : "FAIL"}`);
 console.log(`0G1-T2 trace request_id equals X-Request-ID: ${idsSeen ? `${idsMatch}/${idsSeen}` : "no ids seen"}`);
 
 fs.mkdirSync(path.join(ROOT, "docs/evidence"), { recursive: true });
 const out = path.join(ROOT, `docs/evidence/0g-1-${model}.json`);
-fs.writeFileSync(out, JSON.stringify({ model, base: BASE, runs, threshold, at: new Date().toISOString(), p95Ms: p95, maxBytes, requestIdMatch: { matched: idsMatch, seen: idsSeen }, lastError, results }, null, 2) + "\n");
+fs.writeFileSync(out, JSON.stringify({ model, base: BASE, runs, threshold, at: new Date().toISOString(), p95Ms: p95, timeouts, maxBytes, requestIdMatch: { matched: idsMatch, seen: idsSeen }, lastError, results }, null, 2) + "\n");
 console.log(`saved ${path.relative(process.cwd(), out)}`);

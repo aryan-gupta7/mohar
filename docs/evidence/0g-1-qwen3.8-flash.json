@@ -1,0 +1,206 @@
+{
+  "model": "qwen3.8-flash",
+  "base": "https://router-api.0g.ai/v1",
+  "runs": 5,
+  "threshold": 0.5,
+  "at": "2026-11-06T04:18:13.558Z",
+  "p95Ms": 1196,
+  "timeouts": 0,
+  "maxBytes": 1159,
+  "requestIdMatch": {
+    "matched": 95,
+    "seen": 95
+  },
+  "results": [
+    {
+      "name": "idle standby",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "9fe09a0e-870b-4f08-99ac-f978e69a2cec"
+    },
+    {
+      "name": "normal household",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "c01e9ab9-638e-41b3-9907-f577e55a2b0d"
+    },
+    {
+      "name": "normal evening",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "e965fc7e-3170-4180-b009-5aae836b8186"
+    },
+    {
+      "name": "heavy but sanctioned",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "3317cc86-ca61-458b-819d-e5b78cf5fb31"
+    },
+    {
+      "name": "busy but within limit",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "92ae1438-da6f-436a-b3d9-bcd508a3f82d"
+    },
+    {
+      "name": "above sanctioned load",
+      "expect": "inspect",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 1,
+      "minProb": 1,
+      "maxProb": 1,
+      "sampleRequestId": "3a49ea02-fdad-4cdf-82be-2f3172416999"
+    },
+    {
+      "name": "far above sanctioned load",
+      "expect": "inspect",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 1,
+      "minProb": 1,
+      "maxProb": 1,
+      "sampleRequestId": "6f7eb960-9470-4757-ad91-e3545ba6659d"
+    },
+    {
+      "name": "sudden silence after load",
+      "expect": "inspect",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 1,
+      "minProb": 1,
+      "maxProb": 1,
+      "sampleRequestId": "a87f68d6-1c8d-4c48-8648-e195cdf7b364"
+    },
+    {
+      "name": "one glitch only",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "193afce2-68bd-4ccc-80fb-32f49e28a70f"
+    },
+    {
+      "name": "repeated glitches",
+      "expect": "inspect",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 1,
+      "minProb": 1,
+      "maxProb": 1,
+      "sampleRequestId": "e305efb1-7801-4b4d-9e8b-dde09cb6d0bf"
+    },
+    {
+      "name": "stuck low line",
+      "expect": "inspect",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 1,
+      "minProb": 1,
+      "maxProb": 1,
+      "sampleRequestId": "7df24896-1828-4dee-8515-f1b1c821261e"
+    },
+    {
+      "name": "irregular timing",
+      "expect": "inspect",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 1,
+      "minProb": 1,
+      "maxProb": 1,
+      "sampleRequestId": "8b0d010c-f421-4a75-9ae2-45907b3b3909"
+    },
+    {
+      "name": "low credit, normal usage",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "7f245ca7-3204-4ecc-9acf-e32441b62ab8"
+    },
+    {
+      "name": "borderline just over sanction",
+      "expect": "inspect",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 1,
+      "minProb": 1,
+      "maxProb": 1,
+      "sampleRequestId": "9afbfdba-259a-4dfa-ad9f-b7d760d8bc03"
+    },
+    {
+      "name": "moderate overload",
+      "expect": "inspect",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 1,
+      "minProb": 1,
+      "maxProb": 1,
+      "sampleRequestId": "d032d560-8f03-4005-85ce-cd451d1816f4"
+    },
+    {
+      "name": "load resumes after an outage",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "27a90266-79ae-4e78-917a-72cb3dcb6469"
+    },
+    {
+      "name": "two glitches",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "2f4e1a30-7a9f-4d0d-8d69-abae566d3648"
+    },
+    {
+      "name": "brief peak within sanction",
+      "expect": "run",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 0,
+      "minProb": 0,
+      "maxProb": 0,
+      "sampleRequestId": "16741206-c9e1-414f-b2fc-79a5a6136513"
+    },
+    {
+      "name": "glitchy and irregular",
+      "expect": "inspect",
+      "correct": 5,
+      "of": 5,
+      "meanProb": 1,
+      "minProb": 1,
+      "maxProb": 1,
+      "sampleRequestId": "c7846314-dccc-457e-aab9-41fc5e5b5704"
+    }
+  ]
+}

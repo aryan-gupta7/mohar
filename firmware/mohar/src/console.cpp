@@ -3,8 +3,11 @@
 #include <string.h>
 #include "keccak.h"
 #include "keystore.h"
+#include "meter.h"
+#include "frametx.h"
+#include "intent.h"
 
-static char line[320];
+static char line[560];
 static size_t lineLen = 0;
 
 static void printHex(const uint8_t *b, size_t n) {
@@ -39,6 +42,30 @@ static bool parseHex(const char *s, uint8_t *out, size_t bytes) {
   }
   return true;
 }
+
+static uint64_t parseU64(const char *s) { return strtoull(s, nullptr, 10); }
+// build/report arguments, space separated:
+//   sender ledger paymaster nonce maxPrio maxFee seq total mode reason confidence model salt sensors32 reqIdHex|-
+static bool parseReport(char *args, ReportParams *p) {
+  char *tok[15];
+  int n = 0;
+  for (char *t = strtok(args, " "); t && n < 15; t = strtok(nullptr, " ")) tok[n++] = t;
+  if (n != 15) return false;
+  memset(p, 0, sizeof(*p));
+  if (!parseHex(tok[0], p->sender, 20) || !parseHex(tok[1], p->ledger, 20) || !parseHex(tok[2], p->paymaster, 20)) return false;
+  p->nonce = parseU64(tok[3]); p->maxPrio = parseU64(tok[4]); p->maxFee = parseU64(tok[5]);
+  p->seq = parseU64(tok[6]); p->total = parseU64(tok[7]);
+  p->mode = parseU64(tok[8]); p->reason = parseU64(tok[9]); p->confidence = parseU64(tok[10]); p->model = parseU64(tok[11]);
+  p->salt = (uint32_t)parseU64(tok[12]);
+  if (!parseHex(tok[13], p->sensors, 32)) return false;
+  if (strcmp(tok[14], "-") != 0) {
+    size_t hl = strlen(tok[14]);
+    if (hl % 2 || hl / 2 > REPORT_MAX_ID || !parseHex(tok[14], p->reqId, hl / 2)) return false;
+    p->reqLen = hl / 2;
+  }
+  return true;
+}
+
 #endif
 
 static void cmdInfo() {
@@ -54,9 +81,79 @@ static void cmdInfo() {
   Serial.printf(" heap=%u maxblock=%u\n", ESP.getFreeHeap(), ESP.getMaxFreeBlockSize());
 }
 
+static void printU64(uint64_t v) {
+  char t[21];
+  int n = 0;
+  if (!v) t[n++] = '0';
+  while (v) { t[n++] = '0' + v % 10; v /= 10; }
+  while (n) Serial.print(t[--n]);
+}
+
 static void handle(char *cmd) {
   if (strcmp(cmd, "info") == 0) { cmdInfo(); return; }
+  if (strcmp(cmd, "meter") == 0) {
+    uint32_t v, g, st;
+    int level;
+    meter_raw(&v, &g, &st, &level);
+    Serial.printf("METER valid=%u glitches=%u stuck=%u level=%d total=", v, g, st, level);
+    printU64(meter_total());
+    Serial.println();
+    return;
+  }
+  if (strcmp(cmd, "window") == 0) {  // closes the current window and starts the next
+    MeterWindow w;
+    meter_take_window(&w);
+    Serial.printf("WINDOW valid=%u glitches=%u stuck=%u ms=%u avgW=%u peakW=%u gapMs=%u total=", w.validPulses, w.glitches, w.stuckLow, w.windowMs, w.avgWatts, w.peakWatts, w.longestGapMs);
+    printU64(w.totalPulses);
+    Serial.println();
+    return;
+  }
 #ifdef MOHAR_DEV
+  if (strncmp(cmd, "build ", 6) == 0 || strncmp(cmd, "report ", 7) == 0) {
+    bool isReport = cmd[0] == 'r';
+    ReportParams p;
+    if (!parseReport(cmd + (isReport ? 7 : 6), &p)) { Serial.println("ERROR bad_report_args"); return; }
+    if (isReport) {
+      uint8_t *raw = (uint8_t *)malloc(FRAMETX_MAX_RAW);
+      if (!raw) { Serial.println("ERROR out_of_memory"); return; }
+      size_t n = 0;
+      ReportParams used;
+      IntentInfo info;
+      IntentResult r = intent_sign(p, raw, FRAMETX_MAX_RAW, &n, &used, &info);
+      Serial.printf("RESULT %s resent=%d jumped=%d cleared=%d steps=%u leaf=%u salt=%u\n", intent_name(r), info.resent, info.jumped, info.clearedDone, info.steps, info.leaf, r == INTENT_OK ? used.salt : p.salt);
+      if (r == INTENT_OK) { Serial.print("RAW "); printHex(raw, n); Serial.println(); }
+      free(raw);
+      return;
+    }
+    // build: no key, no state. A stand-in signature (byte i = (i*13+5) & 255) lets the encoding be compared.
+    uint8_t digest[32];
+    uint32_t steps;
+    if (!frametx_guard(&p, digest, &steps)) { Serial.println("ERROR guard_failed"); return; }
+    uint8_t *sig = (uint8_t *)malloc(WOTS_SIG_BYTES), *raw = (uint8_t *)malloc(FRAMETX_MAX_RAW);
+    if (!sig || !raw) { free(sig); free(raw); Serial.println("ERROR out_of_memory"); return; }
+    for (size_t i = 0; i < WOTS_SIG_BYTES; i++) sig[i] = (i * 13 + 5) & 255;
+    uint8_t cd[4 + 10 * 32 + 64];
+    size_t cl = frametx_calldata(p, cd, sizeof(cd));
+    size_t n = frametx_encode(p, sig, WOTS_SIG_BYTES, raw, FRAMETX_MAX_RAW);
+    Serial.printf("BUILD steps=%u salt=%u\n", steps, p.salt);
+    Serial.print("CALLDATA "); printHex(cd, cl); Serial.println();
+    Serial.print("DIGEST "); printHex(digest, 32); Serial.println();
+    Serial.print("RAW "); printHex(raw, n); Serial.println();
+    Serial.print("JSON "); frametx_json(p, sig, WOTS_SIG_BYTES, Serial); Serial.println();
+    free(sig); free(raw);
+    return;
+  }
+  if (strcmp(cmd, "state") == 0) {
+    uint32_t nl; bool hi; uint64_t in;
+    intent_state(&nl, &hi, &in);
+    Serial.printf("STATE nextLeaf=%u hasIntent=%d intentNonce=", nl, hi);
+    printU64(in);
+    Serial.println();
+    return;
+  }
+  if (strncmp(cmd, "set-leaf ", 9) == 0) { intent_set_next_leaf(atoi(cmd + 9)); Serial.println("OK"); return; }
+  if (strcmp(cmd, "state-reset") == 0) { intent_reset(); Serial.println("OK"); return; }
+  if (strncmp(cmd, "crash-at", 8) == 0) { intent_crash_at(cmd[8] == ' ' ? cmd + 9 : ""); Serial.println("OK"); return; }
   if (strncmp(cmd, "keccak ", 7) == 0) {
     uint8_t in[128], out[32];
     size_t hexLen = strlen(cmd + 7);

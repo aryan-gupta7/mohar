@@ -164,12 +164,25 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - Wrote `firmware/mohar/src/meter.*`, the pulse counter for D6 (GPIO12). **Not compiled into the firmware or flashed yet:** it waits for the wires.
 - Found the `/v1/decisions` request format in the 0G docs. `laya` is priced at zero, which may mean it needs only a key. Wrote `signer/tools/0g-eval.ts` and 14 labelled scenarios (`firmware/sim/scenarios.json`), ready to run when a key exists.
 
+### About 09:20 to 09:55 Your new messages: wires done, 0G key in place
+- Wires done. Added pulse counting to the ESP8266 firmware and a two-board test (`firmware/tools/meter_test.py`). **The ESP's count equalled the Pico's exactly:** 72/72 at 900 W, 215/215 at 12,000 W, and 32/32 valid pulses plus 25/25 two-millisecond glitches in glitch mode. The off state read zero with the line high, and 3,000 W measured 2,989 W.
+- 0G key tested. **`laya` can't do this job:** it gave P(inspect) 0.53 to 0.62 for everything. **`vela-2.0-9b` missed 6 of 7 inspect cases.** Both are listed in `docs/evidence/`.
+- **Your choice, `qwen3.8-flash`:** with its reasoning on, calls took 6 to 20 s and about 1 in 10 timed out, so I turned reasoning off (`enable_thinking: false`): 2 s and 66 tokens a call. Then it got 11 of 14 scenarios right on the first prompt. The failures were glitches, irregular timing and a 5.4 kW overload. I added the owner's policy to the prompt (which the ENS `mohar.policy` record will hold), and added 5 scenarios written after that, not used to write it. **Result: 19 of 19 scenarios at 5 of 5, p95 latency 1.2 s, no timeouts, request IDs matching 95 of 95.** The policy text was written after seeing the first 14 scenarios, so those aren't an independent test; the 5 later ones are.
+- Total 0G spend so far is tiny: about 400 calls at about 66 tokens, at $0.00000019 per million input tokens.
+
+### About 09:30 to 09:55 DEV-5: the board builds, saves intent for, and signs its own transactions
+- Wrote the RLP encoder and transaction builder (`frametx.*`), and the key-safety state machine (`intent.*`).
+- **31 of 31 vectors matched the library byte for byte on the first run.** The leaf-safety tests passed, including crash recovery.
+- **Bug found by the end-to-end test:** a state reset restarted the sequence counter at 0, so after a reboot an older slot won and the board refused to sign (`CHAIN_BEHIND`). It refused safely. Fixed; added a regression test.
+- **DEV5-T9 passed:** three transactions built and signed by the board, admitted by the sidecar, mined, four frames each. Hold set on the ledger by the second report.
+- The board dropped off USB once during flashing (it re-enumerated at 09:40) and the upload failed; retrying worked.
+
 ---
 
 ## Current state
 
-**Done:** DEV-0 to DEV-4 and EF-2L on the local chain. Pico meter simulator on the board.
-**Next:** DEV-5 (the board builds and signs transactions itself, with key-safety rules).
+**Done:** DEV-0 to DEV-5 (except the T6 power pull) and EF-2L on the local chain, 0G-1, pulse counting on real hardware.
+**Next:** DEV-6 (Wi-Fi, TLS and RPC on the board).
 
 **Blocked on you:**
 1. Devnet ETH for `0xcfb296f635254A4B3281D2e285174E98D643Ef60`.

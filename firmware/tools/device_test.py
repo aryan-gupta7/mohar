@@ -127,6 +127,118 @@ def t_seed_leak(secret_hex):
     print(f"     {len(tokens)} distinct 64-hex values seen, {len(known)} of them roots")
 
 
+
+# ----------------------------------------------------------------------------- DEV-5
+def tx_vectors():
+    return json.load(open(f"{VEC}/tx.json"))["cases"]
+
+
+def with_nonce(cmd, nonce):
+    t = cmd.split(" ")
+    t[3] = str(nonce)
+    return " ".join(t)
+
+
+def with_total(cmd, total):
+    t = cmd.split(" ")
+    t[7] = str(total)
+    return " ".join(t)
+
+
+def read_build(dev):
+    out = {}
+    out["BUILD"] = fields(dev.read_until("BUILD", 20))
+    for k in ["CALLDATA", "DIGEST", "RAW", "JSON"]:
+        out[k] = dev.read_until(k + " ", 20).split(" ", 1)[1]
+    return out
+
+
+def t_tx_vectors(dev):
+    bad = 0
+    for c in tx_vectors():
+        dev.s.reset_input_buffer(); dev.buf = b""
+        dev.s.write(("build " + c["command"] + "\n").encode())
+        o = read_build(dev)
+        e = c["expect"]
+        ok = (int(o["BUILD"]["steps"]) == e["steps"] and int(o["BUILD"]["salt"]) == e["salt"] and o["CALLDATA"] == e["calldata"]
+              and o["DIGEST"] == e["digest"] and o["RAW"] == e["raw"] and json.loads(o["JSON"]) == e["json"])
+        bad += 0 if ok else 1
+        print(("ok   " if ok else "FAIL ") + c["name"] + (f"  (guard raised salt to {e['salt']})" if e["salt"] else ""))
+    check(bad == 0, f"DEV5-T1 {len(tx_vectors())} vectors match on calldata, digest, raw bytes and JSON")
+    g = [c for c in tx_vectors() if c["firstSteps"] > 630][0]
+    check(g["expect"]["salt"] > 0 and g["expect"]["steps"] <= 630, f"DEV5-T2 the guard case needed {g['firstSteps']} steps, ended at {g['expect']['steps']} with salt {g['expect']['salt']}")
+
+
+def report(dev, cmd):
+    dev.s.reset_input_buffer(); dev.buf = b""
+    dev.s.write(("report " + cmd + "\n").encode())
+    res = dev.read_until("RESULT", 60)
+    f = fields(res)
+    f["name"] = res.split()[1]
+    raw = None
+    if f["name"] == "OK":
+        raw = dev.read_until("RAW ", 30).split(" ", 1)[1]
+    return f, raw
+
+
+def cmd_for(nonce_case):
+    return [c for c in tx_vectors() if c["name"].startswith(f"nonce {nonce_case}, ")]
+
+
+def t_leaf_safety(dev):
+    cases = tx_vectors()
+    n1 = cases[0]          # nonce 1
+    cmd1 = n1["command"]
+    dev.cmd("state-reset", "OK", 5)
+    f, raw = report(dev, cmd1)
+    check(f["name"] == "OK" and raw == n1["expect"]["signedRaw"], "DEV5-T9a board-built signed transaction equals the TypeScript one byte for byte")
+    f2, raw2 = report(dev, cmd1)
+    check(f2["name"] == "OK" and f2["resent"] == "1" and raw2 == raw, "DEV5-T4 same content at a used leaf gives byte-identical output")
+    f3, _ = report(dev, with_total(cmd1, 424242))
+    check(f3["name"] == "LEAF_USED", "DEV5-T3 different content at a used leaf is refused with LEAF_USED")
+
+    # T5: crash after saving the intent, and after signing, then retry
+    for point in ["after_intent", "after_sign"]:
+        dev.cmd("state-reset", "OK", 5)
+        dev.cmd("crash-at " + point, "OK", 5)
+        dev.s.reset_input_buffer(); dev.buf = b""
+        dev.s.write(("report " + cmd1 + "\n").encode())
+        dev.read_until("CRASH", 30)
+        dev.read_until("KEY READY", 30)
+        st = fields(dev.cmd("state", "STATE", 5))
+        check(st["hasIntent"] == "1" and st["intentNonce"] == "1" and st["nextLeaf"] == "1", f"DEV5-T5 after a crash at {point} the intent is on flash")
+        f, raw = report(dev, cmd1)
+        check(f["name"] == "OK" and f["resent"] == "1" and raw == n1["expect"]["signedRaw"], f"DEV5-T5 after {point}: the device rebuilds the identical transaction")
+
+    # T7: the reboot and nonce table, with injected nonces
+    c2 = with_nonce(cmd1, 2)
+    c3 = with_nonce(cmd1, 3)
+    dev.cmd("state-reset", "OK", 5)
+    f, _ = report(dev, cmd1); check(f["name"] == "OK" and f["leaf"] == "0", "DEV5-T7 no intent, chain nonce 1: normal, leaf 0")
+    f, _ = report(dev, c2);  check(f["name"] == "OK" and f["cleared"] == "1" and f["leaf"] == "1", "DEV5-T7 intent at 1, chain at 2: marked done, moves on with leaf 1")
+    f, _ = report(dev, cmd1); check(f["name"] == "CHAIN_BEHIND", "DEV5-T7 intent at 2, chain at 1: refuses to sign")
+    f, _ = report(dev, c2);  check(f["name"] == "OK" and f["resent"] == "1", "DEV5-T7 intent at 2, chain at 2: resends identical")
+    f, _ = report(dev, c3);  check(f["name"] == "OK" and f["cleared"] == "1" and f["leaf"] == "2", "DEV5-T7 intent at 2, chain at 3: done, leaf 2")
+    dev.cmd("set-leaf 10", "OK", 5)
+    f, _ = report(dev, with_nonce(cmd1, 5));  check(f["name"] == "CHAIN_BEHIND", "DEV5-T7 no intent, counter 10, chain nonce 5: refuses (a reset chain or lying RPC)")
+    f, _ = report(dev, with_nonce(cmd1, 20)); check(f["name"] == "OK" and f["jumped"] == "1" and f["leaf"] == "19", "DEV5-T7 no intent, chain ahead: jumps forward to leaf 19")
+    dev.cmd("state-reset", "OK", 5)
+    f, _ = report(dev, with_nonce(cmd1, 0));  check(f["name"] == "BAD_NONCE", "DEV5-T7 nonce 0 is refused")
+
+    # T8: exhaustion
+    n256 = [c for c in cases if c["name"].startswith("nonce 256, ")][0]
+    dev.cmd("set-leaf 255", "OK", 5)
+    f, raw = report(dev, n256["command"])
+    check(f["name"] == "OK" and f["leaf"] == "255" and raw == n256["expect"]["signedRaw"], "DEV5-T8 leaf 255 signs, byte-identical to TypeScript")
+    f, _ = report(dev, with_nonce(n256["command"], 257))
+    check(f["name"] == "KEYS_EXHAUSTED", "DEV5-T8 the next request gets KEYS_EXHAUSTED")
+    dev.cmd("state-reset", "OK", 5)
+    # Regression: a reset must survive a reboot (an older, higher-numbered slot once won).
+    boot(dev, 60)
+    st = fields(dev.cmd("state", "STATE", 5))
+    check(st["nextLeaf"] == "0" and st["hasIntent"] == "0", "DEV5 a state reset survives a reboot")
+
+
 if __name__ == "__main__":
     port, test = sys.argv[1], sys.argv[2]
     dev = Dev(port)
@@ -147,6 +259,10 @@ if __name__ == "__main__":
     elif test == "rest":
         t_reload(dev); t_sign(dev)
         t_seed_leak(json.load(open(f"{VEC}/wots.json"))["seed"])
+    elif test == "tx":
+        boot(dev, 60); t_tx_vectors(dev)
+    elif test == "safety":
+        boot(dev, 60); t_leaf_safety(dev)
     elif test == "all":
         f0 = boot(dev, 600); print("first boot:", f0["source"], int(f0["ms"]) / 1000, "s"); t_keccak(dev); t_keygen(dev); t_sign(dev); t_reload(dev)
         t_seed_leak(json.load(open(f"{VEC}/wots.json"))["seed"])

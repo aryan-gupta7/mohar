@@ -1,0 +1,155 @@
+{
+  "model": "vela-2.0-9b",
+  "base": "https://router-api.0g.ai/v1",
+  "runs": 3,
+  "threshold": 0.5,
+  "at": "2026-11-06T03:53:39.727Z",
+  "p95Ms": 1052,
+  "maxBytes": 921,
+  "requestIdMatch": {
+    "matched": 0,
+    "seen": 42
+  },
+  "results": [
+    {
+      "name": "idle standby",
+      "expect": "run",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.03533907949664697,
+      "minProb": 0.03533907949664697,
+      "maxProb": 0.03533907949664697,
+      "sampleRequestId": "b807619c-c1cb-4160-8b2a-052d1e60f0f6"
+    },
+    {
+      "name": "normal household",
+      "expect": "run",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.042578803750889314,
+      "minProb": 0.042578803750889314,
+      "maxProb": 0.042578803750889314,
+      "sampleRequestId": "72d61cf0-f21a-44bd-b64d-745929b5f9f6"
+    },
+    {
+      "name": "normal evening",
+      "expect": "run",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.1763789801327743,
+      "minProb": 0.1763789801327743,
+      "maxProb": 0.1763789801327743,
+      "sampleRequestId": "cecb8a4f-193a-42bc-92b4-ec8ca5f02fe9"
+    },
+    {
+      "name": "heavy but sanctioned",
+      "expect": "run",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.06900507865219656,
+      "minProb": 0.06900507865219656,
+      "maxProb": 0.06900507865219656,
+      "sampleRequestId": "e5082971-8bba-4297-b7fb-d857380f4b77"
+    },
+    {
+      "name": "busy but within limit",
+      "expect": "run",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.04663113353620937,
+      "minProb": 0.04663113353620936,
+      "maxProb": 0.04663113353620936,
+      "sampleRequestId": "59132527-61cb-41d2-b07f-d91d944d933b"
+    },
+    {
+      "name": "above sanctioned load",
+      "expect": "inspect",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.6584614548932193,
+      "minProb": 0.6584614548932193,
+      "maxProb": 0.6584614548932193,
+      "sampleRequestId": "9e93307b-8275-4469-be4c-6cc57798e484"
+    },
+    {
+      "name": "far above sanctioned load",
+      "expect": "inspect",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.3874541113843895,
+      "minProb": 0.3874541113843895,
+      "maxProb": 0.3874541113843895,
+      "sampleRequestId": "2ef0630e-b610-4afc-a27d-8f40e560b24d"
+    },
+    {
+      "name": "sudden silence after load",
+      "expect": "inspect",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.08183961354959636,
+      "minProb": 0.08183961354959636,
+      "maxProb": 0.08183961354959636,
+      "sampleRequestId": "2c8115b0-34f2-4f2c-99e7-ae01f2250ff1"
+    },
+    {
+      "name": "one glitch only",
+      "expect": "run",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.09603792205488319,
+      "minProb": 0.09603792205488319,
+      "maxProb": 0.09603792205488319,
+      "sampleRequestId": "53cfe7ec-f834-43d4-ba76-446e168f93f5"
+    },
+    {
+      "name": "repeated glitches",
+      "expect": "inspect",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.1652362425825516,
+      "minProb": 0.1652362425825516,
+      "maxProb": 0.1652362425825516,
+      "sampleRequestId": "ffcdf043-fb71-41a4-9e1f-442efd55bbce"
+    },
+    {
+      "name": "stuck low line",
+      "expect": "inspect",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.12294197486307494,
+      "minProb": 0.12294197486307494,
+      "maxProb": 0.12294197486307494,
+      "sampleRequestId": "a607d0fd-de79-4b20-9256-ef16ca178f3c"
+    },
+    {
+      "name": "irregular timing",
+      "expect": "inspect",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.08351387520164798,
+      "minProb": 0.08351387520164798,
+      "maxProb": 0.08351387520164798,
+      "sampleRequestId": "11f6f117-ead5-4e54-8877-a33670790ccf"
+    },
+    {
+      "name": "low credit, normal usage",
+      "expect": "run",
+      "correct": 3,
+      "of": 3,
+      "meanProb": 0.042578803750889314,
+      "minProb": 0.042578803750889314,
+      "maxProb": 0.042578803750889314,
+      "sampleRequestId": "21c4394c-378e-49e1-b1f4-c5b9efdbb3d2"
+    },
+    {
+      "name": "borderline just over sanction",
+      "expect": "inspect",
+      "correct": 0,
+      "of": 3,
+      "meanProb": 0.21358500770551336,
+      "minProb": 0.21358500770551336,
+      "maxProb": 0.21358500770551336,
+      "sampleRequestId": "79b01da6-77ce-4578-815c-817a4e564125"
+    }
+  ]
+}

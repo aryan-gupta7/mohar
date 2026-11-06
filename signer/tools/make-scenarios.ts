@@ -27,6 +27,12 @@ const scenarios = [
   W("irregular timing", "inspect", "spacing swings from 0.2 s to 20 s at the same average, not like a real load", { valid_pulses: 19, avg_watts: 900, peak_watts: 9000, longest_gap_s: 20 }),
   W("low credit, normal usage", "run", "low credit is the ledger's concern, not an anomaly", { valid_pulses: 19, avg_watts: 900, peak_watts: 1000, longest_gap_s: 3.5 }, 15),
   W("borderline just over sanction", "inspect", "5.4 kW against 5 kW, sustained", { valid_pulses: 101, avg_watts: 5400, peak_watts: 5600, longest_gap_s: 0.7 }),
+  // Held-out: added after the first evaluation round, and not used when writing the policy text.
+  W("moderate overload", "inspect", "6.5 kW sustained against a 5 kW sanction", { valid_pulses: 122, avg_watts: 6500, peak_watts: 6800, longest_gap_s: 0.6 }),
+  W("load resumes after an outage", "run", "previous window had no load, now an ordinary 900 W", { valid_pulses: 19, avg_watts: 900, peak_watts: 1000, longest_gap_s: 3.5, previous_avg_watts: 0 }),
+  W("two glitches", "run", "two short spikes in a minute is within normal interference", { valid_pulses: 28, glitches: 2, avg_watts: 1300, peak_watts: 1500, longest_gap_s: 2.4 }),
+  W("brief peak within sanction", "run", "average 1.2 kW, one 4.8 kW burst, all under the sanction", { valid_pulses: 22, avg_watts: 1200, peak_watts: 4800, longest_gap_s: 3 }),
+  W("glitchy and irregular", "inspect", "3 glitches and spacing that does not look like a real load", { valid_pulses: 15, glitches: 3, avg_watts: 700, peak_watts: 8000, longest_gap_s: 18 }),
 ];
 
 const out = path.resolve(import.meta.dirname, "../../firmware/sim/scenarios.json");
