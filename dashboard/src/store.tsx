@@ -50,7 +50,7 @@ export function Provider({ children }: { children: ReactNode }) {
   const ingest = useCallback((raw: string, source: Source, which: "pico" | "esp" | "replay") => {
     const at = Date.now();
     const r = parseLine(raw, at, source);
-    if (r.meter) { setMeter(r.meter); setMeterHist((h) => [...h.slice(-400), r.meter!]); setPico((p) => ({ ...p, lastAt: at })); }
+    if (r.meter) { setMeter(r.meter); setMeterHist((h) => [...h.slice(-1800), r.meter!]); setPico((p) => ({ ...p, lastAt: at })); }
     if (r.ev) { setEvs((e) => [...e.slice(-600), r.ev!]); setEsp((p) => ({ ...p, lastAt: at })); }
     if (r.key) setKey(r.key);
     if (r.cp) setEsp((p) => ({ ...p, lastAt: at }));

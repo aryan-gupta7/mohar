@@ -9,22 +9,23 @@ type Pt = { at: number; w: number };
 const STEPS = [1000, 2000, 4000, 6000, 8000, 12000, 16000];
 const niceMax = (v: number) => STEPS.find((s) => s >= v * 1.08) ?? Math.ceil(v / 2000) * 2000;
 const fmtW = (w: number) => (w >= 1000 ? `${+(w / 1000).toFixed(2)} kW` : `${Math.round(w)} W`);
-const LIVE_RANGES = [{ value: "60", label: "1 min" }, { value: "300", label: "5 min" }];
-const CHAIN_RANGES = [{ value: "3600", label: "1 hour" }, { value: "21600", label: "6 hours" }, { value: "86400", label: "24 hours" }];
+const RANGES = [{ value: "60", label: "1 min" }, { value: "300", label: "5 min" }, { value: "3600", label: "1 hour" }, { value: "21600", label: "6 hours" }, { value: "86400", label: "24 hours" }, { value: "604800", label: "7 days" }];
+const LIVE_MAX = 3600; // the Pico feed is kept for an hour; longer windows come from on-chain reports
 const H = 240, M = { l: 52, r: 16, t: 12, b: 24 };
 
 export function PowerChart({ measured }: { measured: Pt[] }) {
   const s = useStore();
   const wrap = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(640);
-  const [liveRange, setLiveRange] = useState("60"), [chainRange, setChainRange] = useState("3600");
+  const [chosen, setChosen] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [hover, setHover] = useState<number | null>(null);
   useEffect(() => { const ro = new ResizeObserver(([e]) => setWidth(e.contentRect.width)); wrap.current && ro.observe(wrap.current); return () => ro.disconnect(); }, []);
   useEffect(() => { let raf = 0, last = 0; const tick = (t: number) => { if (t - last > 50) { last = t; setNow(Date.now()); } raf = requestAnimationFrame(tick); }; raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf); }, []);
 
-  const fromPico = s.meterHist.length > 0 && (s.mode === "replay" || now - s.pico.lastAt < 300000);
-  const range = fromPico ? liveRange : chainRange;
+  const picoOn = s.meterHist.length > 0 && (s.mode === "replay" || now - s.pico.lastAt < 300000);
+  const range = chosen ?? (picoOn ? "60" : "3600");
+  const fromPico = picoOn && Number(range) <= LIVE_MAX;
   const span = Number(range) * 1000;
   const t0 = now - span;
   const live = fromPico && !!s.meter && (s.mode === "replay" || now - s.pico.lastAt < 8000);
@@ -60,7 +61,7 @@ export function PowerChart({ measured }: { measured: Pt[] }) {
   const shown = hp ?? last ?? null;
   const ticks = [0, 1, 2, 3, 4].map((i) => (ymax / 4) * i);
   const xt = [1, 2 / 3, 1 / 3, 0].map((f) => Math.round(Number(range) * f));
-  const lab = (v: number) => v === 0 ? "now" : v >= 3600 ? `${+(v / 3600).toFixed(1)}h ago` : v >= 120 ? `${Math.round(v / 60)}m ago` : `${v}s ago`;
+  const lab = (v: number) => v === 0 ? "now" : v >= 172800 ? `${Math.round(v / 86400)}d ago` : v >= 3600 ? `${+(v / 3600).toFixed(1)}h ago` : v >= 120 ? `${Math.round(v / 60)}m ago` : `${v}s ago`;
 
   return (
     <div>
@@ -69,7 +70,7 @@ export function PowerChart({ measured }: { measured: Pt[] }) {
           <div className="num text-4xl font-semibold">{shown ? fmtW(shown.w) : "—"}</div>
           <div className="mt-1 text-sm text-mute">{hp ? new Date(hp.at).toLocaleString() : live ? `${s.meter?.mode ?? ""} · live` : shown ? (fromPico ? "last reading" : `from on-chain reports · ${new Date(shown.at).toLocaleTimeString()}`) : "no data"}</div>
         </div>
-        <Segmented id={fromPico ? "range-live" : "range-chain"} options={fromPico ? LIVE_RANGES : CHAIN_RANGES} value={range} onChange={fromPico ? setLiveRange : setChainRange} />
+        <Segmented id="range" options={RANGES} value={range} onChange={setChosen} />
       </div>
       <div ref={wrap} className="relative">
         <svg width={width} height={H} role="img" aria-label="Power over time" className="block touch-pan-y select-none"
