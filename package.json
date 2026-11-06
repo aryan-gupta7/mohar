@@ -14,8 +14,10 @@
     "test:integration": "node --test --test-concurrency=1 \"signer/test/integration/*.test.ts\""
   },
   "dependencies": {
+    "@0gfoundation/0g-storage-ts-sdk": "1.2.12",
     "@forshtat/hegota-support": "0.0.1",
-    "viem": "^2.57.10",
-    "@noble/hashes": "^1.8.0"
+    "@noble/hashes": "^1.8.0",
+    "ethers": "6.13.1",
+    "viem": "^2.57.10"
   }
 }

@@ -60,8 +60,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export async function waitMined(hash: Hex, timeoutSec = 120): Promise<any> {
   const deadline = Date.now() + timeoutSec * 1000;
   while (Date.now() < deadline) {
-    const receipt = await rpc("eth_getTransactionReceipt", [hash]);
-    if (receipt) return receipt;
+    try {
+      const receipt = await rpc("eth_getTransactionReceipt", [hash]);
+      if (receipt) return receipt;
+    } catch {
+      // A busy public gateway sometimes answers with an empty or cut-off body. Ask again.
+    }
     await sleep(2000);
   }
   throw new Error(`${hash} was not mined within ${timeoutSec}s`);
@@ -96,6 +100,7 @@ export async function ensureFunded(address: Address, min: bigint): Promise<bigin
 export async function sendLegacy(tx: { to: Address | null; value?: bigint; data?: Hex; gas?: bigint; key?: Hex }): Promise<any> {
   const account = privateKeyToAccount(tx.key ?? deployerKey());
   const nonce = Number(await getNonce(account.address, "pending"));
+  const gasPrice = (BigInt(await rpc<Hex>("eth_gasPrice")) * 3n) / 2n + 2_000_000n;
   // New accounts and storage slots cost far more than on mainnet here, so estimate when no limit is given.
   const gas =
     tx.gas ??
@@ -107,7 +112,7 @@ export async function sendLegacy(tx: { to: Address | null; value?: bigint; data?
     value: tx.value ?? 0n,
     data: tx.data ?? "0x",
     gas,
-    gasPrice: 2_000_000n, // 0.002 gwei; the devnet base fee is 7 wei
+    gasPrice, // the network's price plus a margin: 7 wei locally, about 1 gwei on the public devnet
     type: "legacy",
   });
   const hash = await rpc<Hex>("eth_sendRawTransaction", [raw]);

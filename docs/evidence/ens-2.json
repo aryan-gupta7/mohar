@@ -1,0 +1,95 @@
+{
+  "network": "sepolia",
+  "tests": {
+    "ENS2-T1": {
+      "pass": true,
+      "detail": "15 text records and the chain-1337 address read back through the Universal Resolver"
+    },
+    "ENS2-T2": {
+      "pass": true,
+      "detail": {
+        "simulation": "ok",
+        "readBack": "inspected 2026-11-06"
+      }
+    },
+    "ENS2-T3": {
+      "pass": true,
+      "detail": {
+        "maintenanceKeyEditsPqRoot": "EACUnauthorizedAccountRoles 0x4b27a133",
+        "rootUnchanged": true
+      }
+    },
+    "ENS2-T4": {
+      "pass": true,
+      "detail": {
+        "uploaderEditsLog": "ok",
+        "uploaderEditsPolicy": "EACUnauthorizedAccountRoles 0x4b27a133",
+        "logReadBack": "0g://test-root-placeholder",
+        "policyUnchanged": true
+      }
+    },
+    "ENS2-T5": {
+      "pass": true,
+      "detail": {
+        "maintenanceKeyOnMeter002": "EACUnauthorizedAccountRoles 0x4b27a133",
+        "maintenanceKeyOnMeter002ForMeter001Name": "EACUnauthorizedAccountRoles 0x4b27a133"
+      }
+    },
+    "ENS2-T6": {
+      "pass": true,
+      "detail": {
+        "transferMeter001": "TransferUnsafeUntilRegistryIsEmancipated 0x54838f98",
+        "note": "the deployed registry refuses with TransferUnsafeUntilRegistryIsEmancipated, not TransferDisallowed: transfers are blocked for a different stated reason"
+      }
+    },
+    "ENS2-T7": {
+      "pass": true,
+      "detail": {
+        "note": "observed only; nothing here is a claim beyond what was seen",
+        "before": {
+          "status": "AVAILABLE",
+          "expiry": 1793958414,
+          "resolvesToZeroAddress": "ok:0x"
+        },
+        "after": {
+          "status": "AVAILABLE",
+          "expiry": 1793958710,
+          "ownerOf": "0x0000000000000000000000000000000000000000",
+          "resolution": "ok:0x"
+        },
+        "reRegisterSimulation": "ok"
+      }
+    }
+  },
+  "txs": {
+    "meter-001 records": "0xd299cc7ffcf04ea9f03918afbb90dd0d507345b50f028f6223330b0f5011fd55",
+    "grant mohar.maintenance.status": "0x80c3914ed9703bebd65e10cacc0a0f95434d2c9f5b1aaaaee3ed1536801fc9c5",
+    "grant mohar.log": "0x06e48495e3f196d84deb8f516d2977874ad0fd4202207bf6ab70e63e8da46699",
+    "T2 maintenance edits status": "0xf4e1e8e921f4f318d04e4768ee0f1a7fa2b2ae108940baf87b9aa30d1207194b",
+    "T4 uploader edits log": "0x5c0503f1846f20f8a1f81cea4a3b29adb468304048ca0206e8bb311a521e9b24",
+    "deploy resolver lease-test": "0x127d10fe0d8af3d978f53808dd0dca6d8fc37ee460409862a530fc5532e8e500",
+    "register lease-test": "0x9943f481594858857bf0952da94b1951ac0bdbd6d370d9bc25a77135398733c7",
+    "deploy resolver temp-test": "0xbd9bf5f18762ac5dc8e84b71e798c2a4c669d48e19f5d613c1911e5ddab81f07",
+    "register temp-test": "0x1b3ac9fb93b5300816e8da632b18d5130fa2badb74683affafb30f21c3c20367"
+  },
+  "startedAt": "2026-11-06T09:48:44.866Z",
+  "accounts": {
+    "owner": "0xcfb296f635254A4B3281D2e285174E98D643Ef60",
+    "maintenance": "0xFA129F48deF75d7d870e2F60142dc56a906D5391",
+    "uploader": "0x4ab4b0AFeEb0ED50a9B4A31aBDC09887Fc6e6AFf"
+  },
+  "names": {
+    "meter-001": {
+      "resolver": "0x81407d1c7C9F482a1cDCC00110E7A0dAD374758a",
+      "expiry": 1794556180,
+      "tokenId": "17290027328679010741964140994828050516707487482904385513452757343069989240832"
+    },
+    "meter-002": {
+      "resolver": "0xf37AaBEB5051DD2fE5934B0af464AaeE4108d03E"
+    }
+  },
+  "fleet": {
+    "registry": "0x53AD330F425412DCFFf888d58d7CB21f28BEeA01",
+    "resolver": "0x7c0768Ca185865Ab3A10D65e5CFD8Fc29288B6ab"
+  }
+}

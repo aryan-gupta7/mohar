@@ -22,7 +22,9 @@ export const DEVICE_STEP_LIMIT = 630;
 
 export const STAKE = 12_000_000_000_000_000n; // 0.012 ETH, above the sidecar's 0.01 ETH minimum
 export const UNSTAKE_DELAY = 86_400n;
-export const DEFAULT_FEES = { maxFeePerGas: 2_000_000_000n, maxPriorityFeePerGas: 1_000_000n };
+// The public devnet's relayer didn't include a transaction priced at 2 gwei max / 1 gwei tip (the base fee is about 1 gwei):
+// it was admitted, relayed four times, then dropped. 5 gwei max / 2.5 gwei tip was mined. Local needs far less.
+export const DEFAULT_FEES = NETWORK === "public" ? { maxFeePerGas: 5_000_000_000n, maxPriorityFeePerGas: 2_500_000_000n } : { maxFeePerGas: 2_000_000_000n, maxPriorityFeePerGas: 1_000_000n };
 
 export const PAYMASTER_ABI = parseAbi([
   "function settle()",

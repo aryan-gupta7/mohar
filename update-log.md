@@ -201,12 +201,38 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - So T4 was run against the public gateway: the board signed and sent a transaction, and the node decoded and judged it (`Nonce mismatch`, since that account isn't on the public chain).
 - **Three bugs of mine, found on the board and fixed:** byte-at-a-time TLS writes (88 s down to 11 s); the signature wasn't copied for streaming; a 2.4 KB buffer was allocated permanently. Two earlier edits had silently not applied after a failed `cd`.
 
+### About 12:00 to 12:45 DEV-7 and 0G-2: the checkpoint loop, written and run on the real board
+- Wrote the whole device behaviour: `machine.*` (checkpoint timer, four modes, status and pulse LEDs), `rpc.*` (chain access over Wi-Fi/HTTPS or the USB bridge), `zerog.*` (the 0G call: one word, only exactly `RUN` or `INSPECT`, real request ID), `config.*` (provisioning), `meter.*` windows packed into each report.
+- Each checkpoint: take the pulse window → read the ledger → fixed checks (peak above 13.8 kW, 3 or more glitches, any stuck line → INSPECT, no network) → ask 0G → pick the most cautious of {decision, ledger hold, credit} → show it on the LED → save intent, sign, send → compare the node's hash with its own.
+- **What the real board did against the local chain** (`firmware/tools/behaviour_test.py`, USB bridge, injected decisions in place of 0G): normal load with credit gave RUN and a mined report whose ledger total equalled the board's pulse count (18 = 18); an INSPECT set the hold on-chain; an AI "run" afterwards did not clear it; the operator cleared it and it went back to RUN; a glitching line gave INSPECT from the local check with the decision service failing; no decision gave SAFE_STOP with an empty request ID; credit running out gave CREDIT_STOP with 14 pulses of arrears; a top-up paid the arrears first and returned to RUN.
+- **Four bugs found by running it, all fixed:**
+  1. A flash write held interrupts off for over 200 ms, so a normal 30 ms pulse looked 200 ms long and was reported as a stuck line. The interrupt can no longer declare a stuck line; only the main loop, sampling the pin, can. Pulses whose two edges arrive together are counted (and tallied separately).
+  2. Commands sent during a checkpoint were swallowed while the board waited for the bridge. Now documented; tests send commands between checkpoints.
+  3. `checkpoint-now` didn't work with the loop off.
+  4. An INSPECT report still waiting to be mined **re-set the hold after the operator had cleared it**. That is correct ledger behaviour (an INSPECT report always raises the hold), so the tests now wait until each report is mined.
+- **What slowed us down, measured:** the sidecar bundles transactions every **10 s** by default, so each report waited up to 10 s to be mined and every test step waited. Set to 1 s for the local sidecar only (`devnet/sidecar.sh`; it changes timing, not any admission rule). The behaviour run went from about 7 minutes to 152 s. Other slow things: the board's 4-minute key generation (done once; the key now survives), and my test steps depending on each other, so one failure cascaded (each step now starts from a known state).
+- **Still open:** the "counting continues in CREDIT_STOP" check showed no new pulses between two checkpoints during a 12 kW surge. Idle counting is exact (27 = 26 over 30 s). Investigating whether it is a regression.
+
+### About 12:45 Parallel work started
+- Three agents are running, each limited to its own folder: ENS-2 (`meter-001.mohar.eth` and its permissions on Sepolia), 0G-4 (the episode log on 0G Storage; the 0.1 0G you sent arrived), and DEV-8 (the dashboard). The board and the local chain stay with me. They don't edit these shared documents or commit; I merge their results.
+
+### About 15:00 to 15:40 Public devnet evidence (EF-1 and EF-2), and the plan rewritten for the Mohar Console
+- **Devnet ETH arrived:** the faucet had been refilled, and sent 1 ETH. Public setup transactions need a real gas price (about 1 gwei, not the 7 wei of the local chain), so they now price from the network.
+- **EF-1, first attempt:** the public alt mempool **admitted** the transaction (hash matched, outcome `accepted`), the miner relayed it four times, and it was **cancelled: "relayed 4 times without being included in a block"**. Cause: fees. At 2 gwei max / 1 gwei tip it was never included.
+- **EF-1, second attempt at 5 gwei max / 2.5 gwei tip: mined** (block 1977, both frames succeeded, 169,146 gas, nonce 1 → 2).
+- **The same run settled the staked-budget question, and corrected something I had told you:** a **staked account was admitted and mined with 150,000 verification gas**. The 100,000 cap I measured on the first night applied to unstaked senders. The docs' staked budgets are real. Our design stays within 100,000 and doesn't need the extra, but the earlier claim (in the plan, mechanism and the first-night log) was wrong for staked senders and is corrected.
+- **EF-2 on the public devnet, T1 to T9, all pass:** same bytes refused by the canonical path and admitted by the alt mempool, mined in block 2010 with four frames succeeding, the account paid nothing, quota 10 → 9, and replay, over-quota, revoked and unstaked-paymaster transactions all refused.
+- **Hardware:** added a structured event line for each pipeline stage on the board (`EV {...}`, documented in `docs/event-protocol.md`), so the dashboard can show only real firmware events. Cut 5.5 KB of permanent RAM (TLS needs about 28 KB of the free heap) by moving large buffers to per-call allocations. Fixed the false stuck-line alarm for good: the main loop now counts low samples only when they are taken back to back (a blocked loop was letting two different pulses look like one long one). **The full behaviour suite passes again, with the stuck count at 0 through the 12 kW surge.**
+- **Agents:** the 0G Storage log agent finished (T1, T3, T4, T5 pass; details below). The dashboard agent was stopped; I restarted it against the expanded Mohar Console spec. The ENS-2 agent hit the usage limit mid-way with reads coming back empty; resumed.
+- **Plan rewritten:** DEV-8 is now the Mohar Console from your brief: a live pipeline with eight real stages and provenance badges, a Demo Console (Web Serial, desktop), and a Meter Dashboard (phone-friendly), built in MVP / Strong / Polish levels with eleven tests.
+- **The hotspot** went off at about 14:30 and was back at about 15:15. 0G-2 (the board calling 0G) still needs a Wi-Fi test.
+
 ---
 
 ## Current state
 
-**Done:** DEV-0 to DEV-5 (including the power pulls) and EF-2L on the local chain, 0G-1, ENS-1 on Sepolia, pulse counting on real hardware.
-**Next (your priority: hardware first):** DEV-7 checkpoint loop (windows in reports, modes, LEDs), then 0G-2 and 0G-3 on the board.
+**Done:** DEV-0 to DEV-6, most of DEV-7, EF-1 and EF-2 on the public devnet, 0G-1, ENS-1, and the 0G Storage log pipeline.
+**In progress:** the Mohar Console (agent), ENS-2 (agent). **Mine:** 0G-2 and 0G-3 on the board (needs the hotspot).
 
 **Blocked on you:**
 1. Devnet ETH for `0xcfb296f635254A4B3281D2e285174E98D643Ef60`.

@@ -26,6 +26,8 @@ struct IntentInfo {
 // If sigOut is not null (2,400 bytes), the signature is copied there too, so the JSON form can be streamed later.
 IntentResult intent_sign(const ReportParams &req, uint8_t *raw, size_t cap, size_t *rawLen, ReportParams *used, IntentInfo *info, uint8_t *sigOut = nullptr);
 
+// The saved intent's report (valid only when hasIntent). Lets the device resend it unchanged.
+void intent_pending_params(ReportParams *p);
 void intent_state(uint32_t *nextLeaf, bool *hasIntent, uint64_t *intentNonce);
 void intent_set_next_leaf(uint32_t v);  // tests only
 void intent_reset();                    // tests only; also happens automatically when the key changes

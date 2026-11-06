@@ -101,6 +101,10 @@ void intent_state(uint32_t *nextLeaf, bool *hasIntent, uint64_t *intentNonce) {
   *hasIntent = g.hasIntent;
   *intentNonce = g.intentNonce;
 }
+void intent_pending_params(ReportParams *p) {
+  if (!loaded && keystore::ready()) load();
+  if (g.hasIntent) *p = g.params;
+}
 void intent_set_next_leaf(uint32_t v) {
   if (!loaded && keystore::ready()) load();
   g.nextLeaf = v;

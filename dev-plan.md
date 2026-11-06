@@ -51,14 +51,14 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 6 | [EF-2L](#ef-2l-alt-mempool-rules-on-a-local-sidecar) | Alt mempool rules, local sidecar | Fri 12:00 | ✅ Done Fri 08:55 |
 | 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | ✅ Done Fri 10:25, all tests |
 | 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | ✅ T1–T6 passed Fri ~11:45 (T4 on the public devnet, see below); T7 soak with DEV-7 |
-| 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | Needs funds |
+| 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | ✅ Done Fri ~15:25, mined on the public devnet |
 | 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | ✅ T1–T5 passed Fri ~09:45; T6–T8 open |
-| 11 | [EF-2](#ef-2-the-alt-mempool-proof) | Alt mempool proof, public | After EF-1 | Needs funds |
+| 11 | [EF-2](#ef-2-the-alt-mempool-proof) | Alt mempool proof, public | After EF-1 | ✅ Done Fri ~15:35, T1–T9 on the public devnet |
 | 12 | [ENS-1](#ens-1-fleet-name-and-registry) | Fleet name and registry | Fri 16:00 | ✅ Done Fri ~10:55 |
 | 13 | [DEV-7](#dev-7-meter-signal-acquisition-and-device-behaviour) | Meter signal acquisition and device behaviour | Fri 18:00 | Partly done: counting T1–T4, T13 passed; T5–T12 open |
 | 14 | [EF-3](#ef-3-device-signed-transaction-with-the-laptop-off) | Device-signed, laptop off | Fri 19:00 | |
 | 15 | [ENS-2](#ens-2-machine-identity-and-permissions) | Machine identity and roles | Fri 19:00 | |
-| 16 | [DEV-8](#dev-8-dashboard) | Dashboard | Fri 21:00 | |
+| 16 | [DEV-8](#dev-8-mohar-console-dashboard) | Mohar Console (dashboard) | Fri 22:00 | In progress |
 | 17 | [ENS-3](#ens-3-discovery-and-permission-demo) | Discovery and permission demo | Fri 22:00 | |
 | 18 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 22:00 | |
 | 19 | [ENS-4](#ens-4-the-device-reads-its-policy-from-ens) | Device reads ENS policy | Sat 00:00 | Optional |
@@ -75,8 +75,8 @@ The schedule was moved on Friday 08:46: the work started again at 08:20, and the
 
 | Fact | Evidence | Label |
 |---|---|---|
-| Validation is capped at **100,000 gas** on the public devnet | Sidecar rejected 102,801 with `exceeds MAX_VERIFY_GAS 100000`; its source has no stake exception | **Verified** unstaked; staked is settled in EF-1 |
-| The docs' 1M and 2.5M staked budgets don't apply in that check | Same source | **Verified** in source only |
+| Validation is capped at **100,000 gas for an unstaked sender** on the public devnet | Sidecar rejected 102,801 with `exceeds MAX_VERIFY_GAS 100000` | **Verified** (unstaked) |
+| **A staked account got more:** admitted and mined with 150,000 verification gas on the public devnet | EF-1, [docs/evidence/ef-1.json](docs/evidence/ef-1.json): hash `0xeb22f90a…3785`, block `0x7c0` | **Verified** on the public devnet. Our design doesn't need it: it stays within 100,000 |
 | Only `nonce_keys = [0]` fits the budget | Measured in [e03_probe.ts](signer/exp/e03_probe.ts) | **Verified** |
 | `TXPARAM`, `SIGPARAM`, `FRAMEPARAM`, `FRAMEDATALOAD`, `SIGDATACOPY`, `APPROVE` work from Yul | Same probe | **Verified** |
 | Our digest equals the client's `SIG_HASH` | Same probe | **Verified** |
@@ -587,42 +587,77 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 
 ---
 
-## DEV-8: Dashboard
+## DEV-8: Mohar Console (dashboard)
 
-**Status:** Not started · **Target:** Fri 19:00 · **Depends on:** DEV-3, ENS-2 · **Needs from you:** hosting choice in REL-2
+**Status:** Restarted Fri ~15:15 with the expanded brief below. An earlier partial build exists in `dashboard/`. · **Depends on:** DEV-3, ENS-2 for the identity page; the event protocol in [docs/event-protocol.md](docs/event-protocol.md) for everything live · **Needs from you:** hosting choice in REL-2
 
-**Why:** ENS and 0G both require a live demo link, and judges need to see state without a terminal.
+**Why:** this is the interface for the demo, and the product view. A person should understand the whole system from the screen: **a user picks a meter scenario → the physical device measures it → AI assesses it → the device signs its own report → Ethereum verifies it → the dashboard shows the evidence.** The dashboard presents; the hardware produces. It is a static frontend with **no backend and no trackers**, and no key or secret ever enters the browser.
 
-**What gets built:** a static site in `dashboard/` with **no backend** and no trackers.
+### Two experiences, one design system
 
-**How it must behave**
+1. **Demo Console** (desktop Chrome/Edge): the live pipeline, the scenario controls and the device log. Uses Web Serial.
+2. **Meter Dashboard** (desktop and phone): what the owner or operator gets. Reads ENS, the devnet RPC and 0G only. Works on iPhone Safari, which has no Web Serial.
 
-1. **Starts from a name.** It resolves `meter-001.<fleet>.eth` through the Universal Resolver, and finds the account, ledger and paymaster from ENS records. **The only configured values are RPC URLs.**
-2. **Cross-checks identity.** It compares `mohar.pq.root` from ENS with `root()` on the account, and shows a clear warning if they differ.
-3. **Shows state:** mode, credit, arrears, hold, quota, the last reports, and each frame's result.
-4. **Shows the meter:**
-   - **Pulse count:** the ledger's `lastTotal`, updated at each report.
-   - **Live pulses between reports:** optional. In Chrome, the page can read the ESP8266's USB serial directly with the Web Serial API, with no backend. It's labelled as a local view, not chain data.
-   - **Consumption estimate:** kWh (pulses ÷ 3,200) and average watts per window, decoded from the report's `sensors` word.
-   - **Anomaly status:** glitches, stuck-low events and peak watts from `sensors`, plus the mode, reason code, 0G request ID and confidence of the latest report.
-5. **Shows the log:** the latest 0G root from `mohar.log`, once 0G-4 exists.
-6. **Actions through a wallet:** top up, clear hold, and edit an ENS record.
-7. **Fails clearly.** An unknown name, an unreachable RPC or a wrong chain each shows its own message.
-8. **Never claims disconnection.** `CREDIT_STOP` is shown as "credit exhausted, usage accruing as arrears".
+### The live pipeline (centrepiece of the Demo Console)
 
-**Tests**
+Left to right on desktop, vertical on a phone. Each stage has a status `WAITING / PROCESSING / COMPLETED / FAILED / UNAVAILABLE` and opens a detail panel with its real inputs and outputs. **A stage changes only when its real event has happened** (an `EV` line, a Pico `METER` line, an RPC receipt or a contract read), or is labelled as a replay.
+
+| Stage | Source of truth | Shows |
+|---|---|---|
+| 1 Meter simulator (Pico H) | `METER` lines | scenario, simulated load, pulses, rate, `SIMULATED METER INPUT` badge, and an **Apply meter scenario** button that writes the one-character command over Web Serial. The browser sends a scenario, never a reading: the Pico makes real pulses |
+| 2 Pulse capture (ESP8266) | `EV window` | total, valid, glitches, stuck-low, window, average and peak watts, kWh; a pulse indicator; "3,200 pulses = 1 kWh" |
+| 3 AI assessment (0G) | `EV ai_request`, `ai_response` | provider, `qwen3.8-flash`, request ID, `RUN`/`INSPECT`, latency. **No confidence value: the model gives none** |
+| 4 Local policy and state | `EV local_check`, `decision` | final mode and why (AI, local rule, credit, hold, no AI response); priority `SAFE_STOP` → `INSPECT` → `CREDIT_STOP` → `RUN`; shows that AI cannot clear a hold or override credit; `CREDIT_STOP` is a ledger state, **never a disconnection** |
+| 5 Signing | `EV sign_start`, `sign_done` | device identity, scheme, Merkle root, leaf, **leaves left of 256**, signing time |
+| 6 Transaction and alt mempool | `EV submit`, `submitted`, RPC | prepared → signed → submitted → mempool accepted → executed → confirmed, with hash and per-frame results. **Submitted is not confirmed** |
+| 7 Contracts | RPC reads and events | MoharAccount (signature and scope), QuotaPaymaster (remaining quota), MachineLedger (what was recorded), as three separate parts |
+| 8 Verified record | ledger `status()` and `Report` events | sequence, pulses, kWh, credit, arrears, mode, hold, hash, confirmation |
+| ENS layer | Sepolia reads | `meter-001.mohar.eth`, roles and records; **labelled Sepolia, separate from the Mohar devnet** |
+| 0G Storage layer | uploader state | archived root, or "not archived"; never a made-up receipt |
+
+**Provenance badges, used everywhere:** `SIMULATED INPUT` · `LIVE HARDWARE` · `DERIVED` · `AI RESPONSE` · `LOCAL POLICY` · `SIGNED` · `MEMPOOL ACCEPTED` · `ON-CHAIN CONFIRMED` · `ARCHIVED`. Every number says where it came from, when, and whether it is confirmed (a live device reading and the last confirmed ledger reading are shown side by side).
+
+### Meter Dashboard pages
+
+Build in this order; stop at the end of any level and ship.
+
+| Level | Pages |
+|---|---|
+| **MVP** | Demo Console with the pipeline, Overview, Live Meter, Device Processing, Verified Report |
+| **Strong** | AI Insights (incl. "AI recommended X, ledger hold forced INSPECT, final INSPECT"), Credit & Ledger, Identity & Access (ENS, one allowed and one rejected edit, Sepolia vs devnet labelled), Activity & Audit (a report expands to its on-chain events and proof) |
+| **Polish** | Sensor Explorer (connected: pulse input, signal integrity; derived: power, energy; **"not installed": voltage, current, temperature, appliance level, with no invented charts**), Usage Analytics (live, today, 7 and 30 days where data exists), Device & Security (root check against ENS, leaves left, "experimental, unaudited"), dark mode |
+
+**Rules that never bend:** no electricity-disconnection claims (there is no relay); devnet ETH credit is never shown as rupees (label it "demo credit", or define a tariff and say so); estimates say "estimated"; no forecast without enough history; no confidence number; no fake sensors; no hard-coded account, ledger or paymaster address (all discovered from the ENS name); stale data is labelled stale and an unreachable RPC or device shows an error, never old numbers as live.
+
+### Tests
 
 | ID | Pass only if |
 |---|---|
-| DEV8-T1 | The site loads and shows correct data from a name alone. Searching the code finds no account, ledger or paymaster address |
-| DEV8-T2 | Displayed credit, hold and quota equal direct `eth_call` results |
-| DEV8-T3 | Changing `mohar.pq.root` makes the warning appear |
-| DEV8-T4 | Top up and clear hold work, and the state updates |
-| DEV8-T5 | An unknown name and a dead RPC each show the right error |
-| DEV8-T6 | The browser's network tab shows only RPC traffic, with no trackers |
-| DEV8-T7 | It's usable at phone width, at about 400 pixels |
-| DEV8-T8 | kWh, average watts and anomaly fields equal values decoded independently from the latest `Report` event |
-| DEV8-T9 | With the Web Serial view connected, the live count matches the ESP's serial output, and the page still works when it's not connected |
+| DEV8-T1 | A name resolves to the account, ledger and paymaster; searching the code finds no such address |
+| DEV8-T2 | Displayed credit, arrears, hold and quota equal direct `eth_call` results |
+| DEV8-T3 | Changing the ENS root makes a mismatch warning appear |
+| DEV8-T4 | Pulse total and kWh match the ESP's `EV window` and the last ledger report; live and confirmed values are shown separately |
+| DEV8-T5 | The pipeline reacts to a real scenario: applying "surge" on the Pico moves stages 1→8 only as their real events arrive, and a stalled stage stays `PROCESSING` |
+| DEV8-T6 | A report expands to its timeline reconstructed from on-chain events |
+| DEV8-T7 | Usable at 400 px, and without Web Serial everything except the Pico controls still works |
+| DEV8-T8 | Unknown name, dead RPC and a disconnected device each show their own explicit error |
+| DEV8-T9 | Network traffic shows only RPC, ENS and 0G reads, no trackers; no secret appears in the code |
+| DEV8-T10 | Top up and clear hold work through a wallet |
+| DEV8-T11 | The AI request ID shown matches the archived 0G episode |
+
+**Design:** dark midnight shell with graphite surfaces and light content cards; lime for success and active, lavender for AI, pale blue for telemetry (starting palette graphite `#232323`, lime `#b9e303`, lavender `#a88ed4`, pale blue `#b5d5e1`); large readable values, rounded cards, restrained motion, light and dark. It should look like a hardware console crossed with a consumer app, not an admin template.
+
+---
+
+# Part A2: Hardware items still open
+
+| Item | Status |
+|---|---|
+| DEV-6 T7 (30-minute soak) and DEV-7 T12 (counting while TLS is busy) | Open. Needs Wi-Fi |
+| DEV-7 T5 (unplug the pulse wire) | Open, needs a person |
+| 0G-2 (the board calls 0G) | Code written; needs Wi-Fi to test; RAM was too tight and is being trimmed |
+| 0G-3 (live loop with real 0G) | After 0G-2 |
+| EF-3 (laptop off, on a hotspot) | After the public devnet confirms a mined transaction |
 
 ---
 
@@ -634,7 +669,18 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 
 ## EF-1: WOTS transaction on the public devnet
 
-**Status:** Blocked: needs funds · **Target:** as soon as funded, **Fri 12:00 latest** · **Depends on:** DEV-2 · **Needs from you:** 0.2 ETH on the devnet
+**Status:** ✅ Done Fri ~15:25 on the **real public devnet**. Evidence: [docs/evidence/ef-1.json](docs/evidence/ef-1.json) · **Target was:** as soon as funded, **Fri 12:00 latest**
+
+| Test | Result |
+|---|---|
+| EF1-T1 | Mined, status `0x1`, both frames succeeded, chain 1337, block 1977, 169,146 gas |
+| EF1-T2 | The hash the node returned equals ours |
+| EF1-T3 | Hash `0xacb01c66…2e9b`; search it at the explorer (its history is in memory only: **save a screenshot**) |
+| EF1-T4 | `skandha_frameTransactionStatus` answered "not found" after inclusion; the receipt is the proof |
+| EF1-T5 | The account's nonce went 1 → 2 |
+| EF1-T6 | **A staked account was admitted, and mined, with 150,000 verification gas** (hash `0xeb22f90a…3785`). The 100,000 cap applies to unstaked senders |
+
+**The first attempt was admitted and then dropped.** At 2 gwei max fee / 1 gwei tip the public alt mempool admitted the transaction, the miner relayed it four times, and it was cancelled with "relayed 4 times without being included in a block". The base fee there is about 1 gwei. At **5 gwei max / 2.5 gwei tip** the same kind of transaction was mined within seconds. So `DEFAULT_FEES` on the public network is now 5 / 2.5 gwei, and setup transactions price from `eth_gasPrice`. · **Depends on:** DEV-2 · **Needs from you:** 0.2 ETH on the devnet
 
 **Why:** this is the kill test on the real network, not just our copy of it.
 
@@ -715,7 +761,21 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 
 ## EF-2: The alt mempool proof
 
-**Status:** Blocked: needs funds · **Target:** Fri 13:00 · **Depends on:** EF-1, DEV-3 · **Needs from you:** nothing further
+**Status:** ✅ Done Fri ~15:35, T1 to T9 on the **public devnet**. Evidence: [docs/evidence/ef-2-public.json](docs/evidence/ef-2-public.json), plus the local copy [ef-2-local-alt.json](docs/evidence/ef-2-local-alt.json). · **Needs from you:** nothing
+
+| Test | Public devnet result |
+|---|---|
+| EF2-T1 | Canonical path refuses: `StorageReadNonSender` |
+| EF2-T2 | The alt mempool admits **the same bytes**; hash `0x161873f6…0e0b` equals ours |
+| EF2-T3 | Admission report saved |
+| EF2-T4 | Mined in block 2010, four frames `0x1`, paid by the paymaster, **account balance 0** |
+| EF2-T5 | Quota 10 → 9 |
+| EF2-T6 | First report within quota mined; the second refused at submission (`validation frame 1: reverted`) |
+| EF2-T7 | Unstaked paymaster refused: `unstaked payer accessed payer slot 0x…01` |
+| EF2-T8 | Replay refused: `Nonce mismatch: expected 2, got 1` |
+| EF2-T9 | Revoked device refused: `validation frame 1: reverted` |
+
+Same script as the local run (`MOHAR_NET=public node signer/tools/ef2.ts`), no code change between them.
 
 **Why:** this is the centrepiece for EF judges: the same signed bytes, refused by the public path and admitted by the alt mempool, with the real reasons shown.
 
@@ -1124,7 +1184,7 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 - [ ] Admitted transaction link, and the code that submits one
 - [ ] The rejection and admission evidence from EF-2
 - [ ] Team can explain the design, code and trade-offs
-- [ ] Budget finding stated: the docs' staked budgets didn't apply in our testing
+- [ ] Budget finding stated: unstaked senders are capped at 100,000 validation gas; a staked account was admitted and mined at 150,000
 
 **ENS: Best Use of ENSv2**
 - [ ] Live demo link

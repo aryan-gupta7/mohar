@@ -1,0 +1,88 @@
+{
+  "phase": "0G-4",
+  "at": "2026-11-06T07:52:03.245Z",
+  "network": {
+    "storage": "0G Galileo testnet",
+    "chainId": 16602,
+    "evmRpc": "https://evmrpc-testnet.0g.ai",
+    "indexer": "https://indexer-storage-testnet-turbo.0g.ai"
+  },
+  "sdk": {
+    "package": "@0gfoundation/0g-storage-ts-sdk",
+    "version": "1.2.12",
+    "note": "1.2.13 was 13 days old, under the two-week rule; ethers pinned to 6.13.1 as its peer"
+  },
+  "payer": "0xcfb296f635254a4b3281d2e285174e98d643ef60",
+  "balance0G": {
+    "before": "0.099915999999853",
+    "after": "0.087745588282288499"
+  },
+  "mainRun": {
+    "ledger": "0xf976853ee4ccd2da5634c9dcd1bca57ff99bea40",
+    "chain": "local EF devnet copy (1337)",
+    "batches": [
+      {
+        "root": "0x67e1ea77fc21ad96b23413ab814a8f0d81588f0b17e31454f962251b8472dc21",
+        "txHash": "0x7ffa337f1c67b08959db4ff5b747faa45d63d80eb7440461827ffe8a5022e531",
+        "fromSeq": 1,
+        "toSeq": 4,
+        "at": "2026-11-06T07:49:36.911Z"
+      },
+      {
+        "root": "0x99889257e85ccc3c758705142f5dda237dde1818f58d4e8dbc9e400c12c550f2",
+        "txHash": "0xa35988594d8f6f237a4325826c811da52c0b89ca95d9d36f0b62e0d27ca3cdfb",
+        "fromSeq": 5,
+        "toSeq": 8,
+        "at": "2026-11-06T07:49:49.815Z"
+      },
+      {
+        "root": "0x2c235057cc80dba041d17b95b6948640bc06c60429f7156590dea549004fd5b6",
+        "txHash": "0x0916cb917d01fc963c570ddd9f7369982d9d6fd0ab5aefd734ce749602462f40",
+        "fromSeq": 9,
+        "toSeq": 11,
+        "at": "2026-11-06T07:50:01.202Z"
+      }
+    ]
+  },
+  "crashRun": {
+    "ledger": "0xf480f92a9affd0c44ddf50281ee000a8f99e6e0a",
+    "batches": [
+      {
+        "root": "0xa2f661031f9ae550ac1f041c7f89379fcdd480bccce0f5a4355facd22c3a9aec",
+        "txHash": "",
+        "fromSeq": 1,
+        "toSeq": 4,
+        "at": "2026-11-06T07:50:51.473Z"
+      },
+      {
+        "root": "0xf257b5c2f67cf51e4c61df13885782368d0806dab855609894f237148274325f",
+        "txHash": "0xa06ea3094ae6e0f7a992b82b51bca74f59d3c01df0778d41bfcf02113d9438ee",
+        "fromSeq": 5,
+        "toSeq": 8,
+        "at": "2026-11-06T07:51:06.389Z"
+      },
+      {
+        "root": "0x8c4d47c36634ab6a8d6c8839d3d4e4b6dad4eb7492295599f8a2bfc0952ed0a8",
+        "txHash": "0x5f1e2b6d894e3a5d356af864c8a0053d52c41c727eda42a2fe13fd62b65dc3bf",
+        "fromSeq": 9,
+        "toSeq": 12,
+        "at": "2026-11-06T07:51:18.901Z"
+      }
+    ],
+    "note": "run 1 killed after upload before saving; run 2 re-uploaded the identical bytes and got the same root (0xa2f66103…)"
+  },
+  "superseded": "An earlier upload of the same ledger used the previous field name request_id_is_0g (roots 0x9696bea9…, 0xfd8ef12b…, 0x684474fd…). It replayed MATCH too, and was replaced after the field was renamed request_id_is_uuid.",
+  "results": {
+    "0G4-T1": "PASS: upload returned a root; download with proof verification gave 2771 bytes identical to the bytes rebuilt from the chain, and the root of the downloaded bytes equals the requested root",
+    "0G4-T2": "PARTIAL: all 5 SAFE_STOP records built by the board have a null request ID and is_decision=false (PASS). All 45 decision records built by the board carry an ID, but every one is 'dev-injected' (test injection), 0 are real 0G request IDs: cannot pass until 0G-2/0G-3 run against live 0G",
+    "0G4-T3": "PASS: replay matched every record against the chain, on 3 batches (11 reports) and 3 more in the crash run (12 reports); exit code 0",
+    "0G4-T4": "PASS: a one-watt edit in one record is reported as MISMATCH in meter; an edit plus a removed record is reported as MISMATCH in selected_mode and 3 records against 4 expected; exit code 1",
+    "0G4-T5": "PASS: killed after upload before saving progress, then after saving; restart produced contiguous batches 1-4, 5-8, 9-12, no gap, no duplicate, same root for the re-uploaded batch",
+    "0G4-T6": "NOT IN SCOPE: uploader/ens-hook.ts is a no-op placeholder until ENS-2"
+  },
+  "gas0G": {
+    "mainRunOf3Batches": 0.004042,
+    "crashRunTotal": "about 0.0013 + 0.0013 + 0.0027",
+    "wholePhaseIncludingDiscardedFirstUpload": 0.01217
+  }
+}

@@ -27,6 +27,7 @@ uint64_t meter_total();                    // cumulative valid pulses
 void meter_take_window(MeterWindow *w);
 // Call often from the main loop: detects a line held low (the interrupt can't see a pulse that never ends).
 void meter_poll();
+uint32_t meter_coalesced();  // pulses whose two edges arrived together (counted as one pulse each)
 void meter_raw(uint32_t *valid, uint32_t *glitch, uint32_t *stuck, int *level);
 // Packs a window into the 32-byte `sensors` word of a report. Layout in mechanism.md.
 void meter_pack(const MeterWindow *w, uint8_t out[32]);

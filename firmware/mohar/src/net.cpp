@@ -18,7 +18,7 @@ bool net_wifi_connect(uint32_t timeoutMs) {
   return net_wifi_up();
 }
 
-int net_post_json(const char *host, uint16_t port, const char *path, const char *body, size_t bodyLen, char *resp, size_t respCap, NetStats *st, uint32_t timeoutMs) {
+int net_post_json(const char *host, uint16_t port, const char *path, const char *body, size_t bodyLen, char *resp, size_t respCap, NetStats *st, uint32_t timeoutMs, const char *bearer) {
   memset(st, 0, sizeof(*st));
   st->heapBefore = st->heapLowest = ESP.getFreeHeap();
   if (!net_wifi_up()) return -1;
@@ -30,7 +30,9 @@ int net_post_json(const char *host, uint16_t port, const char *path, const char 
   if (!client.connect(host, port)) return -1;
   st->connectMs = millis() - t0;
   if (ESP.getFreeHeap() < st->heapLowest) st->heapLowest = ESP.getFreeHeap();
-  client.printf("POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: application/json\r\nContent-Length: %u\r\nConnection: close\r\n\r\n", path, host, (unsigned)bodyLen);
+  client.printf("POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: application/json\r\nContent-Length: %u\r\nConnection: close\r\n", path, host, (unsigned)bodyLen);
+  if (bearer) client.printf("Authorization: Bearer %s\r\n", bearer);
+  client.print("\r\n");
   client.write((const uint8_t *)body, bodyLen);
   // Status line
   String line = client.readStringUntil('\n');

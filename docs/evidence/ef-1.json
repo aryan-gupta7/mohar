@@ -1,0 +1,65 @@
+{
+  "network": "public",
+  "startedAt": "2026-11-06T09:45:17.261Z",
+  "explorer": "https://explorer.altmempool.wtf/",
+  "chainId": 1337,
+  "clientVersion": "ethrex/v23.0.0-eip8141-tracer-9aa3645d795945c64400f41a70aace0edfa7f383/x86_64-unknown-linux-gnu/rustc-v1.93.1",
+  "stakingRegistryHasCode": true,
+  "deployerBalanceETH": "0.9535658785138479",
+  "fees": {
+    "maxFeePerGas": "5000000000",
+    "maxPriorityFeePerGas": "2500000000"
+  },
+  "contracts": {
+    "sink": "0x2da9774b855d6a43354c7f68b0c26ed29435f75b",
+    "account": "0x7f3ac94f8b6f5600b46d1e7250e8f5a29ae3adda",
+    "accountBalanceETH": 0.01
+  },
+  "verifierSteps": 600,
+  "simulation": {
+    "status": "success",
+    "canonicalValid": true,
+    "violation": null,
+    "frames": [
+      {
+        "gasUsed": "0x14e81",
+        "succeeded": true
+      },
+      {
+        "gasUsed": "0xfe2",
+        "succeeded": true
+      }
+    ]
+  },
+  "EF1-T2 returned hash equals the locally computed one": true,
+  "EF1-T1 receipt": {
+    "status": "0x1",
+    "block": 1977,
+    "frames": [
+      {
+        "status": "0x1",
+        "gasUsed": 85633
+      },
+      {
+        "status": "0x1",
+        "gasUsed": 4066
+      }
+    ],
+    "gasUsed": 169146
+  },
+  "EF1-T3 explorer": {
+    "page": "https://explorer.altmempool.wtf/",
+    "txHash": "0xacb01c660a7725f3e0799f7ccb0d4d4bc8718241d80c77856e15d475c63a2e9b",
+    "note": "search the hash in the explorer; its history is in memory only, so save a screenshot"
+  },
+  "EF1-T4 skandha_frameTransactionStatus": "skandha_frameTransactionStatus: Frame transaction not found",
+  "EF1-T5 nonce": {
+    "before": "1",
+    "after": "2"
+  },
+  "EF1-T6 staked account, 150,000 verification gas": {
+    "verdict": "ADMITTED",
+    "hash": "0xeb22f90aad0d15d571b30392d1f095c15b8af7a0c253b8de3f6a8f3080933785"
+  },
+  "finishedAt": "2026-11-06T09:46:38.504Z"
+}

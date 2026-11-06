@@ -3,7 +3,8 @@
 #include <string.h>
 
 // State shared with the interrupt. Everything the ISR touches is volatile and small.
-static volatile uint32_t vValid = 0, vGlitch = 0, vStuck = 0;
+static volatile uint32_t vValid = 0, vGlitch = 0, vStuck = 0, vCoalesced = 0;
+static uint32_t lowSince = 0;  // main loop: when it first physically saw the pin low
 static volatile uint32_t fallAt = 0;          // micros() at the last falling edge
 static volatile bool low = false;
 static volatile bool stuckFlagged = false;    // this low period was already counted as stuck
@@ -24,12 +25,19 @@ static void IRAM_ATTR onEdge() {
     stuckFlagged = false;
     return;
   }
-  if (!low) return;  // rising edge with no matching fall
+  if (!low) {
+    // A rising edge with no falling edge seen: both edges were latched while interrupts were held off (a flash
+    // write), so a whole pulse happened but its width is unknown. Count it as a pulse, and note that we did.
+    vValid++;
+    vCoalesced++;
+    return;
+  }
   low = false;
-  if (stuckFlagged) return;  // already counted as stuck; its release isn't a pulse
+  if (stuckFlagged) return;  // the main loop already saw this line held low; its release isn't a pulse
   uint32_t width = now - fallAt;
   if (width < METER_MIN_PULSE_US) { vGlitch++; return; }
-  if (width > METER_MAX_PULSE_US) { vStuck++; return; }
+  // A long width can be real, or just a delayed interrupt (a flash write holds them off for 100+ ms). Only the main
+  // loop, sampling the pin itself, may call a line stuck. So here a long pulse still counts as a pulse.
   vValid++;
   if (haveLastValid) {
     uint32_t gap = fallAt - lastValidFall;
@@ -53,15 +61,28 @@ void meter_begin() {
 void meter_set_base(uint64_t b) { base = b; }
 
 uint64_t meter_total() { return base + vValid; }
+uint32_t meter_coalesced() { return vCoalesced; }
 
 void meter_poll() {
-  // A line held low longer than any pulse: count it once and keep it out of the energy count.
-  noInterrupts();
-  if (low && !stuckFlagged && (micros() - fallAt) > METER_MAX_PULSE_US) {
-    stuckFlagged = true;
-    vStuck++;
+  // A line held low longer than any pulse. Judged only from what this loop physically sees: the pin must read LOW on
+  // samples taken back to back (never more than 20 ms apart) for longer than the longest pulse. If the loop was blocked
+  // (a flash write, a network wait), the run of samples is broken and starts over, so two different pulses seen far
+  // apart can't add up to a "stuck" line. Counted once, and kept out of the energy count.
+  static uint32_t lastPoll = 0;
+  uint32_t now = micros();
+  bool contiguous = lastPoll != 0 && (now - lastPoll) <= 20000UL;
+  lastPoll = now ? now : 1;
+  if (digitalRead(METER_PIN) == LOW) {
+    if (lowSince == 0 || !contiguous) lowSince = lastPoll;
+    else if (now - lowSince > METER_MAX_PULSE_US && !stuckFlagged) {
+      noInterrupts();
+      stuckFlagged = true;
+      vStuck++;
+      interrupts();
+    }
+  } else {
+    lowSince = 0;
   }
-  interrupts();
 }
 
 void meter_raw(uint32_t *valid, uint32_t *glitch, uint32_t *stuck, int *level) {

@@ -12,7 +12,7 @@ struct NetStats {
   uint32_t heapLowest;  // lowest free heap seen during the call
   size_t respLen;
 };
-int net_post_json(const char *host, uint16_t port, const char *path, const char *body, size_t bodyLen, char *resp, size_t respCap, NetStats *st, uint32_t timeoutMs);
+int net_post_json(const char *host, uint16_t port, const char *path, const char *body, size_t bodyLen, char *resp, size_t respCap, NetStats *st, uint32_t timeoutMs, const char *bearer = nullptr);
 
 // Sends {"jsonrpc":"2.0","id":1,"method":"eth_sendFrameTransaction","params":[<tx json>]} by streaming it, so the
 // body is never held in memory. tls=false uses plain HTTP (for the local test chain on the LAN only).

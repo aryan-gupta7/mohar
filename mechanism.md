@@ -2,7 +2,7 @@
 
 This describes only what is **built and tested so far**. For what comes next, see [dev-plan.md](dev-plan.md). For the history of each step, see [update-log.md](update-log.md).
 
-**Last updated:** Friday, November 6, 2026, 09:55 IST
+**Last updated:** Friday, November 6, 2026, 13:30 IST
 
 ---
 
@@ -19,6 +19,8 @@ This describes only what is **built and tested so far**. For what comes next, se
 | Board benchmark | [firmware/bench/](firmware/bench/) | Working on the real ESP8266 |
 | Meter simulator | [firmware/pico-meter/](firmware/pico-meter/) | Working on the real Pico H, wired to the ESP8266 (GP0 to D6) |
 | Device firmware: keys, signing, transactions, key safety | [firmware/mohar/](firmware/mohar/) | Working on the real ESP8266: builds and signs whole transactions the alt mempool admits |
+| Device firmware: networking (Wi-Fi, TLS, RPC) | [firmware/mohar/src/net.cpp](firmware/mohar/src/net.cpp) | Working on the real ESP8266: TLS 1.2 to the public devnet, 50 of 50 reads |
+| Device firmware: checkpoint loop, modes, LEDs | [firmware/mohar/src/machine.cpp](firmware/mohar/src/machine.cpp) | Working on the real board against the local chain, with injected decisions |
 | Device firmware: pulse counting | [firmware/mohar/src/meter.cpp](firmware/mohar/src/meter.cpp) | Working: counts the Pico's pulses exactly |
 | 0G decision evaluation | [signer/tools/0g-eval.ts](signer/tools/0g-eval.ts) | Run with a real key: `qwen3.8-flash` chosen |
 
@@ -28,16 +30,21 @@ This describes only what is **built and tested so far**. For what comes next, se
 |---|---|---|
 | A WOTS-signed frame transaction can be mined | **Proven on the local chain** | Mined with status `0x1`; test `end to end` |
 | The canonical rules refuse the paymaster | **Proven on the local chain** | Violation: `StorageReadNonSender` |
-| The public devnet caps validation at 100,000 gas | **Proven for an unstaked sender** | `exceeds MAX_VERIFY_GAS 100000`. The source has no staking exception, but a staked sender hasn't been tried live |
+| The public devnet caps validation at 100,000 gas for an **unstaked** sender; a **staked** account gets more | **Proven both ways on the public devnet** | Unstaked: `exceeds MAX_VERIFY_GAS 100000`. Staked: admitted and mined with 150,000 (EF-1). The earlier note that the docs' staked budgets don't apply was wrong for staked senders. Our design stays within 100,000 anyway |
 | Reports update the ledger through the full 4-frame path | **Proven on the local chain** | DEV3-T8 and T9: events match every field |
-| The alt mempool's rules admit our transaction, and the canonical rules refuse the same bytes | **Proven with the real sidecar code, on our local chain** | EF-2L; [evidence](docs/evidence/ef-2-local-alt.json). Not yet on the public devnet |
+| The alt mempool's rules admit our transaction, and the canonical rules refuse the same bytes | **Proven on the public devnet, and on our local copy** | EF-2: [public](docs/evidence/ef-2-public.json) (block 2010, four frames succeeded, account paid nothing) and [local](docs/evidence/ef-2-local-alt.json) |
+| A WOTS-signed transaction is mined on the public devnet | **Proven** | EF-1: [evidence](docs/evidence/ef-1.json), block 1977 |
+| Fees matter on the public devnet | **Learned the hard way** | At 2 gwei max / 1 gwei tip the transaction was admitted, relayed four times and dropped; at 5 / 2.5 gwei it was mined |
 | An unstaked paymaster is refused | **Proven, same setup** | `unstaked payer accessed payer slot 0x…01` |
 | Anything on the public devnet with our contracts | **Not proven** | Same funding block |
 | The ESP8266 holds its own key and signs transactions the alt mempool accepts | **Proven on the local chain** | DEV4-T8: board-signed report, admitted by the real sidecar code, mined, 4 frames succeeded |
 | The ESP8266 builds the whole transaction itself and keeps one-time-key safety across crashes | **Proven**, including three real power pulls | DEV5-T1 to T9: 31 vectors byte-identical; three device-built transactions mined; crash points injected; power pulled mid-signing three times |
 | The ESP8266 counts a meter's pulses exactly | **Proven on the real Pico and ESP8266** | DEV7-T1 to T4 and T13: counts equal, glitches separate |
 | `qwen3.8-flash` makes reliable inspect or run decisions on meter windows | **Proven on 19 labelled scenarios, 5 runs each** | `docs/evidence/0g-1-qwen3.8-flash.json`. The policy text was written after the first 14 scenarios; 5 more were added after |
-| The ESP8266 reaches the network, holds TLS, and talks to 0G | **Not proven** | DEV-6, 0G-2 |
+| The ESP8266 joins Wi-Fi, holds TLS 1.2, reads the chain and streams a signed transaction | **Proven** | DEV6-T1 to T6: public gateway chain `0x539`, 50 of 50 reads, the node decoded the board's transaction |
+| The board's modes, LEDs, holds and credit logic work against a real ledger | **Proven on the local chain**, with injected decisions | `firmware/tools/behaviour_test.py`; see the device behaviour section |
+| The board calls 0G itself and acts on the answer | **Not yet tested on the board** | The code is written (`zerog.cpp`); 0G-2 tests pending |
+| A transaction submitted by the board over Wi-Fi is mined on the local chain | **Not proven**: the phone hotspot blocks board-to-laptop traffic | Mined proof is the USB-forwarded path (DEV5-T9); the Wi-Fi path was proven to reach and be decoded by the public node |
 | ENS and 0G integrations | **Not started** | Docs and endpoints checked only |
 
 **Local mining proves execution, not mempool admission.** The local node has no sidecar, so tests submit through its privileged route, which skips mempool rules.
@@ -339,6 +346,41 @@ Power estimate: `W = pulses × 1,125,000 / window ms` (3,200 pulses per kWh). A 
 | Heavy 3,000 W, 30 s | | 2,989 W average, 3,095 W peak |
 
 **Not done yet:** the window isn't yet taken at each checkpoint or put into reports, the cumulative total isn't kept across reboots (it must continue from the ledger's `lastTotal`, or the ledger would reject a lower total), and nothing drives the status LED.
+
+### The device's behaviour (DEV-7)
+
+[machine.cpp](firmware/mohar/src/machine.cpp). **Modes, most cautious first: `SAFE_STOP`, `INSPECT`, `CREDIT_STOP`, `RUN`.** Nothing switches any supply; a mode is a state the device shows on its LED and records on the ledger. The device starts in `SAFE_STOP` until its first full check passes.
+
+**One checkpoint** (every `checkpointS` seconds, 60 by default):
+
+1. Take the pulse window (section above).
+2. Read the ledger's `status()` and the account's nonce. **If the chain can't be read, stay `SAFE_STOP`.** No report can be sent; pulses keep being counted. On the first successful read the device continues its total from the ledger's `lastTotal`, so a reboot never sends a lower total.
+3. **Fixed checks, no network:** peak above 13,800 W, or 3 or more glitches, or any stuck-low event → `INSPECT` (reason 1, 2 or 3).
+4. Otherwise ask 0G (below). **No valid decision means `SAFE_STOP`**, with an empty request ID and reason 20. An `INSPECT` answer gives reason 4.
+5. **The ledger can only add caution:** a hold forces at least `INSPECT` (reason 11); credit that can't cover a pulse forces at least `CREDIT_STOP` (reason 10). The final mode is the most cautious of all of these, so **an AI "run" cannot clear a hold or override credit.**
+6. Save the intent, sign, send, and compare the node's returned hash with the device's own. If the previous transaction is still unmined (same nonce), it resends **that** transaction unchanged.
+
+**Reason codes:** 0 none · 1 peak · 2 glitches · 3 stuck line · 4 AI inspect · 10 credit · 11 hold · 20 no decision · 21 chain unreachable · 22 keys used up · 24 startup.
+
+**Status LED** (D4, GPIO2): `RUN` one short blink per 2 s · `INSPECT` two quick blinks per 2 s · `CREDIT_STOP` 1 s on, 1 s off · `SAFE_STOP` solid. **Pulse LED** (D0, GPIO16) flashes for each valid pulse, so it flashes together with the Pico's.
+
+**Report contents:** `seq` = the ledger's last sequence + 1 · `total` = cumulative pulses · `mode`, `reason` · `confidence` 0 (the chat model gives no probability) · `model` 1 for `qwen3.8-flash`, 0 for none or injected · `sensors` = the packed window · `requestId` = the 0G request ID, empty if none.
+
+**Provisioning** ([config.cpp](firmware/mohar/src/config.cpp)): the `provision` console command stores the account, ledger and paymaster addresses, the transport, the checkpoint period and the sanctioned load in `/config.bin`. None of it is secret and none of it widens what the key can sign, because the account only accepts reports to its one ledger. Transport `0` is the USB bridge (the laptop forwards bytes and can't alter signed transactions); transport `1` is HTTPS over Wi-Fi.
+
+**The 0G call** ([zerog.cpp](firmware/mohar/src/zerog.cpp)): HTTPS `POST /v1/chat/completions` to `router-api.0g.ai`, `qwen3.8-flash`, thinking off, the owner's policy as the system message. The device accepts only the exact words `RUN` or `INSPECT` and a present request ID; anything else, an HTTP error or a late answer is "no decision". The key lives in the git-ignored `secrets.h`, and flash is readable, so it must be a low-limit key. **Not yet tested on the board.**
+
+**Test builds only:** `inject run|inspect|fail|none` stands in for 0G, and `loop on|off` and `checkpoint-now` control the timer. The release build has none of them, so it has no code path that invents a decision.
+
+**Measured on the real board, local chain, injected decisions** ([behaviour_test.py](firmware/tools/behaviour_test.py)): normal load with credit gave `RUN` and a report whose ledger total equalled the board's pulse count; `INSPECT` set the hold; a following `run` left it `INSPECT`; after the operator cleared it, `RUN`; a glitching line gave `INSPECT` from the fixed check with the decision service failing; no decision gave `SAFE_STOP` with an empty request ID; credit running out gave `CREDIT_STOP` with the shortfall recorded as arrears, and a top-up paid arrears first.
+
+**Things the tests taught us:**
+
+- A **flash write holds interrupts off for over 200 ms**, so a normal 30 ms pulse can look 200 ms long. The interrupt therefore never declares a line stuck; only the main loop, physically sampling the pin, can. Two edges that arrive together are counted as one pulse and tallied separately (`coalesced`).
+- While waiting for the bridge the board doesn't read console commands. A command sent during a checkpoint is lost; send commands between checkpoints, or turn the loop off.
+- **A reset leaves the loop running.** A provisioned board starts checkpointing 10 s after boot, so a tool that talks to it must send `loop off` early.
+- An `INSPECT` report that is still waiting to be mined **sets the hold again after the operator cleared it.** That is the ledger doing what it says: an `INSPECT` report always raises the hold.
+- **The sidecar bundles every 10 s by default.** Locally it is set to 1 s (`devnet/sidecar.sh`), which only changes timing.
 
 ### The decision model (0G-1)
 

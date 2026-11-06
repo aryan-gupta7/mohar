@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs the ERC-8421 alt mempool sidecar against the LOCAL chain, with the public devnet's rules:
-# minimum stake 0.01 ETH, staking registry 0xd51c…2d2f, admission reports on.
+# minimum stake 0.01 ETH, staking registry 0xd51c…2d2f, admission reports on. Locally it bundles every 1 s
+# instead of the default 10 s, so tests don't wait; that changes timing only, not any admission rule.
 # Start ./devnet/up.sh and the producer first. RPC: http://127.0.0.1:14337/rpc
 # Then use MOHAR_NET=local-alt to submit through it.
 #
@@ -47,7 +48,8 @@ echo "relayer $RELAYER funded on the local chain"
   "relayers": ["$(tr -d '\n' < "$KEY_FILE")"],
   "rpcEndpoint": "$CHAIN_RPC",
   "stakingRegistryAddress": "0xd51c04d7a0b01124e84de152f4e56d9eecb22d2f",
-  "minStake": "10000000000000000"
+  "minStake": "10000000000000000",
+  "bundleInterval": 1000
 }
 EOF
 )

@@ -7,6 +7,9 @@
 #include "frametx.h"
 #include "intent.h"
 #include "net.h"
+#include "zerog.h"
+#include "config.h"
+#include "machine.h"
 #include <ESP8266WiFi.h>
 
 static char line[560];
@@ -70,6 +73,18 @@ static bool parseReport(char *args, ReportParams *p) {
 
 #endif
 
+static bool parseHex20(const char *s, uint8_t *out) {
+  if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
+  if (strlen(s) != 40) return false;
+  for (int i = 0; i < 20; i++) {
+    auto nibv = [](char c) { return c >= '0' && c <= '9' ? c - '0' : (c | 32) >= 'a' && (c | 32) <= 'f' ? (c | 32) - 'a' + 10 : -1; };
+    int a = nibv(s[2 * i]), b = nibv(s[2 * i + 1]);
+    if (a < 0 || b < 0) return false;
+    out[i] = (a << 4) | b;
+  }
+  return true;
+}
+
 static void cmdInfo() {
   Serial.print("INFO root=0x");
   if (keystore::ready()) printHex(keystore::root(), 32); else Serial.print("none");
@@ -93,11 +108,38 @@ static void printU64(uint64_t v) {
 
 static void handle(char *cmd) {
   if (strcmp(cmd, "info") == 0) { cmdInfo(); return; }
+  if (strncmp(cmd, "provision ", 10) == 0) {
+    // provision <sender> <ledger> <paymaster> <transport 0|1> <host> <port> <checkpointS> <sanctionedW> <maxPrio> <maxFee>
+    char *tok[10];
+    int n = 0;
+    for (char *t = strtok(cmd + 10, " "); t && n < 10; t = strtok(nullptr, " ")) tok[n++] = t;
+    DeviceConfig c;
+    memset(&c, 0, sizeof(c));
+    if (n != 10 || !parseHex20(tok[0], c.sender) || !parseHex20(tok[1], c.ledger) || !parseHex20(tok[2], c.paymaster) || strlen(tok[4]) >= sizeof(c.host)) { Serial.println("ERROR usage: provision <sender> <ledger> <paymaster> <0|1> <host> <port> <checkpointS> <sanctionedW> <maxPrio> <maxFee>"); return; }
+    c.transport = atoi(tok[3]);
+    strcpy(c.host, tok[4]);
+    c.port = atoi(tok[5]);
+    c.checkpointS = atoi(tok[6]);
+    c.sanctionedW = atoi(tok[7]);
+    c.maxPrio = strtoull(tok[8], nullptr, 10);
+    c.maxFee = strtoull(tok[9], nullptr, 10);
+    if (!config_save(c)) { Serial.println("ERROR config_write_failed"); return; }
+    machine_reload_config();
+    Serial.println("PROVISIONED");
+    return;
+  }
+  if (strcmp(cmd, "config") == 0) {
+    DeviceConfig c;
+    if (!config_load(&c)) { Serial.println("CONFIG none"); return; }
+    Serial.print("CONFIG sender=0x"); printHex(c.sender, 20); Serial.print(" ledger=0x"); printHex(c.ledger, 20); Serial.print(" paymaster=0x"); printHex(c.paymaster, 20);
+    Serial.printf(" transport=%u host=%s port=%u checkpointS=%u sanctionedW=%u\n", c.transport, c.host, c.port, c.checkpointS, c.sanctionedW);
+    return;
+  }
   if (strcmp(cmd, "meter") == 0) {
     uint32_t v, g, st;
     int level;
     meter_raw(&v, &g, &st, &level);
-    Serial.printf("METER valid=%u glitches=%u stuck=%u level=%d total=", v, g, st, level);
+    Serial.printf("METER valid=%u glitches=%u stuck=%u coalesced=%u level=%d total=", v, g, st, meter_coalesced(), level);
     printU64(meter_total());
     Serial.println();
     return;
@@ -172,6 +214,11 @@ static void handle(char *cmd) {
     bool ok = resolved && c.connect(ip, atoi(sp + 1));
     Serial.printf("TCP resolved=%d ip=%s connected=%d ms=%u wifi=%d rssi=%d\n", resolved, ip.toString().c_str(), ok, millis() - t0, WiFi.status(), WiFi.RSSI());
     c.stop();
+    return;
+  }
+  if (strncmp(cmd, "zg ", 3) == 0) {  // zg <window text>: one real 0G decision from the board (needs Wi-Fi and a key)
+    ZgResult z = zerog_decide(cmd + 3, 20000);
+    Serial.printf("ZG answer=%s rid=%s http=%d ms=%u why=%s heap=%u\n", z.answer == ZG_RUN ? "RUN" : z.answer == ZG_INSPECT ? "INSPECT" : "NONE", z.requestId, z.httpStatus, (unsigned)z.ms, z.why, ESP.getFreeHeap());
     return;
   }
   if (strncmp(cmd, "rpc-loop ", 9) == 0) {  // rpc-loop <host> <count>: repeated eth_chainId, to look for leaks and resets
@@ -253,6 +300,14 @@ static void handle(char *cmd) {
   if (strncmp(cmd, "set-leaf ", 9) == 0) { intent_set_next_leaf(atoi(cmd + 9)); Serial.println("OK"); return; }
   if (strcmp(cmd, "state-reset") == 0) { intent_reset(); Serial.println("OK"); return; }
   if (strncmp(cmd, "crash-at", 8) == 0) { intent_crash_at(cmd[8] == ' ' ? cmd + 9 : ""); Serial.println("OK"); return; }
+  if (strncmp(cmd, "loop ", 5) == 0) { machine_enable(strcmp(cmd + 5, "on") == 0); Serial.println("OK"); return; }
+  if (strcmp(cmd, "checkpoint-now") == 0) { machine_checkpoint_now(); Serial.println("OK"); return; }
+  if (strncmp(cmd, "inject ", 7) == 0) {  // inject none|run|inspect|fail: stands in for 0G in tests. Dev builds only.
+    const char *a = cmd + 7;
+    machine_set_inject(strcmp(a, "run") == 0 ? 1 : strcmp(a, "inspect") == 0 ? 2 : strcmp(a, "fail") == 0 ? 3 : 0);
+    Serial.println("OK");
+    return;
+  }
   if (strncmp(cmd, "keccak ", 7) == 0) {
     uint8_t in[128], out[32];
     size_t hexLen = strlen(cmd + 7);
