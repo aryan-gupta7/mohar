@@ -59,6 +59,21 @@ tests and results. [update-log.md](update-log.md) is the dated record of what ha
 | `devnet/` | a local copy of the devnet and the alt mempool sidecar for development |
 | `docs/` | evidence, the event protocol, notes |
 
+## Control centre
+
+One command shows every service, the port it owns, whether it is healthy, the boards, the hotspot band, and the funds, and starts, stops and diagnoses them:
+
+```sh
+npm run ctl                     # status of everything
+npm run ctl -- up               # local chain + block producer + alt mempool sidecar
+npm run ctl -- up dashboard     # the dashboard on http://127.0.0.1:8088/
+npm run ctl -- down             # stop the dev stack
+npm run ctl -- doctor           # what is wrong, and the exact fix
+npm run ctl -- ports            # every listening port and who owns it
+npm run ctl -- free 8088        # stop whatever is holding a port
+npm run ctl -- logs sidecar     # last lines of a service's log
+```
+
 ## Run it
 
 Needs Node 23.6+, Foundry (it provides solc 0.8.28), Docker and PlatformIO. Full manual tests with expected output are in

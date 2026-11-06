@@ -18,12 +18,21 @@ static const char SYSTEM[] =
     "(4) the pulse spacing does not look like a real electrical load, for example the peak is many times the average. "
     "Otherwise answer RUN. Low credit is not a reason to inspect.";
 
+#ifdef MOHAR_DEV
+static bool blackhole = false;
+void zerog_set_blackhole(bool on) { blackhole = on; }
+#endif
+
 bool zerog_available() { return strlen(MOHAR_ZEROG_KEY) > 10; }
 
 ZgResult zerog_decide(const char *stateText, uint32_t timeoutMs) {
   ZgResult r;
   memset(&r, 0, sizeof(r));
   if (!zerog_available()) { strcpy(r.why, "no_key"); return r; }
+  const char *host = "router-api.0g.ai";
+#ifdef MOHAR_DEV
+  if (blackhole) host = "10.255.255.1";  // not routable: the connection really times out
+#endif
   char *body = (char *)malloc(1300);
   char *resp = (char *)malloc(1500);
   if (!body || !resp) { free(body); free(resp); strcpy(r.why, "out_of_memory"); return r; }
@@ -34,7 +43,7 @@ ZgResult zerog_decide(const char *stateText, uint32_t timeoutMs) {
   if (n <= 0 || n >= 1300) { free(body); free(resp); strcpy(r.why, "request_too_long"); return r; }
   NetStats st;
   uint32_t t0 = millis();
-  r.httpStatus = net_post_json("router-api.0g.ai", 443, "/v1/chat/completions", body, n, resp, 1500, &st, timeoutMs, MOHAR_ZEROG_KEY);
+  r.httpStatus = net_post_json(host, 443, "/v1/chat/completions", body, n, resp, 1500, &st, timeoutMs, MOHAR_ZEROG_KEY);
   free(body);
   r.ms = millis() - t0;
   if (r.httpStatus != 200) { snprintf(r.why, sizeof(r.why), "http_%d", r.httpStatus); free(resp); return r; }

@@ -243,6 +243,18 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - **Dashboard against real data (agent): 14 of 14 headless checks pass** — name → ENS → public ledger → status and decoded reports with request IDs, the root-mismatch warning, a dead RPC giving "Cannot read the chain", and 400 px. Not yet run with the real boards over Web Serial (needs you in Chrome) or with a real wallet.
 - **Added:** README, LICENSE, a timed demo script with pre-flight and fallbacks, and manual tests 8f to 8k.
 
+### About 16:30 to 17:05 Control centre, the watchdog, and 0G-1 closed
+- **Control centre** (`npm run ctl`): every service with its port and health, the boards and who holds their serial ports, the hotspot band, the networks and the funds; `up`, `down`, `restart`, `logs`, `ports`, `doctor`, `free <port>`. **It immediately found why your dashboard wouldn't start:** a leftover test web server from one of the agents had been holding port 8088 since 13:20. `free 8088` then `up dashboard` fixed it, and the dashboard now runs from the tool.
+- **Hotspot:** you fixed it; it is on channel 6 (2.4 GHz).
+- **Soak 2 caught the actual reset cause.** Reset-reason logging reported `Hardware Watchdog`, with the program counter in `millis()`: the CPU was spinning in a library wait loop that never yields. My earlier guard (switching off the software watchdog around the handshake) only moved the reset to the 8 s hardware watchdog. The fix is now a hardware-timer interrupt that feeds the watchdog every 100 ms during a TLS exchange, with a deadline so a dead connection still resets. Soak 3 is running with it.
+- **0G-1 closed:** `verify_tee` is accepted but `qwen3.8-flash` returns no TEE attestation (it isn't a TEE-attested model), so we make no "TEE-verified" claim; the 401, 404 and 400 errors come back clean; the request format is frozen in `docs/0g-request-format.md`.
+
+### About 16:50 to 17:20 The reset hunt: it was the stack
+- Soak 3 (interrupt-fed watchdog) had 6 resets in 11 minutes, now including a real crash: a fault inside `strtoull` reading from an address in code memory. Different addresses every time is the signature of **stack overflow**.
+- **Measured:** the free-stack high-water mark was only **~800 bytes of 4,096** in the Wi-Fi + TLS + signing path. Moved the large locals (a 420-byte text buffer, two 290-byte report structs, a 512-byte write buffer, a 388-byte calldata buffer) off the stack, and raised the core's stack to 6 KB (`-DCONT_STACKSIZE=6144`): free stack is now **~2,850 bytes**, heap unchanged at ~35.5 KB.
+- **Result so far: 0 resets over 11+ minutes of checkpoints** (every report mined with real 0G decisions), against 6 resets in 11 minutes before. The 20-minute run is finishing. The first soak's 6 resets were most likely this same overflow; the watchdog theory was a symptom, not the cause.
+- **ENS-3 (agent):** the dashboard's Identity page dry-runs each edit as the maintenance key, the uploader key and a stranger against the live Sepolia resolver and shows the contract's real answer (allowed, or the real `EACUnauthorizedAccountRoles` revert). No key is in the browser. All five ENS3 checks pass.
+
 ---
 
 ## Current state

@@ -21,7 +21,7 @@ pico = serial.Serial(); pico.port, pico.baudrate, pico.timeout = PICO, 115200, 0
 b = Board(ESP, "http://127.0.0.1:1/unused"); b.bridge_ok = False
 b.reset(); b.wait("KEY READY", 0, 60)
 pico.write(b"a")  # the Pico's automatic scenario cycle
-t_start = time.time(); resets = 0; cps = 0; ok = 0; min_heap = 10**9; last_admin = 0; seen = 0
+t_start = time.time(); resets = 0; cps = 0; ok = 0; min_heap = 10**9; min_stack = 10**9; last_admin = 0; seen = 0
 rows = []
 print(f"soak: {MINUTES} min on {NET}, ledger {LEDGER}", flush=True)
 while time.time() - t_start < MINUTES * 60:
@@ -37,8 +37,9 @@ while time.time() - t_start < MINUTES * 60:
             c = dict(re.findall(r"(\w+)=(\S+)", l)); cps += 1
             ok += c.get("sent") == "ok"
             if "heap" in c: min_heap = min(min_heap, int(c["heap"]))
+            if "stack" in c: min_stack = min(min_stack, int(c["stack"]))
             rows.append(l)
-            print(f"  {int((time.time()-t_start)/60):2d} min  {c.get('mode')} reason={c.get('reason')} ai={c.get('ai')} seq={c.get('seq')} sent={c.get('sent')} heap={c.get('heap')} ms={c.get('ms')}", flush=True)
+            print(f"  {int((time.time()-t_start)/60):2d} min  {c.get('mode')} reason={c.get('reason')} ai={c.get('ai')} seq={c.get('seq')} sent={c.get('sent')} heap={c.get('heap')} stack={c.get('stack')} ms={c.get('ms')}", flush=True)
     if time.time() - last_admin > 150:  # operator: clear any hold, keep credit topped up
         last_admin = time.time()
         st = node("status", LEDGER)
@@ -48,7 +49,7 @@ while time.time() - t_start < MINUTES * 60:
 st = node("status", LEDGER)
 pico.write(b"n")
 b.stop = True
-print(f"\nsoak finished: {cps} checkpoints, {ok} reports sent ok, resets={resets}, lowest heap seen in CP lines={min_heap}", flush=True)
+print(f"\nsoak finished: {cps} checkpoints, {ok} reports sent ok, resets={resets}, lowest heap seen in CP lines={min_heap}, lowest free stack={min_stack}", flush=True)
 print("ledger:", st, flush=True)
 good = resets == 0 and st and st["lastSeq"] >= ok - 1 and min_heap >= 8000 and cps >= MINUTES * 0.8
 print("SOAK PASS" if good else "SOAK CHECK FAILED", flush=True)

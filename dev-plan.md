@@ -52,7 +52,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | ✅ Done Fri 10:25, all tests |
 | 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | ✅ T1–T6 passed Fri ~11:45 (T4 on the public devnet, see below); T7 soak with DEV-7 |
 | 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | ✅ Done Fri ~15:25, mined on the public devnet |
-| 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | ✅ T1–T5 passed Fri ~09:45; T6–T8 open |
+| 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | ✅ Done Fri ~17:00: T1–T8 (T6: no TEE attestation for this model) |
 | 11 | [EF-2](#ef-2-the-alt-mempool-proof) | Alt mempool proof, public | After EF-1 | ✅ Done Fri ~15:35, T1–T9 on the public devnet |
 | 12 | [ENS-1](#ens-1-fleet-name-and-registry) | Fleet name and registry | Fri 16:00 | ✅ Done Fri ~10:55 |
 | 13 | [DEV-7](#dev-7-meter-signal-acquisition-and-device-behaviour) | Meter signal acquisition and device behaviour | Fri 18:00 | Partly done: counting T1–T4, T13 passed; T5–T12 open |

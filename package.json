@@ -11,7 +11,8 @@
   "scripts": {
     "build": "forge build --root contracts && node contracts/build-yul.ts",
     "test": "node --test \"signer/test/*.test.ts\"",
-    "test:integration": "node --test --test-concurrency=1 \"signer/test/integration/*.test.ts\""
+    "test:integration": "node --test --test-concurrency=1 \"signer/test/integration/*.test.ts\"",
+    "ctl": "node ctl/mohar.mjs"
   },
   "dependencies": {
     "@0gfoundation/0g-storage-ts-sdk": "1.2.12",

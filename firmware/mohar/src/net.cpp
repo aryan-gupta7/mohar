@@ -2,6 +2,30 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClientSecureBearSSL.h>
 #include "secrets.h"
+extern "C" {
+#include "user_interface.h"
+}
+
+// While a TLS exchange runs, the library can wait on the network in a tight loop that never yields, and the chip's
+// watchdog resets the board (seen in a soak as "Hardware Watchdog", stuck in millis()). A hardware-timer interrupt
+// feeds the watchdog every 100 ms, but only until a deadline: a connection that is truly dead stops being fed, and the
+// board resets and recovers as designed.
+static volatile uint32_t wdtDeadline = 0;
+static void IRAM_ATTR wdtIsr() {
+  if ((int32_t)(millis() - wdtDeadline) < 0) system_soft_wdt_feed();
+}
+struct TlsWatchdog {
+  explicit TlsWatchdog(uint32_t maxMs) {
+    wdtDeadline = millis() + maxMs;
+    timer1_attachInterrupt(wdtIsr);
+    timer1_enable(TIM_DIV256, TIM_EDGE, TIM_LOOP);
+    timer1_write(31250);  // 80 MHz / 256 = 312.5 kHz; 31,250 ticks = 100 ms
+  }
+  ~TlsWatchdog() {
+    timer1_disable();
+    timer1_detachInterrupt();
+  }
+};
 #include "frametx.h"
 #include <WiFiClient.h>
 
@@ -24,16 +48,12 @@ int net_post_json(const char *host, uint16_t port, const char *path, const char 
   // A device that has just powered up must join the network by itself (and rejoin after a drop).
   if (!net_wifi_up() && !net_wifi_connect(25000)) return -1;
   uint32_t t0 = millis();
+  TlsWatchdog watchdog(timeoutMs + 8000);
   BearSSL::WiFiClientSecure client;
   client.setInsecure();                 // first version: no certificate check (see dev-plan DEV-6)
   client.setBufferSizes(16709, 512);    // a full TLS record in, small buffer out
   client.setTimeout(timeoutMs);
-  // The TLS handshake (elliptic-curve maths) can compute for about 3 s without yielding, close to the 3.2 s software
-  // watchdog. The 8 s hardware watchdog stays on.
-  ESP.wdtDisable();
-  bool connected = client.connect(host, port);
-  ESP.wdtEnable(8000);
-  if (!connected) return -1;
+  if (!client.connect(host, port)) return -1;
   st->connectMs = millis() - t0;
   if (ESP.getFreeHeap() < st->heapLowest) st->heapLowest = ESP.getFreeHeap();
   client.printf("POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: application/json\r\nContent-Length: %u\r\nConnection: close\r\n", path, host, (unsigned)bodyLen);
@@ -102,9 +122,10 @@ class ClientPrint : public Print {
   }
  private:
   WiFiClient &c_;
-  uint8_t buf_[512];
+  static uint8_t buf_[512];  // static: not on the 4 KB stack
   size_t n_ = 0;
 };
+uint8_t ClientPrint::buf_[512];
 
 static const char PREFIX[] = "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_sendFrameTransaction\",\"params\":[";
 static const char SUFFIX[] = "]}";
@@ -153,6 +174,7 @@ int net_submit_frame_tx(const char *host, uint16_t port, bool tls, const char *p
   CountPrint counter;
   net_print_submit_body(counter, p, sig, sigLen);
   uint32_t t0 = millis();
+  TlsWatchdog watchdog(timeoutMs + 8000);
   WiFiClient plain;
   BearSSL::WiFiClientSecure secure;
   WiFiClient *client = &plain;
@@ -162,10 +184,7 @@ int net_submit_frame_tx(const char *host, uint16_t port, bool tls, const char *p
     client = &secure;
   }
   client->setTimeout(timeoutMs);
-  ESP.wdtDisable();
-  bool connected = client->connect(host, port);
-  ESP.wdtEnable(8000);
-  if (!connected) return -1;
+  if (!client->connect(host, port)) return -1;
   st->connectMs = millis() - t0;
   if (ESP.getFreeHeap() < st->heapLowest) st->heapLowest = ESP.getFreeHeap();
   client->printf("POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: application/json\r\nContent-Length: %u\r\nConnection: close\r\n\r\n", path, host, (unsigned)counter.n);

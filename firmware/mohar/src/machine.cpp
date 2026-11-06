@@ -176,7 +176,7 @@ static void checkpoint() {
     else
 #endif
     {
-      char text[420];
+      static char text[420];  // static: the chip's stack is only 4 KB and TLS needs most of it
       snprintf(text, sizeof(text),
                "Electricity meter, last %u s. Sanctioned load %u W, meter limit %u W. Valid pulses %u, average %u W, peak %u W, longest gap between pulses %u.%u s. Pulse-line glitches %u, stuck-low events %u.%s",
                (unsigned)((w.windowMs + 500) / 1000), (unsigned)cfg.sanctionedW, (unsigned)PEAK_LIMIT_W, (unsigned)w.validPulses, (unsigned)w.avgWatts, (unsigned)w.peakWatts,
@@ -207,7 +207,7 @@ static void checkpoint() {
      modeName(mode), reason, modeName(wanted), lv.hold, (unsigned)lv.ledgerMode, aiNote);
 
   // 4. Report. Resend a pending identical transaction if the last one hasn't been mined.
-  ReportParams p;
+  static ReportParams p;
   memset(&p, 0, sizeof(p));
   memcpy(p.sender, cfg.sender, 20);
   memcpy(p.ledger, cfg.ledger, 20);
@@ -233,7 +233,7 @@ static void checkpoint() {
   uint8_t *raw = (uint8_t *)malloc(FRAMETX_MAX_RAW);
   if (!sig || !raw) { free(sig); free(raw); Serial.println("CP error=out_of_memory"); return; }
   size_t rawLen = 0;
-  ReportParams used;
+  static ReportParams used;
   IntentInfo info;
   EV("\"e\":\"sign_start\",\"nonce\":%u,\"leaf\":%u", (unsigned)nonce, (unsigned)(nonce ? nonce - 1 : 0));
   uint32_t tSign = millis();
@@ -267,9 +267,9 @@ static void checkpoint() {
   free(sig);
   if (r == INTENT_OK) EV("\"e\":\"submitted\",\"result\":\"%s\",\"hash\":\"%s\"", sent, txHash);
   EV("\"e\":\"cp_end\",\"mode\":\"%s\",\"totalMs\":%u", modeName(mode), (unsigned)(millis() - t0));
-  Serial.printf("CP mode=%s reason=%d ai=%s rid=%s seq=%u nonce=%u total=%u valid=%u glitches=%u stuck=%u avgW=%u peakW=%u hold=%d credit=%u intent=%s resent=%d sent=%s ms=%u heap=%u tx=%s\n",
+  Serial.printf("CP mode=%s reason=%d ai=%s rid=%s seq=%u nonce=%u total=%u valid=%u glitches=%u stuck=%u avgW=%u peakW=%u hold=%d credit=%u intent=%s resent=%d sent=%s ms=%u heap=%u stack=%u tx=%s\n",
                 modeName(mode), reason, aiNote, requestId[0] ? requestId : "-", (unsigned)p.seq, (unsigned)nonce, (unsigned)p.total, (unsigned)w.validPulses, (unsigned)w.glitches,
-                (unsigned)w.stuckLow, (unsigned)w.avgWatts, (unsigned)w.peakWatts, lv.hold, (unsigned)lv.credit, intent_name(r), info.resent, sent, millis() - t0, ESP.getFreeHeap(), txHash);
+                (unsigned)w.stuckLow, (unsigned)w.avgWatts, (unsigned)w.peakWatts, lv.hold, (unsigned)lv.credit, intent_name(r), info.resent, sent, millis() - t0, ESP.getFreeHeap(), (unsigned)ESP.getFreeContStack(), txHash);
 }
 
 void machine_tick() {

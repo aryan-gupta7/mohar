@@ -414,6 +414,8 @@ The same scripts that ran on our local copy ran unchanged on the shared EF devne
 
 [live-run-public.json](docs/evidence/live-run-public.json) holds every `EV` and `CP` line. Real Pico pulses, the board on Wi-Fi, real 0G calls, a freshly deployed account, ledger and paymaster: normal load → 0G `RUN` → mined, with the request ID in the report (20 s end to end); a 12 kW surge → 0G `INSPECT` → the device moved to `INSPECT` and set the hold on the ledger; back to normal → still `INSPECT` because of the hold; the surge had used up the credit, so the next mode was `CREDIT_STOP` with 125 pulses of arrears; a glitching line → `INSPECT` from the fixed check without calling 0G.
 
+**What the soak found about resets (Fri 16:50):** the first 30-minute soak had 6 resets. With reset-reason logging the next one reported `Hardware Watchdog` with the program counter in `millis()`: the CPU was spinning in a library wait loop (BearSSL waiting on the network) that never yields. My first fix (disabling the software watchdog around the handshake) only moved the reset from 3.2 s to the 8 s hardware watchdog. The fix now in place feeds the watchdog from a hardware-timer interrupt every 100 ms during a TLS exchange, **until a deadline** (the call's timeout plus 8 s). A connection that is truly dead stops being fed, so the board still resets and recovers. The result of the rerun is in the plan (DEV-6 T7).
+
 **A bug the soak found:** the board never joined Wi-Fi by itself after a reset (only my test command did), so a power-cycled board went `SAFE_STOP` forever. The network code now connects on demand and rejoins after a drop.
 
 ### ENS (ENS-1, ENS-2)
@@ -836,6 +838,13 @@ node ens/00-check.ts                                  # the Sepolia deployment, 
 node uploader/replay.ts <root>                        # download a 0G Storage root, verify it, compare with the chain
 ```
 **Expected:** the records listed in section 7c (`mohar.ledger` and `mohar.paymaster` are the live devnet contracts). See [docs/handoff/0g-4.md](docs/handoff/0g-4.md) for the uploader and replay commands and flags.
+
+### Test 8l: The control centre
+```sh
+npm run ctl                    # every service, its port and status; hardware, hotspot band, networks and funds
+npm run ctl -- doctor          # lists what is wrong and the exact fix (a port held by a leftover server, a serial port held by a test, a 5 GHz hotspot ...)
+```
+**Expected:** the services table shows `chain`, `producer`, `sidecar`, `dashboard` with their ports; the boards show whether another program holds their serial port (and which); the hotspot line says `2.4 GHz, channel N` or warns that the ESP8266 can't join a 5 GHz network. State is kept in `.state/pids` and `.state/logs`.
 
 ### Test 8k: The dashboard
 Follow [dashboard/README.md](dashboard/README.md). In desktop Chrome, open the Demo Console, connect the Pico and the ESP8266 (only one program may hold a serial port: close `pio device monitor` first), choose a scenario and press **Apply meter scenario**.

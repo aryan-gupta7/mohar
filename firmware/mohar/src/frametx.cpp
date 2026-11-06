@@ -185,7 +185,7 @@ static void jframe(Print &o, uint8_t mode, uint8_t flags, const uint8_t *target,
 }
 
 void frametx_json(const ReportParams &p, const uint8_t *sig, size_t sigLen, Print &o) {
-  uint8_t calldata[4 + 10 * 32 + 64];
+  static uint8_t calldata[4 + 10 * 32 + 64];  // static: keep it off the small stack
   size_t cl = frametx_calldata(p, calldata, sizeof(calldata));
   o.print("{\"chainId\":"); qty(o, CHAIN_ID);
   o.print(",\"nonceKeys\":[\"0x0\"],\"nonceSeq\":"); qty(o, p.nonce);

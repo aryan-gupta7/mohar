@@ -300,6 +300,7 @@ static void handle(char *cmd) {
   if (strncmp(cmd, "set-leaf ", 9) == 0) { intent_set_next_leaf(atoi(cmd + 9)); Serial.println("OK"); return; }
   if (strcmp(cmd, "state-reset") == 0) { intent_reset(); Serial.println("OK"); return; }
   if (strncmp(cmd, "crash-at", 8) == 0) { intent_crash_at(cmd[8] == ' ' ? cmd + 9 : ""); Serial.println("OK"); return; }
+  if (strncmp(cmd, "zgblock ", 8) == 0) { zerog_set_blackhole(strcmp(cmd + 8, "on") == 0); Serial.println("OK"); return; }
   if (strncmp(cmd, "loop ", 5) == 0) { machine_enable(strcmp(cmd + 5, "on") == 0); Serial.println("OK"); return; }
   if (strcmp(cmd, "checkpoint-now") == 0) { machine_checkpoint_now(); Serial.println("OK"); return; }
   if (strncmp(cmd, "inject ", 7) == 0) {  // inject none|run|inspect|fail: stands in for 0G in tests. Dev builds only.

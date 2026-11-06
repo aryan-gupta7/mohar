@@ -72,3 +72,28 @@ Screenshots: `docs/evidence/dashboard/real-*.png`. The earlier suite (`test/e2e.
 **Bugs found on real data and fixed:** (1) one empty answer from a public Sepolia RPC made a real name look "unknown" or its records "not set": ENS reads now retry across four endpoints before concluding anything; (2) number and unit had no space in the text ("2768pulses"); (3) added landmarks, `aria-current`, `aria-expanded` and a skip link.
 
 **Still not verified:** Web Serial with the real boards (README has the exact steps); DEV8-T4 against a live ESP (the page shows ledger pulses and kWh; the device-side count needs the serial feed); DEV8-T5 on live hardware (passes in replay); DEV8-T10 with a real wallet; DEV8-T11 (needs a real archived 0G root in `mohar.log`); the light theme isn't screenshot-checked. `npm run build` is clean.
+
+## ENS-3 (Fri ~16:55): discovery and permission demo
+
+**Built:** `src/pages/Permissions.tsx` (used by the Identity & Access page; replaces the earlier small card), `public/demo-roles.json`
+(the public addresses of the demo personas), `test/ens3.py`. Rebuild with `npm run build`; run the test with
+`uv run --no-project --with selenium python dashboard/test/ens3.py`. It reads Sepolia only and sends nothing.
+
+**What the panel does:** a table of records vs roles (owner, maintenance, uploader, stranger), labelled as **Sepolia identity records**
+that do not control the meter's devnet contracts; five one-click cases plus free choice of account, record and value; **Try this edit**
+dry-runs `setText` with `eth_call` from the chosen account against the live resolver of the name (found through ENS) and shows the
+contract's real answer, labelled "Simulated against the live contract (eth_call on Sepolia at <time>). Nothing is sent." The previous
+answer is cleared the moment a new check starts (found in testing: it was briefly possible to read the old answer as the new one).
+If `window.ethereum` exists, a wallet can connect and send the real edit; the page first checks the wallet's account against the
+resolver and only then asks it to sign, and it never handles a key. **The wallet path was not run** (no browser wallet here).
+
+| Test | Result |
+|---|---|
+| ENS3-T1 | PASS: the name alone leads to resolver, account and records |
+| ENS3-T2 | PASS, live: maintenance → status ALLOWED; maintenance → `mohar.pq.root` REJECTED `EACUnauthorizedAccountRoles` (`0x4b27a133`); uploader → `mohar.log` ALLOWED; uploader → `mohar.policy` REJECTED (same error); stranger → anything REJECTED (same error). The real error carries the resource, the missing role bit and the account |
+| ENS3-T3 | PASS as far as it can without sending: the page shows the live `mohar.maintenance.status` (`inspected 2026-11-06`), read from ENS with no code involved, so a later edit appears by itself. No transaction was sent |
+| ENS3-T4 | PASS: `agent-context` resolves and describes the meter |
+| ENS3-T5 | PASS: no account, ledger, paymaster or resolver address appears in `src/`; the persona addresses are configuration in `public/demo-roles.json` |
+
+Screenshots: `docs/evidence/dashboard/ens3-*.png` (one per case, plus `ens3-panel.png` and `ens3-phone.png`).
+**Not verified:** the wallet-sent edit; a real allowed edit being mined and then appearing (the live write was ENS-2's script, not the page).

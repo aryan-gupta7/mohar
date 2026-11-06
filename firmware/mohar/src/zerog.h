@@ -12,3 +12,8 @@ struct ZgResult {
 };
 bool zerog_available();  // a key is compiled in
 ZgResult zerog_decide(const char *stateText, uint32_t timeoutMs);
+
+#ifdef MOHAR_DEV
+// Test builds only: send the 0G call to an address nothing answers, so the REAL connection timeout path runs.
+void zerog_set_blackhole(bool on);
+#endif

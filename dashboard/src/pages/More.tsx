@@ -8,6 +8,7 @@ import { arrearsText, creditText } from "./Overview";
 import { simulateSetText, RECORDS, ENS_FALLBACKS, archiveOf } from "../lib/ens";
 import { getReceipt } from "../lib/chain";
 import { encodeCall } from "../lib/abi.js";
+import { Permissions } from "./Permissions";
 
 const MODE = ["RUN", "INSPECT", "CREDIT_STOP", "SAFE_STOP"];
 const tip = { contentStyle: { background: "var(--card)", border: "1px solid var(--line)", borderRadius: 12 } };
@@ -107,17 +108,7 @@ export function Identity() {
           {match === true && <div className="mt-2 text-sm text-lime">ENS and the account contract agree.</div>}
         </Card>
       </>)}
-      <Card><H>Who can change what</H>
-        {[["Device public root, operating policy, identity records", "Owner only"], ["Maintenance status", "Maintenance provider"], ["0G log reference", "Uploader"]].map(([a, b]) => <Row key={a} k={a}>{b}</Row>)}
-        <p className="text-xs text-mute mt-2">Checked live below: it asks ENS (a dry run, no gas, no key) whether an address may edit a record.</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-4">
-          <input aria-label="Address to test" placeholder="0x… address to test as" value={from} onChange={(e) => setFrom(e.target.value)} className="sm:col-span-2 rounded-xl border border-line bg-mid px-3 py-2 text-sm font-mono" />
-          <select aria-label="Record" value={key} onChange={(e) => setKey(e.target.value)} className="rounded-xl border border-line bg-mid px-3 py-2 text-sm">{RECORDS.map((k) => <option key={k}>{k}</option>)}</select>
-          <input aria-label="Value" value={val} onChange={(e) => setVal(e.target.value)} className="rounded-xl border border-line bg-mid px-3 py-2 text-sm" />
-        </div>
-        <button disabled={!E.data || !/^0x[0-9a-fA-F]{40}$/.test(from)} onClick={async () => setRes(await simulateSetText(s.ens.data ? ENS_FALLBACKS[0] : "", E.data!.resolver, E.data!.name, key, val, from).catch((e) => ({ ok: false, message: String(e.message) })))} className="mt-3 rounded-full bg-lime px-4 py-2 text-sm font-bold text-black disabled:opacity-40">Check whether this edit is allowed</button>
-        {res && <div className={`mt-2 rounded-xl p-3 text-sm ${res.ok ? "bg-lime/15 text-lime" : "bg-bad/15 text-bad"}`}>{res.message}</div>}
-      </Card>
+      <Permissions />
       <Card><H>Security notes</H><Row k="Signature scheme">Hash-based, WOTS-like, custom — <b>experimental and unaudited</b></Row><Row k="Keys">256 one-time keys; the seed never leaves the ESP8266</Row><Row k="Physical limit">Flash on this chip is readable by someone holding the board</Row><Row k="Revocation">The fleet owner can revoke the device’s sponsorship at any time</Row></Card>
     </div>
   );

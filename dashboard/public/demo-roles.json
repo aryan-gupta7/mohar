@@ -1,0 +1,9 @@
+{
+  "note": "Public addresses of the demo personas on Sepolia (ENS-2). They are configuration for the permission demo, not machine addresses. Their private keys are never in the browser.",
+  "personas": [
+    { "id": "maintenance", "label": "Maintenance provider", "address": "0xFA129F48deF75d7d870e2F60142dc56a906D5391" },
+    { "id": "uploader", "label": "Uploader (0G log)", "address": "0x4ab4b0AFeEb0ED50a9B4A31aBDC09887Fc6e6AFf" },
+    { "id": "owner", "label": "Owner / operator", "address": "0xcfb296f635254A4B3281D2e285174E98D643Ef60" },
+    { "id": "stranger", "label": "A stranger", "address": "0x000000000000000000000000000000000000dEaD" }
+  ]
+}
