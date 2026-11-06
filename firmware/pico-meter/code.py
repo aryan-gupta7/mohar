@@ -17,6 +17,10 @@
 #   s surge 12000 W    g normal load plus 2 ms spikes (interference or tampering)
 #   x off, no pulses   a automatic demo cycle
 #   r reset counters   ? print status now
+#   c toggle steady mode: constant load, +-3 % timing only (for repeatable tests)
+#
+# Each load is a centre level, not a fixed wattage. Like a real household it drifts slowly, appliances switch on
+# and off at random, and every pulse has its own timing noise. Surge stays below 13.8 kW so the local check isn't tripped.
 #
 # Output: one JSON object per line, prefixed with "METER ".
 
@@ -26,6 +30,7 @@ import random
 import board
 import digitalio
 import supervisor
+import math
 
 IMP_PER_KWH = 3200
 PULSE_S = 0.030
@@ -53,14 +58,69 @@ key = "n"
 pulses = 0
 glitches = 0
 auto_on = False
+steady = False
 auto_step = 0
 auto_until = 0
+
+
+# --- load model -------------------------------------------------------------------------------------------------
+level = 0.0          # slow base load in W, drifts around the mode's centre
+extra = 0.0          # an appliance that is currently switched on, W
+extra_until = 0
+next_model = 0
+MODEL_S = 1.0        # model step, seconds
+TAU_S = 45.0         # how fast the base load returns to its centre
+SIGMA = {"i": 0.18, "n": 0.07, "h": 0.06, "g": 0.07, "s": 0.025, "x": 0.0}   # drift size, fraction of the centre
+SURGE_CAP_W = 13200  # keeps surge under the 13.8 kW local limit even with noise
+
+
+def gauss():
+    # CircuitPython has no random.gauss: the sum of three uniforms is close enough (sd 1.0).
+    return (random.random() + random.random() + random.random() - 1.5) * 2.0
+
+
+def model_step(now):
+    global level, extra, extra_until
+    centre = LOADS[key][1]
+    if centre == 0:
+        level = 0.0
+        extra = 0.0
+        return
+    if steady:
+        level = float(centre)
+        extra = 0.0
+        return
+    k = MODEL_S / TAU_S
+    level += (centre - level) * k + SIGMA[key] * centre * math.sqrt(2.0 * k) * gauss()
+    level = max(centre * 0.35, level)
+    if extra and now >= extra_until:
+        extra = 0.0
+    # An appliance switches on about once every 2 to 3 minutes. Not during a surge, and not while idle.
+    if not extra and key in ("n", "g", "h") and random.random() < MODEL_S / 150.0:
+        extra = random.uniform(120.0, 0.6 * centre + 300.0)
+        extra_until = now + int(random.uniform(15.0, 90.0) * 1e9)
+    if not extra and key == "i" and random.random() < MODEL_S / 240.0:
+        extra = random.uniform(60.0, 200.0)   # a fridge compressor or a charger
+        extra_until = now + int(random.uniform(20.0, 120.0) * 1e9)
+
+
+def current_watts():
+    centre = LOADS[key][1]
+    if centre == 0:
+        return 0
+    w = level + extra
+    if key == "s":
+        w = min(w, SURGE_CAP_W)
+    return max(5, int(w))
 
 
 def interval_ns(watts):
     # seconds per pulse = 3600 s/h * 1000 W/kW / (watts * IMP_PER_KWH)
     base = 3_600_000.0 / (watts * IMP_PER_KWH)
-    return int(base * (1.0 + random.uniform(-JITTER, JITTER)) * 1e9)
+    noise = random.uniform(-JITTER, JITTER) if steady else 0.045 * gauss()   # every pulse has its own timing noise
+    if key == "s":
+        noise = max(noise, -0.03)   # a short gap would read as a spike above the local limit
+    return int(base * (1.0 + noise) * 1e9)
 
 
 def pulse(seconds):
@@ -72,17 +132,19 @@ def pulse(seconds):
 
 
 def status(event):
-    name, watts = LOADS[key]
+    name = LOADS[key][0]
     print(
-        'METER {"event":"%s","mode":"%s","watts":%d,"pulses":%d,"glitches":%d,"wh":%.4f,"auto":%s}'
-        % (event, name, watts, pulses, glitches, pulses * 1000.0 / IMP_PER_KWH, "true" if auto_on else "false")
+        'METER {"event":"%s","mode":"%s","watts":%d,"pulses":%d,"glitches":%d,"wh":%.4f,"auto":%s,"steady":%s}'
+        % (event, name, current_watts(), pulses, glitches, pulses * 1000.0 / IMP_PER_KWH, "true" if auto_on else "false", "true" if steady else "false")
     )
 
 
 def set_load(new_key, now):
-    global key, next_pulse, next_glitch
+    global key, next_pulse, next_glitch, level, extra
     key = new_key
-    watts = LOADS[key][1]
+    level = float(LOADS[key][1])
+    extra = 0.0
+    watts = current_watts()
     next_pulse = now + interval_ns(watts) if watts else 0
     next_glitch = now + random.randint(1000, 2500) * 1_000_000
     status("load")
@@ -107,6 +169,9 @@ while True:
             auto_step = 0
             auto_until = now + AUTO[0][1] * 1_000_000_000
             set_load(AUTO[0][0], now)
+        elif c == "c":
+            steady = not steady
+            set_load(key, now)
         elif c == "r":
             pulses = 0
             glitches = 0
@@ -119,7 +184,10 @@ while True:
         auto_until = now + AUTO[auto_step][1] * 1_000_000_000
         set_load(AUTO[auto_step][0], now)
 
-    watts = LOADS[key][1]
+    if now >= next_model:
+        model_step(now)
+        next_model = now + int(MODEL_S * 1e9)
+    watts = current_watts()
     if watts and now >= next_pulse:
         pulse(PULSE_S)
         pulses += 1

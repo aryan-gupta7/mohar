@@ -83,12 +83,14 @@ dp, de, *_ = scenario("surge 12000 W", "s", 20)
 check(abs(dp - de) <= 1 and dp > 150, f"DEV7-T2 surge: counts equal within 1 ({dp} vs {de})")
 
 # DEV7-T13 power estimate while at heavy load
+pico.s.write(b"c"); time.sleep(0.3)   # steady mode: the default load now drifts and has appliances switching on, so a 5 % check needs a constant one
 pico.s.write(b"h"); time.sleep(0.5)
 esp.drain(); esp.until("WINDOW", 5, b"window\n")
 time.sleep(30)
 w = kv(esp.until("WINDOW", 5, b"window\n"))
 avg, peak = int(w["avgW"]), int(w["peakW"])
-check(abs(avg - 3000) <= 150, f"DEV7-T13 heavy load: average {avg} W within 5% of 3000 W (peak {peak} W)")
+check(abs(avg - 3000) <= 150, f"DEV7-T13 heavy load (steady mode): average {avg} W within 5% of 3000 W (peak {peak} W)")
+pico.s.write(b"c"); time.sleep(0.3)   # back to the varying load
 
 # DEV7-T3 glitches: counted separately, and not charged
 dp, de, dgp, dge, e = scenario("glitch line", "g", 40)

@@ -274,3 +274,9 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 
 **Done:** DEV-0 to DEV-6 and most of DEV-7; EF-1 and EF-2 on the public devnet; EF-2L; 0G-1 to 0G-4 (0G-3 partly); ENS-1 to ENS-3; the dashboard (Mohar Console, new theme); the control centre; README, LICENSE, demo script.
 **Open:** why 4 of 12 soak checkpoints couldn't complete; the pulse-wire unplug test (you); the laptop-off run, EF-3 (you); the dashboard with the real boards over Web Serial and a real wallet (you); a really blocked 0G network; two rehearsals, a fresh key and contracts, the video; the GitHub repo (you).
+
+### Sat 02:00 Pico load now varies like a real household
+- **Why:** each load was a fixed wattage with ±3 % timing jitter, which looked artificial next to a real meter.
+- **What:** `firmware/pico-meter/code.py` now models a centre level that drifts (mean-reverting random walk, 45 s time constant), appliances that switch on for 15 to 90 s about every 2 to 3 minutes, and per-pulse timing noise. Host simulation over 10 minutes: idle 52 to 64 W, normal 789 to 1,754 W, heavy 2,621 to 5,044 W, surge 11,590 to 12,695 W. **Surge is capped:** worst single-pulse power over 40 random runs was 13,363 W, under the 13.8 kW local limit, so the "AI decides" scenario can't be tripped by noise.
+- **Steady mode:** key `c` toggles the old constant load for repeatable tests. `meter_test.py` now uses it for the heavy-load 5 % check. **Not rerun**, because the dashboard holds the Pico's port.
+- The `METER` line now reports the current (varying) watts and a `steady` flag, which is what a live power graph reads.
