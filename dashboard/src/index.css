@@ -4,14 +4,14 @@
 
 :root {
   color-scheme: dark;
-  --ink: #0b0d12; --mid: #14171f; --surf: #1b1f29; --card: #202533; --line: #2c3243; --text: #f2f4f8; --mute: #98a1b3;
+  --ink: #1A1D1D; --mid: #212525; --surf: #2B2E2E; --card: #2B2E2E; --line: #3a3e3e; --text: #FFFFFF; --mute: #9aa6a5; --mint: #D7FEFA;
 }
 :root[data-theme="light"] {
   color-scheme: light;
-  --ink: #ecebe6; --mid: #f6f5f1; --surf: #ffffff; --card: #ffffff; --line: #e2e0d8; --text: #15171c; --mute: #626a7a;
+  --ink: #e4efee; --mid: #eef6f5; --surf: #ffffff; --card: #ffffff; --line: #d3e2e0; --text: #1A1D1D; --mute: #5b6a69; --mint: #7fd9d0;
 }
 html, body, #root { height: 100%; }
-body { margin: 0; background: var(--ink); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background: var(--ink); color: var(--text); font-family: "Poppins", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; }
 .metric { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 @keyframes flow { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }

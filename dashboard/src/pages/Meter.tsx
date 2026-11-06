@@ -21,7 +21,7 @@ export function Meter() {
       </div>
       <Card>
         <H right={<Badge k="DERIVED" />}>Valid pulses per window</H>
-        {W.length < 2 ? <Empty>No windows yet.</Empty> : <div className="h-52"><ResponsiveContainer><BarChart data={W}><CartesianGrid stroke="var(--line)" strokeDasharray="3 3" /><XAxis dataKey="time" stroke="var(--mute)" fontSize={11} /><YAxis stroke="var(--mute)" fontSize={11} width={40} /><Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 12 }} /><Bar dataKey="valid" name="Valid pulses" fill="#b9e303" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div>}
+        {W.length < 2 ? <Empty>No windows yet.</Empty> : <div className="h-52"><ResponsiveContainer><BarChart data={W}><CartesianGrid stroke="var(--line)" strokeDasharray="3 3" /><XAxis dataKey="time" stroke="var(--mute)" fontSize={11} /><YAxis stroke="var(--mute)" fontSize={11} width={40} /><Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 12 }} /><Bar dataKey="valid" name="Valid pulses" fill="#D7FEFA" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div>}
       </Card>
       <Card>
         <H right={<Badge k="LIVE HARDWARE" />}>Signal integrity</H>
@@ -31,7 +31,7 @@ export function Meter() {
           <div><div className="text-xs text-mute">Stuck-low events (over 200 ms)</div><div className="metric text-2xl">{last?.stuck ?? "—"}</div></div>
         </div>
         <p className="mt-3 text-xs text-mute">Pulses are classified by how long the line stays low. Glitches and stuck lines are never counted as energy. Three or more glitches in a window, or any stuck line, makes the device choose INSPECT without asking the AI.</p>
-        {W.length > 1 && <div className="mt-3 h-40"><ResponsiveContainer><LineChart data={W}><CartesianGrid stroke="var(--line)" strokeDasharray="3 3" /><XAxis dataKey="time" stroke="var(--mute)" fontSize={11} /><YAxis stroke="var(--mute)" fontSize={11} width={30} allowDecimals={false} /><Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 12 }} /><Line dataKey="glitches" name="Glitches" stroke="#a88ed4" dot={false} /><Line dataKey="stuck" name="Stuck-low" stroke="#ff6b6b" dot={false} /></LineChart></ResponsiveContainer></div>}
+        {W.length > 1 && <div className="mt-3 h-40"><ResponsiveContainer><LineChart data={W}><CartesianGrid stroke="var(--line)" strokeDasharray="3 3" /><XAxis dataKey="time" stroke="var(--mute)" fontSize={11} /><YAxis stroke="var(--mute)" fontSize={11} width={30} allowDecimals={false} /><Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 12 }} /><Line dataKey="glitches" name="Glitches" stroke="#9BD7E8" dot={false} /><Line dataKey="stuck" name="Stuck-low" stroke="#ff7a7a" dot={false} /></LineChart></ResponsiveContainer></div>}
       </Card>
       <Card>
         <H>Sensor explorer</H>

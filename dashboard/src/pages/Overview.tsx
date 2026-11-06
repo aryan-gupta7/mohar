@@ -43,9 +43,9 @@ export function Overview() {
       <Card>
         <H right={<Badge k="DERIVED" />}>Estimated power per measurement window</H>
         {W.length < 2 ? <Empty>Needs at least two windows from the device. Connect the ESP8266 or play a replay.</Empty> : (
-          <div className="h-56"><ResponsiveContainer><AreaChart data={W}><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#b9e303" stopOpacity={0.5} /><stop offset="100%" stopColor="#b9e303" stopOpacity={0} /></linearGradient></defs>
+          <div className="h-56"><ResponsiveContainer><AreaChart data={W}><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#D7FEFA" stopOpacity={0.5} /><stop offset="100%" stopColor="#D7FEFA" stopOpacity={0} /></linearGradient></defs>
             <CartesianGrid stroke="var(--line)" strokeDasharray="3 3" /><XAxis dataKey="time" stroke="var(--mute)" fontSize={11} /><YAxis stroke="var(--mute)" fontSize={11} unit=" W" width={60} />
-            <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 12 }} /><Area type="monotone" dataKey="avgW" name="Average W" stroke="#b9e303" fill="url(#g)" /><Area type="monotone" dataKey="peakW" name="Peak W" stroke="#b5d5e1" fill="none" /></AreaChart></ResponsiveContainer></div>
+            <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: 12 }} /><Area type="monotone" dataKey="avgW" name="Average W" stroke="#D7FEFA" fill="url(#g)" /><Area type="monotone" dataKey="peakW" name="Peak W" stroke="#7fb8b2" fill="none" /></AreaChart></ResponsiveContainer></div>
         )}
       </Card>
       <div className="grid gap-4 lg:grid-cols-2">

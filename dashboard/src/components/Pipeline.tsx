@@ -4,7 +4,7 @@ import { STAGES, REASONS, stageStatuses, evOf, type StageId, type StageView } fr
 import { useStore } from "../store";
 import { Badge, Card, Mono, Row, StatusIcon, short, ago, fmtKwh, ModePill, type BadgeKind } from "./ui";
 
-const TONE: Record<string, string> = { COMPLETED: "border-lime/50", PROCESSING: "border-lav/70 shadow-[0_0_24px_-6px_#a88ed4]", FAILED: "border-bad/60", UNAVAILABLE: "border-line opacity-70", WAITING: "border-line" };
+const TONE: Record<string, string> = { COMPLETED: "border-lime/50", PROCESSING: "border-lav/70 shadow-[0_0_24px_-6px_#9BD7E8]", FAILED: "border-bad/60", UNAVAILABLE: "border-line opacity-70", WAITING: "border-line" };
 
 export function usePipeline() {
   const s = useStore();
@@ -31,7 +31,7 @@ function Node({ v, i, open, onOpen }: { v: StageView; i: number; open: boolean; 
     </button>
   );
 }
-const DOT: Record<string, string> = { COMPLETED: "#b9e303", PROCESSING: "#a88ed4", FAILED: "#ff6b6b", UNAVAILABLE: "#556", WAITING: "#2c3243" };
+const DOT: Record<string, string> = { COMPLETED: "#D7FEFA", PROCESSING: "#9BD7E8", FAILED: "#ff7a7a", UNAVAILABLE: "#556", WAITING: "#3a3e3e" };
 /** One line through all eight stages. A segment animates only while the stage after it is actually processing. */
 function Rail({ views, cp }: { views: StageView[]; cp?: { done: boolean } }) {
   return (

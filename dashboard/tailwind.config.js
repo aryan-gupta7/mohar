@@ -6,9 +6,9 @@ export default {
       colors: {
         ink: "var(--ink)", mid: "var(--mid)", surf: "var(--surf)", card: "var(--card)", line: "var(--line)",
         text: "var(--text)", mute: "var(--mute)",
-        lime: "#b9e303", lav: "#a88ed4", sky: "#b5d5e1", graph: "#232323", warn: "#f5a524", bad: "#ff6b6b",
+        lime: "var(--mint)", mint: "var(--mint)", lav: "#9BD7E8", sky: "#7fb8b2", graph: "#2B2E2E", warn: "#f5c26b", bad: "#ff7a7a",
       },
-      fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', 'Inter', 'system-ui', 'sans-serif'], mono: ['ui-monospace', '"SF Mono"', 'Menlo', 'monospace'] },
+      fontFamily: { sans: ['Poppins', 'system-ui', 'sans-serif'], mono: ['ui-monospace', '"SF Mono"', 'Menlo', 'monospace'] },
       borderRadius: { xl2: "20px" },
     },
   },
