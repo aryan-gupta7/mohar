@@ -257,13 +257,7 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 
 ---
 
-## Current state
+## Current state (Fri 17:30)
 
-**Done:** DEV-0 to DEV-6, most of DEV-7, EF-1 and EF-2 on the public devnet, 0G-1, ENS-1, and the 0G Storage log pipeline.
-**Open:** a clean 30-minute soak (needs the hotspot held on 2.4 GHz), the pulse-wire unplug test, the laptop-off run (EF-3), Web Serial test of the dashboard with the boards, rehearsal, video.
-
-**Blocked on you:**
-1. Devnet ETH for `0xcfb296f635254A4B3281D2e285174E98D643Ef60`.
-2. 0G API key and credits.
-3. Sepolia ETH for the same address.
-4. The two wires between the Pico and the ESP8266.
+**Done:** DEV-0 to DEV-6 and most of DEV-7; EF-1 and EF-2 on the public devnet; EF-2L; 0G-1 to 0G-4 (0G-3 partly); ENS-1 to ENS-3; the dashboard (Mohar Console, new theme); the control centre; README, LICENSE, demo script.
+**Open:** why 4 of 12 soak checkpoints couldn't complete; the pulse-wire unplug test (you); the laptop-off run, EF-3 (you); the dashboard with the real boards over Web Serial and a real wallet (you); a really blocked 0G network; two rehearsals, a fresh key and contracts, the video; the GitHub repo (you).
