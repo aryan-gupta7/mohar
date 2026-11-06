@@ -2,7 +2,7 @@
 
 This describes only what is **built and tested so far**. For what comes next, see [dev-plan.md](dev-plan.md). For the history of each step, see [update-log.md](update-log.md).
 
-**Last updated:** Friday, November 6, 2026, 13:30 IST
+**Last updated:** Friday, November 6, 2026, 15:55 IST
 
 ---
 
@@ -43,7 +43,7 @@ This describes only what is **built and tested so far**. For what comes next, se
 | `qwen3.8-flash` makes reliable inspect or run decisions on meter windows | **Proven on 19 labelled scenarios, 5 runs each** | `docs/evidence/0g-1-qwen3.8-flash.json`. The policy text was written after the first 14 scenarios; 5 more were added after |
 | The ESP8266 joins Wi-Fi, holds TLS 1.2, reads the chain and streams a signed transaction | **Proven** | DEV6-T1 to T6: public gateway chain `0x539`, 50 of 50 reads, the node decoded the board's transaction |
 | The board's modes, LEDs, holds and credit logic work against a real ledger | **Proven on the local chain**, with injected decisions | `firmware/tools/behaviour_test.py`; see the device behaviour section |
-| The board calls 0G itself and acts on the answer | **Not yet tested on the board** | The code is written (`zerog.cpp`); 0G-2 tests pending |
+| The board calls 0G itself and acts on the answer | **Proven**, on Wi-Fi, on the public devnet | Five windows, five expected answers with real request IDs; a live run where 0G's `INSPECT` set a hold on the public ledger ([live-run-public.json](docs/evidence/live-run-public.json)) |
 | A transaction submitted by the board over Wi-Fi is mined on the local chain | **Not proven**: the phone hotspot blocks board-to-laptop traffic | Mined proof is the USB-forwarded path (DEV5-T9); the Wi-Fi path was proven to reach and be decoded by the public node |
 | ENS and 0G integrations | **Not started** | Docs and endpoints checked only |
 
@@ -396,6 +396,43 @@ Power estimate: `W = pulses × 1,125,000 / window ms` (3,200 pulses per kWh). A 
 **How the device asks:** `POST /v1/chat/completions` with `temperature 0`, `max_tokens 16`, `enable_thinking: false`, the owner's policy as the system message and the meter window as plain text. The device accepts only the exact words `RUN` or `INSPECT`, and anything else is no decision. The request ID is `x_0g_trace.request_id`. The router sends two `X-Request-Id` headers, and the UUID one matches the trace.
 
 **Honest caveats:** the policy text (average above the sanctioned load, 3 or more glitches or any stuck-low, silence after load, spacing that doesn't look like a load) was written after seeing the first 14 scenarios. Only the 5 added afterwards are an independent test. The model also applies fixed rules, so the AI's value here is judging combinations of signals; the glitch and overload thresholds are also enforced in code, and **0G can only make the device more cautious.** The key sits in the board's flash once 0G-2 is built, so it must be a low-limit key.
+
+---
+
+## 7c. Outside the board: the public devnet, ENS, 0G Storage and the dashboard
+
+### The public devnet (EF-1, EF-2)
+
+The same scripts that ran on our local copy ran unchanged on the shared EF devnet with `MOHAR_NET=public`.
+
+- **EF-1** ([evidence](docs/evidence/ef-1.json)): a self-paying account signed with its WOTS key was admitted and mined (block 1977, both frames succeeded, 169,146 gas). A **staked** account was also admitted and mined with **150,000** verification gas, so the 100,000 cap applies to unstaked senders only.
+- **EF-2** ([evidence](docs/evidence/ef-2-public.json)): the canonical mempool refused the transaction (`StorageReadNonSender`); the alt mempool admitted **the same bytes**; mined in block 2010 with four frames succeeding, the account paying nothing, the paymaster's quota 10 → 9. Replay, over-quota, revoked-device and unstaked-paymaster transactions were all refused.
+- **Fees matter.** At 2 gwei max fee / 1 gwei tip the public alt mempool *admitted* a transaction, the miner relayed it four times, and it was cancelled ("relayed 4 times without being included in a block"). At **5 gwei / 2.5 gwei** it was mined within seconds, because the base fee there is about 1 gwei. `DEFAULT_FEES` on the public network is 5 / 2.5 gwei.
+- **The board's own submission:** over Wi-Fi and TLS the board signed and sent a transaction; the public node decoded it and judged it. The live run below shows full reports mined from the board.
+
+### The live run (0G-3, public devnet)
+
+[live-run-public.json](docs/evidence/live-run-public.json) holds every `EV` and `CP` line. Real Pico pulses, the board on Wi-Fi, real 0G calls, a freshly deployed account, ledger and paymaster: normal load → 0G `RUN` → mined, with the request ID in the report (20 s end to end); a 12 kW surge → 0G `INSPECT` → the device moved to `INSPECT` and set the hold on the ledger; back to normal → still `INSPECT` because of the hold; the surge had used up the credit, so the next mode was `CREDIT_STOP` with 125 pulses of arrears; a glitching line → `INSPECT` from the fixed check without calling 0G.
+
+**A bug the soak found:** the board never joined Wi-Fi by itself after a reset (only my test command did), so a power-cycled board went `SAFE_STOP` forever. The network code now connects on demand and rejoins after a drop.
+
+### ENS (ENS-1, ENS-2)
+
+`mohar.eth` is registered on Sepolia with its own resolver and subname registry (28-day term). **`meter-001.mohar.eth`** has its own resolver and these records, read back through the Universal Resolver (`node ens/04-read.ts`): address for chain 1337, `mohar.chainId`, `mohar.ledger`, `mohar.paymaster` (now the **live public-devnet contracts**), `mohar.pq.scheme` / `root` / `pubSeed` (the board's real key), `mohar.policy`, `mohar.deviceType`, `mohar.capabilities`, `mohar.tariff`, `mohar.operator`, `mohar.maintenance.status`, `mohar.log`, `agent-context`, `agent-endpoint[web]`. Details: [docs/handoff/ens-2.md](docs/handoff/ens-2.md).
+
+- **Permissions, tested on Sepolia:** a maintenance key can edit only `mohar.maintenance.status`; the same key editing `mohar.pq.root` is refused with `EACUnauthorizedAccountRoles`; an uploader key can edit only `mohar.log`; a second meter's resolver refuses the first meter's key.
+- **The deployed Sepolia contracts are an older version than the `contracts-v2` repo head:** name-based setters (`setText(bytes name, string key, string value)`), `initialize((address,uint256)[], bytes[])`, and `grantSetterRoles(bytes, address)`. We found the real interfaces from the deployed bytecode and tested every call before sending it.
+- **Transfer:** transferring `meter-001` is refused with `TransferUnsafeUntilRegistryIsEmancipated`, not `TransferDisallowed`. The name can't be moved, but it is a state of the registry, so **we do not claim a per-name "non-transferable" role.**
+- **Boundary:** ENS permissions control ENS records only. They do not control the devnet contracts. The two chains are linked by clients reading both.
+- A public RPC can serve state a few seconds old: right after a registration, the resolver read as zero and the first record writes went to address zero. The scripts now wait and retry.
+
+### 0G Storage log (0G-4)
+
+[uploader/](uploader/) reads `Report` events, builds one JSON record per report (the meter fields decoded from the 32-byte `sensors` word, the request ID or `null` for `SAFE_STOP`), uploads batches to 0G Storage on the Galileo testnet and prints the root. `uploader/replay.ts` downloads a root with proof verification, compares every record with the chain and prints the timeline. Tested: an upload round-trips byte for byte; replay matched 23 of 23 records across 6 batches; a one-watt edit is caught as `MISMATCH in meter`; killing the uploader before or after it saves progress left no gap or duplicate. Cost: about 0.0013 to 0.0015 0G per 2.8 KB batch. Details: [docs/handoff/0g-4.md](docs/handoff/0g-4.md).
+
+### The dashboard (DEV-8)
+
+[dashboard/](dashboard/) is the Mohar Console: a static site (Vite, React, TypeScript, no backend, no trackers, no secrets). Its Demo Console shows an eight-stage live pipeline (Pico → ESP8266 → 0G → policy → signing → transaction → contracts → verified record) driven only by the `METER` and `EV` lines the boards print ([docs/event-protocol.md](docs/event-protocol.md)) plus RPC reads, and sends scenario commands to the Pico over Web Serial. The Meter Dashboard resolves a name through ENS, then reads the ledger and its events. Every number carries a provenance badge (`SIMULATED INPUT`, `LIVE HARDWARE`, `DERIVED`, `AI RESPONSE`, `LOCAL POLICY`, `SIGNED`, `MEMPOOL ACCEPTED`, `ON-CHAIN CONFIRMED`, `ARCHIVED`). Web Serial works in desktop Chrome and Edge only; on a phone the Meter Dashboard works and the Pico controls don't. Test status: [docs/handoff/dev-8.md](docs/handoff/dev-8.md).
 
 ---
 
@@ -758,6 +795,50 @@ node signer/tools/make-scenarios.ts
 node signer/tools/0g-eval.ts qwen3.8-flash 5 0.5     # about 2 minutes
 ```
 **Expected:** every scenario `ok 5/5`, `0G1-T3 … PASS`, no timeouts, p95 latency about 1 to 1.5 s, request IDs matching. Rerun with `laya` or `vela-2.0-9b` to see why they weren't chosen.
+
+### Test 8f: Behaviour of the board against the local chain
+
+Needs the local chain, producer and sidecar (Tests 3 and 8a), the Pico wired to the board, and the dev firmware. About 2.5 minutes.
+```sh
+uv run --no-project --with pyserial python firmware/tools/behaviour_test.py $ESP $PICO
+```
+**Expected:** `ALL PASS`: normal load → `RUN` and a ledger total equal to the board's count; injected inspect → `INSPECT` and a hold on the ledger; an AI "run" doesn't clear it; the operator clears it → `RUN`; a glitch line → `INSPECT` from the local check; no decision → `SAFE_STOP` with an empty request ID; credit used up → `CREDIT_STOP` with arrears; a top-up pays arrears first. The `[after …]` lines show the board's pulse count and the Pico's side by side; they differ by a constant start offset.
+
+### Test 8g: Real 0G calls from the board (needs the hotspot on 2.4 GHz and your 0G key in `secrets.h`)
+```sh
+# in `pio device monitor --port $ESP --baud 115200` (press RST first, then type; the loop starts 10 s after boot, so type `loop off` first):
+loop off
+wifi
+zg Electricity meter, last 60 s. Sanctioned load 5000 W, meter limit 13800 W. Valid pulses 150, average 8000 W, peak 8300 W, longest gap between pulses 0.5 s. Pulse-line glitches 0, stuck-low events 0.
+```
+**Expected:** `WIFI ok=1 … ip=…`, then `ZG answer=INSPECT rid=<a UUID> http=200 ms≈6200`. Change the numbers to a normal window (19 pulses, 900 W) and the answer is `RUN`.
+
+### Test 8h: The public devnet (needs devnet ETH at the deployer address)
+```sh
+MOHAR_NET=public node signer/tools/ef1.ts      # EF-1: a WOTS transaction, plus the staked 150,000-gas question
+MOHAR_NET=public node signer/tools/ef2.ts      # EF-2: refused by the canonical path, admitted by the alt mempool, mined
+```
+**Expected:** `EF1-T1 receipt: status 0x1`, `EF1-T6 … ADMITTED`; `EF2-T1 … refused … StorageReadNonSender`, `EF2-T4 receipt … 4 frames 0x1`, `accountBalanceWei: 0`, `EF2-T5 quota 10 → 9`, and the refusals. Each run deploys new contracts and costs about 0.05 ETH of devnet funds. Fees are 5 / 2.5 gwei there; lower fees get admitted and then dropped.
+
+### Test 8i: The live run and the soak on the public devnet (the board on Wi-Fi, the Pico wired)
+```sh
+LED=<ledger> ACC=<account> PM=<paymaster>      # from ledger-cli.ts deploy
+MOHAR_NET=public node signer/tools/ledger-cli.ts deploy <root> <pubSeed>      # deploys for the board's key
+MOHAR_NET=public uv run --no-project --with pyserial python firmware/tools/live_test.py $ESP $PICO $LED $ACC $PM
+MOHAR_NET=public uv run --no-project --with pyserial python firmware/tools/soak_test.py $ESP $PICO $LED 30
+```
+**Expected (live run):** `PASS` for a real 0G `RUN` report, a 0G `INSPECT` that sets the hold, and the hold surviving a later `RUN`. If credit runs out you will correctly see `CREDIT_STOP`; give the ledger more credit with `ledger-cli.ts topup`. **Expected (soak):** `SOAK PASS`: no reset, every report mined, heap never below 8,000 bytes.
+
+### Test 8j: ENS and 0G Storage
+```sh
+node ens/04-read.ts                                   # meter-001.mohar.eth's records, through the Universal Resolver
+node ens/00-check.ts                                  # the Sepolia deployment, read-only
+node uploader/replay.ts <root>                        # download a 0G Storage root, verify it, compare with the chain
+```
+**Expected:** the records listed in section 7c (`mohar.ledger` and `mohar.paymaster` are the live devnet contracts). See [docs/handoff/0g-4.md](docs/handoff/0g-4.md) for the uploader and replay commands and flags.
+
+### Test 8k: The dashboard
+Follow [dashboard/README.md](dashboard/README.md). In desktop Chrome, open the Demo Console, connect the Pico and the ESP8266 (only one program may hold a serial port: close `pio device monitor` first), choose a scenario and press **Apply meter scenario**.
 
 ### Test 9: Pico meter simulator
 

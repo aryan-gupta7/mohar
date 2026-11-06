@@ -62,7 +62,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 17 | [ENS-3](#ens-3-discovery-and-permission-demo) | Discovery and permission demo | Fri 22:00 | |
 | 18 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 22:00 | ✅ Done Fri ~15:20 (T1, T3, T4-equivalent; T2, T5 open) |
 | 19 | [ENS-4](#ens-4-the-device-reads-its-policy-from-ens) | Device reads ENS policy | Sat 00:00 | Optional |
-| 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | ✅ T1–T3, T6 on the public devnet Fri ~16:00; T4, T5, T7, T8, T9 open |
+| 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | ✅ T1–T3, T6 on the public devnet Fri ~15:45; T4, T5, T7, T8, T9 open |
 | 21 | [0G-4](#0g-4-episode-log-and-replay) | Episode log and replay | Sat 03:00 | ✅ Pipeline done Fri ~15:00; redo on real data after 0G-3 |
 | 22 | [REL-1](#rel-1-full-rehearsal) | Full rehearsal, following the [demo story](#demo-story) | Sat 05:30 | |
 | 23 | [REL-2](#rel-2-submission) | Submission | **Sat 08:00** | |
@@ -589,7 +589,7 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 
 ## DEV-8: Mohar Console (dashboard)
 
-**Status:** Built by an agent Fri ~16:00: MVP and Strong levels, most of Polish; 20 of 20 headless-Firefox checks. **Not yet run against the real boards (Web Serial) or the real `meter-001` ENS records;** the ARCHIVED stage is not wired; the replay logs are synthesised. Details: [docs/handoff/dev-8.md](docs/handoff/dev-8.md). · **Depends on:** DEV-3, ENS-2 for the identity page; the event protocol in [docs/event-protocol.md](docs/event-protocol.md) for everything live · **Needs from you:** hosting choice in REL-2
+**Status:** Built by an agent Fri ~15:45: MVP and Strong levels, most of Polish; 20 of 20 headless-Firefox checks. **Not yet run against the real boards (Web Serial) or the real `meter-001` ENS records;** the ARCHIVED stage is not wired; the replay logs are synthesised. Details: [docs/handoff/dev-8.md](docs/handoff/dev-8.md). · **Depends on:** DEV-3, ENS-2 for the identity page; the event protocol in [docs/event-protocol.md](docs/event-protocol.md) for everything live · **Needs from you:** hosting choice in REL-2
 
 **Why:** this is the interface for the demo, and the product view. A person should understand the whole system from the screen: **a user picks a meter scenario → the physical device measures it → AI assesses it → the device signs its own report → Ethereum verifies it → the dashboard shows the evidence.** The dashboard presents; the hardware produces. It is a static frontend with **no backend and no trackers**, and no key or secret ever enters the browser.
 
@@ -1092,7 +1092,7 @@ Heap stayed above 37 KB across the calls. The key is in the git-ignored `secrets
 
 ## 0G-3: Decision loop and safe stop
 
-**Status:** ✅ T1, T2, T3 and T6 passed Fri ~16:00 on the **public devnet** with the board on Wi-Fi, real 0G decisions and real Pico pulses. **Open: T4/T5 (a real network block), T7, T8 (30-minute run), T9.** Evidence: [docs/evidence/live-run-public.json](docs/evidence/live-run-public.json) (every `EV` and `CP` line) · **Needs from you:** nothing
+**Status:** ✅ T1, T2, T3 and T6 passed Fri ~15:45 on the **public devnet** with the board on Wi-Fi, real 0G decisions and real Pico pulses. **Open: T4/T5 (a real network block), T7, T8 (30-minute run), T9.** Evidence: [docs/evidence/live-run-public.json](docs/evidence/live-run-public.json) (every `EV` and `CP` line) · **Needs from you:** nothing
 
 | Test | Result |
 |---|---|

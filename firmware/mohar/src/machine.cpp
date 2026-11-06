@@ -136,6 +136,7 @@ static void checkpoint() {
   Reason reason = R_OK;
   char requestId[40] = "";
   const char *aiNote = "none";
+  bool injectedNow = false;  // only ever set by a dev build's `inject` command
 
   LedgerView lv = readLedger();
   uint64_t nonce = 0;
@@ -169,8 +170,8 @@ static void checkpoint() {
     ZgAnswer ans = ZG_NONE;
     char why[48] = "";
 #ifdef MOHAR_DEV
-    if (inject == 1) { ans = ZG_RUN; strcpy(requestId, "dev-injected"); aiNote = "injected"; }
-    else if (inject == 2) { ans = ZG_INSPECT; strcpy(requestId, "dev-injected"); aiNote = "injected"; }
+    if (inject == 1) { ans = ZG_RUN; strcpy(requestId, "dev-injected"); aiNote = "injected"; injectedNow = true; }
+    else if (inject == 2) { ans = ZG_INSPECT; strcpy(requestId, "dev-injected"); aiNote = "injected"; injectedNow = true; }
     else if (inject == 3) { ans = ZG_NONE; strcpy(why, "injected_failure"); aiNote = "injected-fail"; }
     else
 #endif
@@ -219,7 +220,7 @@ static void checkpoint() {
   p.mode = (uint8_t)mode;
   p.reason = (uint8_t)reason;
   p.confidence = 0;  // the chat model gives no probability
-  p.model = requestId[0] && strcmp(requestId, "dev-injected") != 0 ? MODEL_QWEN_FLASH : 0;
+  p.model = requestId[0] && !injectedNow ? MODEL_QWEN_FLASH : 0;
   meter_pack(&w, p.sensors);
   if (requestId[0]) { p.reqLen = strlen(requestId) > REPORT_MAX_ID ? REPORT_MAX_ID : strlen(requestId); memcpy(p.reqId, requestId, p.reqLen); }
 

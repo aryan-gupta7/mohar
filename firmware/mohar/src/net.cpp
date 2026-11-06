@@ -21,7 +21,8 @@ bool net_wifi_connect(uint32_t timeoutMs) {
 int net_post_json(const char *host, uint16_t port, const char *path, const char *body, size_t bodyLen, char *resp, size_t respCap, NetStats *st, uint32_t timeoutMs, const char *bearer) {
   memset(st, 0, sizeof(*st));
   st->heapBefore = st->heapLowest = ESP.getFreeHeap();
-  if (!net_wifi_up()) return -1;
+  // A device that has just powered up must join the network by itself (and rejoin after a drop).
+  if (!net_wifi_up() && !net_wifi_connect(25000)) return -1;
   uint32_t t0 = millis();
   BearSSL::WiFiClientSecure client;
   client.setInsecure();                 // first version: no certificate check (see dev-plan DEV-6)
@@ -142,7 +143,8 @@ void net_print_submit_body(Print &out, const ReportParams &p, const uint8_t *sig
 int net_submit_frame_tx(const char *host, uint16_t port, bool tls, const char *path, const ReportParams &p, const uint8_t *sig, size_t sigLen, char *resp, size_t respCap, NetStats *st, uint32_t timeoutMs) {
   memset(st, 0, sizeof(*st));
   st->heapBefore = st->heapLowest = ESP.getFreeHeap();
-  if (!net_wifi_up()) return -1;
+  // A device that has just powered up must join the network by itself (and rejoin after a drop).
+  if (!net_wifi_up() && !net_wifi_connect(25000)) return -1;
   CountPrint counter;
   net_print_submit_body(counter, p, sig, sigLen);
   uint32_t t0 = millis();
