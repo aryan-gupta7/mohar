@@ -18,3 +18,7 @@ body { margin: 0; background: var(--bg); color: var(--fg); font-family: "Inter V
 .num { font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
 :focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+@keyframes train { to { background-position-x: -28px; } }
+.train { height: 18px; background-image: repeating-linear-gradient(90deg, var(--fg) 0 4px, transparent 4px 28px); background-size: 28px 100%; animation: train var(--d, 1s) linear infinite; }
+.train[data-idle="true"] { animation: none; opacity: .25; }
+@keyframes spin { to { transform: rotate(360deg); } }

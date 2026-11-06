@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Cable, Unplug, Usb } from "lucide-react";
 import { useStore } from "../store";
+import { Segmented } from "../components/motion";
 import { Pipeline } from "../components/Pipeline";
 import { Button, Card, H, ErrorBox, Mono, Page, Tag, ago, inputCls } from "../components/ui";
 
@@ -28,13 +29,7 @@ export function Console() {
     <Page title="Console" aside={s.mode === "replay" ? <Tag k="Replay" title="Recorded lines, not live hardware" /> : <Tag k="Simulated" title="The Pico simulates the meter's pulse output" />}>
       <Card>
         <H right={<span className="text-xs text-mute">{s.pico.connected ? msg ?? "Pico connected" : "Pico not connected"}</span>}>Scenario</H>
-        <div className="flex flex-wrap gap-2">
-          {SCENARIOS.map((x) => (
-            <button key={x.key} onClick={() => setSel(x.key)} aria-pressed={sel === x.key} className={`rounded-full px-4 py-2 text-sm transition-colors ${sel === x.key ? "bg-accent text-bg" : "shadow-[inset_0_0_0_1px_var(--line)] hover:bg-fg/5"}`}>
-              {x.name} <span className={`ml-1 text-xs ${sel === x.key ? "opacity-70" : "text-faint"}`}>{x.w}</span>
-            </button>
-          ))}
-        </div>
+        <Segmented id="scenario" value={sel} onChange={setSel} options={SCENARIOS.map((x) => ({ value: x.key, label: x.name, hint: x.w }))} />
         <div className="mt-5"><Button onClick={apply} disabled={!s.pico.connected}>Apply scenario</Button></div>
       </Card>
 
