@@ -3,7 +3,9 @@
 We build in phases, one at a time. Each phase below says exactly what gets built, how it must behave, and which tests prove it.
 
 **Deadline:** Saturday, November 7, 2026, 9:00 AM IST
-**Last updated:** Thursday, November 5, 2026, 23:58 IST
+**Last updated:** Friday, November 6, 2026, 09:00 IST
+
+**Story (changed Friday 08:20):** Mohar is a **prepaid electricity meter that signs its own readings**. A Raspberry Pi Pico H plays the meter's impulse output, and the ESP8266 counts the pulses, decides, signs and reports. There is **no servo** and nothing physically disconnects a supply: the ledger records consumption, credit, arrears and inspection holds. Contracts, WOTS signing, the quota paymaster and the ENS identity design are unchanged.
 **Related:** [mechanism.md](mechanism.md) explains what's built. [update-log.md](update-log.md) records every step. The product plan is `plan.md` in the parent folder, outside this repo. **Where they differ, this file and mechanism.md are correct**, because they come from testing.
 
 ---
@@ -44,25 +46,28 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 1 | [DEV-0](#dev-0-tooling-local-chain-and-baseline) | Tooling, local chain, board baseline | | ✅ Done |
 | 2 | [DEV-1](#dev-1-wots-signer-and-machine-account) | WOTS signer and account | | ✅ Done locally |
 | 3 | [DEV-2](#dev-2-quota-paymaster) | Quota paymaster | | ✅ Done locally |
-| 4 | [DEV-3](#dev-3-machine-ledger) | Machine ledger | Fri 01:00 | Next |
-| 5 | [DEV-4](#dev-4-firmware-keys-and-signing) | Device keys and signing | Fri 03:00 | |
-| 6 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 05:30 | |
-| 7 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 09:00 | Needs Wi-Fi |
-| 8 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **Fri 12:00 latest** | Needs funds |
-| 9 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 12:00 | Needs API key |
-| 10 | [EF-2](#ef-2-the-alt-mempool-proof) | Alt mempool proof | Fri 13:00 | Needs funds |
-| 11 | [ENS-1](#ens-1-fleet-name-and-registry) | Fleet name and registry | Fri 14:00 | Needs Sepolia ETH |
-| 12 | [EF-3](#ef-3-device-signed-transaction-with-the-laptop-off) | Device-signed, laptop off | Fri 15:00 | |
-| 13 | [ENS-2](#ens-2-machine-identity-and-permissions) | Machine identity and roles | Fri 16:00 | |
-| 14 | [DEV-7](#dev-7-machine-behaviour) | Servo, sensors, operating modes | Fri 17:00 | Needs wiring |
-| 15 | [DEV-8](#dev-8-dashboard) | Dashboard | Fri 19:00 | |
-| 16 | [ENS-3](#ens-3-discovery-and-permission-demo) | Discovery and permission demo | Fri 20:00 | |
-| 17 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 21:00 | |
-| 18 | [ENS-4](#ens-4-the-device-reads-its-policy-from-ens) | Device reads ENS policy | Fri 22:00 | Optional |
-| 19 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop and safe stop | Fri 23:30 | |
-| 20 | [0G-4](#0g-4-episode-log-and-replay) | Episode log and replay | Sat 02:00 | Needs 0G tokens |
-| 21 | [REL-1](#rel-1-full-rehearsal) | Full rehearsal | Sat 04:30 | |
-| 22 | [REL-2](#rel-2-submission) | Submission | **Sat 08:00** | |
+| 4 | [DEV-3](#dev-3-machine-ledger) | Machine ledger | Fri 01:00 | ✅ Done locally, Fri 09:00 |
+| 5 | [DEV-4](#dev-4-firmware-keys-and-signing) | Device keys and signing | Fri 12:00 | Next |
+| 6 | [EF-2L](#ef-2l-alt-mempool-rules-on-a-local-sidecar) | Alt mempool rules, local sidecar | Fri 12:00 | You approved the build |
+| 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | |
+| 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | Wi-Fi received |
+| 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | Needs funds |
+| 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | Needs API key |
+| 11 | [EF-2](#ef-2-the-alt-mempool-proof) | Alt mempool proof, public | After EF-1 | Needs funds |
+| 12 | [ENS-1](#ens-1-fleet-name-and-registry) | Fleet name and registry | Fri 16:00 | Needs Sepolia ETH |
+| 13 | [DEV-7](#dev-7-meter-signal-acquisition-and-device-behaviour) | Meter signal acquisition and device behaviour | Fri 18:00 | Needs Pico wired to ESP |
+| 14 | [EF-3](#ef-3-device-signed-transaction-with-the-laptop-off) | Device-signed, laptop off | Fri 19:00 | |
+| 15 | [ENS-2](#ens-2-machine-identity-and-permissions) | Machine identity and roles | Fri 19:00 | |
+| 16 | [DEV-8](#dev-8-dashboard) | Dashboard | Fri 21:00 | |
+| 17 | [ENS-3](#ens-3-discovery-and-permission-demo) | Discovery and permission demo | Fri 22:00 | |
+| 18 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 22:00 | |
+| 19 | [ENS-4](#ens-4-the-device-reads-its-policy-from-ens) | Device reads ENS policy | Sat 00:00 | Optional |
+| 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | |
+| 21 | [0G-4](#0g-4-episode-log-and-replay) | Episode log and replay | Sat 03:00 | Needs 0G tokens |
+| 22 | [REL-1](#rel-1-full-rehearsal) | Full rehearsal, following the [demo story](#demo-story) | Sat 05:30 | |
+| 23 | [REL-2](#rel-2-submission) | Submission | **Sat 08:00** | |
+
+The schedule was moved on Friday 09:00: the work started again at 08:20, and the public funds still haven't arrived. EF-2L was added so alt mempool rules can be tested before funds come.
 
 ---
 
@@ -88,8 +93,13 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 0G testnet router fails the TLS handshake | `curl` and `openssl` | **Verified** at 23:40 |
 | 0G responses carry `x_0g_trace.request_id`, and it matches `X-Request-ID` | [Router docs](https://0gfoundation.github.io/0g-router/) | **Docs** |
 | `POST /v1/decisions` returns typed answers, and `laya` costs nothing | Model catalogue; [docs PR](https://github.com/0gfoundation/0g-doc/pull/418) | **Docs**, tested in 0G-1 |
-| The alt mempool admits our paymaster | Source reading suggests yes | **Untested**, settled in EF-2 |
+| The alt mempool admits our paymaster | Source reading suggests yes | **Untested**, settled in EF-2L and EF-2 |
 | The ESP8266 can run TLS while holding a signature | About 51 KB free before Wi-Fi | **Untested**, settled in DEV-6 |
+| Creating a storage slot costs about 98,600 gas; code costs about 1,670 gas per byte | DEV-3 measurements | **Verified** on the local chain |
+| The ledger's report frame fits: worst case 35,686 of 50,000 gas | DEV-3 worst-case test | **Verified** on the local chain |
+| The Pico generates meter pulses at the intended rates | Its console, at 900, 3,000 and 12,000 W | **Verified** on the board |
+| Frame transactions exist only on the EF devnet, not on Sepolia | EIP-8141 is a draft; Sepolia hasn't adopted it | **Docs**. ENS runs on Sepolia; the EF parts can't |
+| The laptop and the ESP are on different Wi-Fi networks | Laptop on `ETHGlobal`, ESP to use its own network | **Verified** Fri 08:20. Matters for local-chain tests over Wi-Fi |
 
 ---
 
@@ -98,13 +108,14 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | # | What | Needed for | How |
 |---:|---|---|---|
 | 1 | **Devnet ETH: at least 0.2 ETH** at `0xcfb296f635254A4B3281D2e285174E98D643Ef60` | EF-1 onward | Ask Pierre or Alex at the EF booth to refill the faucet or fund this address |
-| 2 | **Wi-Fi name and password.** Must be **2.4 GHz**: the ESP8266 can't use 5 GHz | DEV-6 | Put them in `firmware/mohar/src/secrets.h`, which I'll template. It's never committed |
+| 2 | ~~Wi-Fi name and password~~ | DEV-6 | ✅ Received Fri 08:20, stored only in the git-ignored `secrets.h` |
 | 3 | **0G API key** (`sk-…`) and team credits | 0G-1 | [pc.0g.ai](https://pc.0g.ai) → Dashboard → API Keys. Credits from the 0G booth |
 | 4 | **Sepolia ETH: at least 0.05 ETH** at the same address | ENS-1 | Any Sepolia faucet, or the ENS booth |
-| 5 | **Wiring** the servo and Pico | DEV-7 | Instructions are in DEV-7 |
+| 5 | **Wiring:** Pico GP0 (pin 1) to NodeMCU D6, and GND (pin 3) to GND | DEV-7 | Details in DEV-7. No servo |
 | 6 | **0G testnet tokens** | 0G-4 | [faucet.0g.ai](https://faucet.0g.ai), or the 0G booth. I'll give you the address |
-| 7 | **Your decision:** may I build the sidecar locally? | Optional | The permission system blocked it as external code. Allowing it gives us real admission checks without public funds |
+| 7 | ~~Sidecar decision~~ | EF-2L | ✅ Approved Fri 08:20: build locally, keep switching easy |
 | 8 | **How many people are building?** | Scheduling | Tells me what can run in parallel |
+| 9 | **For Wi-Fi tests against the local chain:** put the laptop on the same network as the ESP | DEV-6 | Only needed then. The laptop is on `ETHGlobal`; the ESP uses your hotspot |
 
 ---
 
@@ -117,7 +128,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | **EF-2: paymaster not admitted by Fri 16:00** | Ask the EF team. Without it, our transaction passes the public mempool too, so **the claim that we need the alt mempool has to go**. We'd disclose that and keep the PQ account |
 | **DEV-6: TLS can't work on the board by Fri 15:00** | The laptop forwards signed bytes and can't alter them. Drop "laptop off" and "no relayer" from all claims |
 | **ENS behind schedule at Fri 22:00** | Skip ENS-4 and extras, but keep the rejected-edit demo. Without that, ENS is cosmetic |
-| **0G: the decision isn't moving the servo by Sat 02:00** | **Withdraw from the 0G track.** We won't submit a logging-only integration |
+| **0G: a 0G decision isn't changing the device's state and LED by Sat 02:00** | **Withdraw from the 0G track.** We won't submit a logging-only integration |
 | **Sat 06:00** | Feature freeze: only fixes and docs after this |
 
 ---
@@ -195,7 +206,20 @@ All run with `npm run test:integration`: 26 of 26 passed.
 
 ## DEV-3: Machine ledger
 
-**Status:** Next · **Target:** Fri 01:00 · **Depends on:** DEV-2 · **Needs from you:** nothing
+**Status:** ✅ Done on the local chain, Fri 09:00. All 12 ledger tests and the 26 earlier tests pass against it. · **Needs from you:** nothing
+
+**Changes from the original spec, and why**
+
+| Change | Why |
+|---|---|
+| **Arrears.** Usage beyond credit is owed, not dropped, and a top-up pays it first | Without a servo nothing stops consumption, so uncovered usage must still be recorded |
+| Credit and arrears are **one signed `balance`** in the slot `report` already writes | A new storage slot costs about 98,600 gas here. A separate arrears slot would have been recreated each time credit ran out |
+| `status()` also returns `arrears`, `lastMode` and `ledgerMode`; added `credit()`, `arrears()` and `ledgerMode()` | The device and dashboard need the ledger's own view of the mode |
+| `report` also refuses confidence above 100 and request IDs over 64 bytes | Bounded logs |
+| A plain transfer to the ledger is a top-up | Simple payment |
+| Deployments estimate gas; optimizer at 200 runs | Code costs about 1,670 gas per byte here; the ledger costs about 6.0 million gas to deploy |
+
+**Measured:** report frame 24,338 to 35,413 gas (worst case 35,686), total 188,784 to 192,880 gas, and about 98,600 more for the one report that creates the ledger's second slot. Maximum cost about 0.00069 ETH at 2 gwei. Details are in [mechanism.md](mechanism.md) section 7a.
 
 **Why:** tests currently report to a stand-in contract. The ledger holds the shared state that parties actually rely on: readings, credit and holds. This is the on-chain reason the project exists.
 
@@ -238,11 +262,13 @@ Modes: `0 RUN`, `1 INSPECT`, `2 CREDIT_STOP`, `3 SAFE_STOP`.
 8. `bindMachine` works once, so a machine can't be swapped later.
 9. The account's getters don't weaken validation. Frame calls have empty calldata and take the same path as before.
 
-**Tests:** run `npm run test:integration`. Every item must pass.
+**Tests:** run `npm run test:integration`. Every item must pass. **Result: all passed, Fri 09:00.**
 
 | ID | Pass only if |
 |---|---|
 | DEV3-T1 | A stranger's `report` reverts; the bound account's succeeds |
+| DEV3-T13 (added) | Worst case through the frame path: first report on an unfunded ledger, `INSPECT`, 64-byte request ID. All frames succeed |
+| DEV3-T14 (added) | The ledger's ETH equals credit plus earned: checked after the charging sequence, after a withdrawal, and after the frame-path reports |
 | DEV3-T2 | Equal or lower `seq` reverts; lower `total` reverts |
 | DEV3-T3 | Credit and earned change by exactly the expected wei, including when credit is too low to cover the charge |
 | DEV3-T4 | `INSPECT` sets the hold; `RUN`, `CREDIT_STOP` and `SAFE_STOP` don't |
@@ -377,6 +403,8 @@ Modes: `0 RUN`, `1 INSPECT`, `2 CREDIT_STOP`, `3 SAFE_STOP`.
 | `firmware/mohar/src/secrets.example.h` | Template; your real `secrets.h` is git-ignored |
 | `devnet/up.sh --lan` | Exposes the local RPC to the Wi-Fi network, for testing only. The Engine API stays on localhost |
 
+**Networks:** the ESP joins your 2.4 GHz hotspot. The laptop is on `ETHGlobal`, a different network, so the ESP can't reach the laptop's local chain over Wi-Fi until the laptop joins the hotspot too. Until then, local-chain tests forward signed bytes over USB (DEV5-T9), and Wi-Fi tests use public endpoints only.
+
 **How it must behave**
 
 1. Connects to Wi-Fi in under 30 seconds, and reconnects by itself after a drop.
@@ -406,67 +434,106 @@ Modes: `0 RUN`, `1 INSPECT`, `2 CREDIT_STOP`, `3 SAFE_STOP`.
 
 ---
 
-## DEV-7: Machine behaviour
+## DEV-7: Meter signal acquisition and device behaviour
 
-**Status:** Not started · **Target:** Fri 17:00 · **Depends on:** DEV-6 · **Needs from you:** wiring
+**Status:** Pico side ✅ built and tested on the board. ESP side not started · **Target:** Fri 18:00 · **Depends on:** DEV-5 for reports; counting can start now · **Needs from you:** the two wires below
 
-**Why:** this is what makes it a physical machine. The on-chain state and local safety rules must visibly change what it does.
+**Why:** this makes it a real metering device. Real pulses are generated, counted and reported, and the device's state visibly follows the ledger and its own checks. **No servo:** it isn't needed, and it caused power-supply problems.
 
-**Wiring**
+### Wiring
 
-| From | To | Note |
+| Pico H | NodeMCU ESP8266 | Note |
 |---|---|---|
-| Servo signal | NodeMCU D5 (GPIO14) | |
-| Servo power | External 5 V if possible | Never the 3.3 V pin |
-| Pico GP0 (UART TX) | NodeMCU D6 (GPIO12) | Both are 3.3 V logic |
-| All grounds | Joined together | Required |
+| GP0 (physical pin 1) | D6 (GPIO12) | The pulse line. Both boards are 3.3 V logic |
+| GND (physical pin 3) | GND | Required |
 
-Add a large capacitor across the servo supply if the board resets when the servo moves. **Low voltage only.** A servo is not a mains switch.
+Both boards stay powered over USB. The Pico only ever **pulls the line low or releases it**, like a real meter's open-collector (S0) output, and the ESP8266's internal pull-up holds it high. So the Pico never drives the line high, and neither board can back-power the other through it. GPIO12 isn't a boot-strapping pin, so the line can't stop the ESP8266 from booting.
 
-**What gets built**
+### The meter simulator (Pico, built)
+
+[firmware/pico-meter/code.py](firmware/pico-meter/code.py) on the Pico's existing CircuitPython 10.0.3. The firmware and boot ROM weren't touched.
+
+| Property | Value |
+|---|---|
+| Meter constant | 3,200 pulses per kWh, so one pulse is 0.3125 Wh |
+| Pulse | Line low for 30 ms; the onboard LED lights with it |
+| Interval jitter | ±3 %, so the load looks real |
+| Output | One JSON line every 2 seconds on the USB console, prefixed `METER ` |
+
+| Key | Scenario | Load | What it represents |
+|---|---|---:|---|
+| `i` | idle | 60 W | Standby |
+| `n` | normal (the default) | 900 W | A household |
+| `h` | heavy | 3,000 W | Geyser or AC |
+| `s` | surge | 12,000 W | Far above a typical 5 kW sanctioned load |
+| `g` | glitch | 900 W plus 2 ms spikes every 1 to 2.5 s | Interference or tampering on the pulse line |
+| `x` | off | none | Supply cut, or the meter goes dark |
+| `a` | automatic cycle | normal, heavy, normal, glitch, normal, surge, off | Hands-free demo |
+
+### Pulse counting (ESP8266, to build)
 
 | File | Purpose |
 |---|---|
-| `firmware/mohar/src/machine.*` | Mode logic and servo |
-| `firmware/mohar/src/sensors.*` | Reads and checks Pico frames |
-| `firmware/sim/` | Pico scenarios: normal, overheat, vibration, stall |
+| `firmware/mohar/src/meter.*` | Interrupt-driven counting and pulse-width checks |
+| `firmware/mohar/src/machine.*` | Mode logic and the status LED |
 
-**Sensors are simulated, and we say so.** The parts list has no temperature or vibration sensor, so the Pico sends scripted values as framed data with a checksum, at 9600 baud.
+1. GPIO12 is `INPUT_PULLUP`, with an interrupt on both edges. The interrupt only records times and counts, with no allocation and no serial output.
+2. **Pulse classes, by how long the line stayed low:**
 
-**How it must behave**
+   | Width | Class | Counted as energy? |
+   |---|---|---|
+   | Under 15 ms | Glitch | No. Counted separately |
+   | 15 to 200 ms | Valid pulse | Yes |
+   | Over 200 ms | Stuck low | No. Counted separately |
 
-| Mode | Trigger | Servo | How to leave |
+3. **Power estimate:** `W = 1,125,000 / interval_ms` between valid pulses, from 3,600 s/h × 1,000 W/kW ÷ 3,200 pulses/kWh. Averaged over the window.
+4. **Window statistics,** packed into the report's `sensors` word: valid pulses, glitches, stuck-low events, average and peak watts, window length, and the longest gap between pulses. The exact layout gets frozen in this phase and written into mechanism.md.
+5. **Deterministic checks, no network needed:**
+
+   | Check | Result |
+   |---|---|
+   | Peak above 13,800 W (60 A at 230 V, beyond what the meter can measure) | `INSPECT` immediately |
+   | 3 or more glitches in a window | `INSPECT` immediately |
+   | Anything else unusual (above the sanctioned load, a sudden silence, odd timing) | Asked of 0G in 0G-3. Until then it counts as `RUN` |
+
+### Device states (no physical positions)
+
+| Mode | Trigger | Status LED (D4, GPIO2) | How to leave |
 |---|---|---|---|
-| `RUN` | Decision is run, credit above zero, no hold, within local limits | Open | |
-| `INSPECT` | Decision is inspect, or a local limit is exceeded | Half | Operator clears the hold on-chain, then a fresh `RUN` decision |
-| `CREDIT_STOP` | On-chain credit is zero | Closed | Top-up |
-| `SAFE_STOP` | Decision service or chain unreachable past its timeout, invalid decision, or keys exhausted | Closed | Service returns, then a fresh valid decision |
+| `RUN` | Credit covers a pulse, no hold, checks pass, valid run decision | One short blink every 2 s | |
+| `INSPECT` | A local check fails, or a valid inspect decision | Two quick blinks every 2 s | Operator clears the hold on-chain, then a fresh `RUN` decision |
+| `CREDIT_STOP` | The ledger says credit can't cover one more pulse | Slow on and off, 1 s each | Top-up |
+| `SAFE_STOP` | No valid decision in time, chain unreachable, line dead while pulses were expected, or keys used up | Solid on | Service returns, then a fresh valid decision |
 
-1. **Most restrictive wins:** the mode order is `SAFE_STOP`, `INSPECT`, `CREDIT_STOP`, `RUN`.
-2. **Local limits don't wait:** too hot means `INSPECT` immediately, with no network.
-3. **At boot,** the servo is closed until a full check passes.
-4. Each checkpoint (60 seconds by default, shorter in the demo) reads sensors, reads chain state, decides, moves the servo and reports.
+The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the two boards' LEDs flash together.
+
+1. **Order when several apply:** `SAFE_STOP`, `INSPECT`, `CREDIT_STOP`, `RUN`. The device can add caution to `ledgerMode()`, never remove it.
+2. **At boot** the device shows `SAFE_STOP` until its first full check passes.
+3. Each checkpoint (60 seconds, 20 seconds in the demo) takes the window statistics, reads the ledger, decides, sets the LED, then saves intent, signs and reports.
+4. **Counting never stops,** in any mode: the meter keeps measuring, and the ledger keeps charging or recording arrears.
 5. **In this phase,** decisions come from a development-only injection command. 0G replaces it in 0G-3, and release builds don't contain it.
 
-**Tests**
+### Tests
 
 | ID | Scenario | Pass only if |
 |---|---|---|
-| DEV7-T1 | Boot | Servo stays closed until the first check passes |
-| DEV7-T2 | Normal sensors, credit, injected run | Open; `RUN` report mined |
-| DEV7-T3 | Injected inspect | Half; hold set on-chain; report mined |
-| DEV7-T4 | After T3, inject run | **Stays half.** AI can't clear a hold |
-| DEV7-T5 | Operator clears the hold, then run | Open |
-| DEV7-T6 | Credit used up | Closed within one checkpoint |
-| DEV7-T7 | Top-up from a script | Open within one checkpoint |
-| DEV7-T8 | Pico overheat, with 0G unavailable | Half immediately, without network |
-| DEV7-T9 | No sensor frames, or bad checksums | Treated as `SAFE_STOP` |
-| DEV7-T10 | 100 servo moves with Wi-Fi active | No resets |
-| DEV7-T11 | Corrupted serial frames are rejected, and valid ones accepted | Checksum works; the dropped-frame rate is recorded |
+| DEV7-T1 | Pico `r`, then 5 minutes of normal load | The ESP's valid count equals the Pico's count exactly |
+| DEV7-T2 | Pico surge for 30 s, about 10.7 pulses per second | Still no missed pulses; counts equal |
+| DEV7-T3 | Pico glitch for 30 s | Glitches counted separately and **not charged**; `INSPECT` immediately, without network |
+| DEV7-T4 | Pico off for 60 s | Zero pulses; no false counts from a floating line |
+| DEV7-T5 | Unplug the pulse wire mid-run | No counts while unplugged; the line reads high |
+| DEV7-T6 | Normal load, credit, injected run | LED shows `RUN`; `RUN` report mined; ledger `lastTotal` equals the ESP's count |
+| DEV7-T7 | Injected inspect | LED shows `INSPECT`; hold set on-chain |
+| DEV7-T8 | After T7, inject run | **Still `INSPECT`.** AI can't clear a hold |
+| DEV7-T9 | Operator clears the hold, then run | `RUN` |
+| DEV7-T10 | Heavy load until credit runs out | `CREDIT_STOP` within one checkpoint; arrears grow on the ledger; counting continues |
+| DEV7-T11 | Top-up from a script | Arrears paid first; `RUN` within one checkpoint |
+| DEV7-T12 | Counting while Wi-Fi and TLS are busy for 10 minutes | Counts still equal the Pico's; no resets |
+| DEV7-T13 | Power estimate at 900, 3,000 and 12,000 W | Within 5 % of the Pico's setting |
 
-**Manual test you can do:** watch the servo through each scenario, and compare it with the ledger's `status()`.
+**Manual test you can do:** watch both boards' LEDs flash together, and compare the ESP's count with the Pico's `METER` lines and the ledger's `lastTotal`.
 
-**If it fails:** if the servo resets the board, power it separately. If software serial drops too many frames, lower the speed or simplify the frame.
+**If it fails:** if pulses are missed, lengthen the pulse or check the interrupt code isn't in flash (it must be `IRAM_ATTR`). If the line picks up noise when the Pico is off, that's the floating-line case; the pull-up should prevent it.
 
 ---
 
@@ -480,12 +547,18 @@ Add a large capacitor across the servo supply if the board resets when the servo
 
 **How it must behave**
 
-1. **Starts from a name.** It resolves `pump-001.<fleet>.eth` through the Universal Resolver, and finds the account, ledger and paymaster from ENS records. **The only configured values are RPC URLs.**
+1. **Starts from a name.** It resolves `meter-001.<fleet>.eth` through the Universal Resolver, and finds the account, ledger and paymaster from ENS records. **The only configured values are RPC URLs.**
 2. **Cross-checks identity.** It compares `mohar.pq.root` from ENS with `root()` on the account, and shows a clear warning if they differ.
-3. **Shows state:** mode, credit, hold, quota, the last reports, and each frame's result.
-4. **Shows the log:** the latest 0G root from `mohar.log`, once 0G-4 exists.
-5. **Actions through a wallet:** top up, clear hold, and edit an ENS record.
-6. **Fails clearly.** An unknown name, an unreachable RPC or a wrong chain each shows its own message.
+3. **Shows state:** mode, credit, arrears, hold, quota, the last reports, and each frame's result.
+4. **Shows the meter:**
+   - **Pulse count:** the ledger's `lastTotal`, updated at each report.
+   - **Live pulses between reports:** optional. In Chrome, the page can read the ESP8266's USB serial directly with the Web Serial API, with no backend. It's labelled as a local view, not chain data.
+   - **Consumption estimate:** kWh (pulses ÷ 3,200) and average watts per window, decoded from the report's `sensors` word.
+   - **Anomaly status:** glitches, stuck-low events and peak watts from `sensors`, plus the mode, reason code, 0G request ID and confidence of the latest report.
+5. **Shows the log:** the latest 0G root from `mohar.log`, once 0G-4 exists.
+6. **Actions through a wallet:** top up, clear hold, and edit an ENS record.
+7. **Fails clearly.** An unknown name, an unreachable RPC or a wrong chain each shows its own message.
+8. **Never claims disconnection.** `CREDIT_STOP` is shown as "credit exhausted, usage accruing as arrears".
 
 **Tests**
 
@@ -498,6 +571,8 @@ Add a large capacitor across the servo supply if the board resets when the servo
 | DEV8-T5 | An unknown name and a dead RPC each show the right error |
 | DEV8-T6 | The browser's network tab shows only RPC traffic, with no trackers |
 | DEV8-T7 | It's usable at phone width, at about 400 pixels |
+| DEV8-T8 | kWh, average watts and anomaly fields equal values decoded independently from the latest `Report` event |
+| DEV8-T9 | With the Web Serial view connected, the live count matches the ESP's serial output, and the page still works when it's not connected |
 
 ---
 
@@ -535,6 +610,46 @@ Add a large capacitor across the servo supply if the board resets when the servo
 | EF1-T6 | The verdict for a staked account at 150,000 gas is recorded. **Either result is acceptable, but [mechanism.md](mechanism.md) must then state it** |
 
 **If it fails:** read the node's error. The likely causes are a fee floor or a devnet change. A design-level refusal triggers the kill rule.
+
+---
+
+## EF-2L: Alt mempool rules on a local sidecar
+
+**Status:** Next, approved Fri 08:20 · **Target:** Fri 12:00 · **Depends on:** DEV-3 · **Needs from you:** nothing
+
+**Why:** the real alt mempool's admission rules are what the EF track judges, and the public faucet is empty. Running the same sidecar code against our local chain tests those rules now. It doesn't replace EF-2: a local run isn't the public network.
+
+**What gets built**
+
+| File | Purpose |
+|---|---|
+| `devnet/sidecar.sh` | Builds the sidecar from its source at a pinned commit and runs it against the local chain |
+| `signer/src/devnet.ts` | A third network, `MOHAR_NET=local-alt`: local chain, submitted through the local sidecar |
+| `signer/tools/ef2.ts` | The EF-2 script. It runs unchanged on `local-alt` and `public` |
+
+**Switching networks** is one variable, with no code change:
+
+| `MOHAR_NET` | Chain | Submission | Proves |
+|---|---|---|---|
+| `local` | Our ethrex | Privileged route that skips mempool rules | Execution only |
+| `local-alt` | Our ethrex | Our local sidecar: `eth_sendFrameTransaction` | Execution and the sidecar's rules, on our copy |
+| `public` | EF devnet | The public gateway | Everything, for real |
+
+**Sepolia isn't on this list.** Frame transactions exist only on the EF devnet. ENS uses Sepolia separately, through its own RPC setting.
+
+**Tests**
+
+| ID | Pass only if |
+|---|---|
+| EF2L-T1 | The sidecar builds from source and starts against the local chain |
+| EF2L-T2 | The canonical path refuses our report with `StorageReadNonSender` |
+| EF2L-T3 | The sidecar admits **the same bytes**, the hashes match, and it's mined with all four frames succeeding |
+| EF2L-T4 | The sidecar's rule-by-rule report is saved |
+| EF2L-T5 | An **unstaked** paymaster is refused, and the refusal is recorded |
+| EF2L-T6 | Replay, over-quota and revoked-device transactions are refused, and where each is refused is recorded |
+| EF2L-T7 | Switching to `MOHAR_NET=public` needs no code change; checked by a read-only call |
+
+**If it fails:** if it won't build or run, record why and fall back to EF-2 on funds. If our transaction is refused, record the exact rule, since it'll also fail publicly.
 
 ---
 
@@ -651,7 +766,7 @@ Add a large capacitor across the servo supply if the board resets when the servo
 **How it must behave**
 
 1. Deploy a **separate Permissioned Resolver for each machine**. Role grants cover a whole resolver instance, so sharing one would let a writer edit every machine.
-2. Register `pump-001` in the fleet registry, with an expiry as its lease. Don't grant transfer rights, so a financed machine can't be sold off.
+2. Register `meter-001` in the fleet registry, with an expiry as its lease. Don't grant transfer rights, so a meter's name can't be moved to another device or owner.
 3. Set these records:
 
 | Record | Editable by | Used by |
@@ -660,7 +775,7 @@ Add a large capacitor across the servo supply if the board resets when the servo
 | `mohar.chainId`, `mohar.ledger`, `mohar.paymaster` | Owner | Dashboard |
 | `mohar.pq.scheme`, `mohar.pq.root`, `mohar.pq.pubSeed` | Owner | Dashboard: cross-check |
 | `mohar.policy` | **Owner only** | The AI's operating policy |
-| `mohar.deviceType`, `mohar.capabilities` | Owner | Fleet view |
+| `mohar.deviceType` (`electricity-meter`), `mohar.capabilities` (`pulse-3200-imp-kwh`), `mohar.tariff` | Owner | Fleet view |
 | `mohar.operator` | Owner | Shows who operates it |
 | `mohar.maintenance.status` | **Maintenance key only** | Dashboard |
 | `mohar.log` | **Uploader key only** | Latest 0G root |
@@ -678,7 +793,7 @@ Add a large capacitor across the servo supply if the board resets when the servo
 | ENS2-T3 | The maintenance key edits `mohar.pq.root`: reverts, expected as `EACUnauthorizedAccountRoles` |
 | ENS2-T4 | The uploader key edits `mohar.log`: success. Editing `mohar.policy`: reverts |
 | ENS2-T5 | A second machine's resolver refuses the first machine's maintenance key |
-| ENS2-T6 | Transferring `pump-001` reverts, expected as `TransferDisallowed`. If it's allowed, stop claiming non-transferable |
+| ENS2-T6 | Transferring `meter-001` reverts, expected as `TransferDisallowed`. If it's allowed, stop claiming non-transferable |
 | ENS2-T7 | A short-lived test subname: record what happens after expiry. **Only claim what we observe** |
 | ENS2-T8 | The owner can `unregister` a test subname |
 
@@ -752,7 +867,7 @@ Add a large capacitor across the servo supply if the board resets when the servo
 
 | File | Purpose |
 |---|---|
-| `firmware/sim/scenarios.json` | Labelled scenarios: normal, overheat, vibration, stall, borderline |
+| `firmware/sim/scenarios.json` | Labelled meter windows: normal, heavy, above sanctioned load, glitching line, sudden silence after load, and borderline cases. Each is the window statistics the ESP will send |
 | `signer/tools/0g-eval.ts` | Runs them through each candidate, and scores the results |
 | `firmware/vectors/0g/` | Saved real responses, for firmware parser tests |
 | `docs/evidence/0g-1.md` | Results and the decision |
@@ -820,27 +935,28 @@ Add a large capacitor across the servo supply if the board resets when the servo
 
 **Status:** Not started · **Target:** Fri 23:30 · **Depends on:** 0G-2, DEV-7 · **Needs from you:** nothing further
 
-**Why:** this is what qualifies for the track: a real 0G decision moves real hardware.
+**Why:** this is what qualifies for the track: a real 0G decision changes what a real device does. Here that's the device's operating state, shown on its status LED and recorded on-chain.
 
 **How it must behave**
 
-1. Each checkpoint: read sensors → read chain state → ask 0G → validate → choose the most restrictive mode → move the servo → save intent → sign → submit the report, which includes the request ID.
+1. Each checkpoint: take the window's pulse statistics → read the ledger → run the deterministic checks → ask 0G about anything the checks don't settle → validate the answer → choose the mode → **set the device state and LED** → save intent → sign → submit the report, including the request ID.
 2. Development injection is gone from release builds.
-3. **If 0G fails, there is no decision.** The servo closes, and a `SAFE_STOP` report goes out with an empty `requestId` and a reason code.
+3. **If 0G fails, there is no decision.** The device goes to `SAFE_STOP` (LED solid on), and a `SAFE_STOP` report goes out with an empty `requestId` and a reason code. Counting continues.
 4. Only a fresh, valid decision can leave `SAFE_STOP`.
+5. 0G only ever adds caution. It can't clear a hold, override `CREDIT_STOP`, or stop pulses being counted and charged.
 
 **Tests**
 
 | ID | Scenario | Pass only if |
 |---|---|---|
-| 0G3-T1 | Pico normal | 0G run; servo open; `RUN` report on-chain with the real request ID |
-| 0G3-T2 | Pico overheat, within 0G's range but below the local limit | **0G inspect moves the servo to half.** Hold set |
-| 0G3-T3 | After T2 | 0G run doesn't reopen it; the operator must clear the hold first |
-| 0G3-T4 | Block 0G's address | Servo closes within the timeout; `SAFE_STOP` report; `requestId` empty |
-| 0G3-T5 | Restore access | Reopens only after a fresh valid decision |
-| 0G3-T6 | Credit zero, 0G says run | Closed: AI can't override credit |
+| 0G3-T1 | Pico normal | 0G says run; LED shows `RUN`; `RUN` report on-chain with the real request ID |
+| 0G3-T2 | Pico surge: above the sanctioned load, below the meter's limit, so no local check fires | **0G says inspect, and the LED changes to `INSPECT`.** Hold set on-chain |
+| 0G3-T3 | After T2, back to normal | 0G says run, but the device stays `INSPECT` until the operator clears the hold |
+| 0G3-T4 | Block 0G's address | `SAFE_STOP` within the timeout; LED solid; `requestId` empty; pulses still counted |
+| 0G3-T5 | Restore access | Leaves `SAFE_STOP` only after a fresh valid decision |
+| 0G3-T6 | Credit zero, 0G says run | Stays `CREDIT_STOP`: AI can't override credit |
 | 0G3-T7 | Inspect release firmware and logs | No code path invents a decision |
-| 0G3-T8 | 30-minute run | No resets; all reports mined |
+| 0G3-T8 | 30-minute run | No resets; all reports mined; counts still match the Pico |
 | 0G3-T9 | Key count | Reports stay within 256 leaves across the demo and practice; a fresh key is planned before the demo |
 
 **If it fails:** kill rule in section 5.
@@ -865,17 +981,17 @@ Add a large capacitor across the servo supply if the board resets when the servo
 
 ```json
 {
-  "device": "pump-001.<fleet>.eth",
+  "device": "meter-001.<fleet>.eth",
   "seq": 12, "tx": "0x…", "timestamp": 0,
   "request_id": "…", "model": "…",
-  "sensors": { "simulated": true },
-  "decision": { "action": "inspect", "confidence": 91, "reason": "overheat" },
+  "meter": { "simulated": true, "total_pulses": 4210, "window_pulses": 49, "avg_watts": 920, "peak_watts": 1010, "glitches": 0 },
+  "decision": { "action": "inspect", "confidence": 91, "reason": "above_sanctioned_load" },
   "selected_mode": "INSPECT",
-  "commanded_actuator": "half"
+  "device_state": "INSPECT"
 }
 ```
 
-`commanded_actuator` is what the device ordered. There's no sensor to confirm movement, so we don't claim it moved.
+`device_state` is the state the device entered and showed on its LED. Nothing physical is switched.
 
 **Tests**
 
@@ -898,7 +1014,7 @@ Add a large capacitor across the servo supply if the board resets when the servo
 
 **Status:** Not started · **Target:** Sat 04:30 · **Depends on:** all completed phases · **Needs from you:** the full hardware setup
 
-**How it must behave:** the whole demo runs start to finish on the public devnet, from a freshly flashed board with fresh keys.
+**How it must behave:** the whole [demo story](#demo-story) runs start to finish on the public devnet, from a freshly flashed board with fresh keys. **The physical part is real:** the Pico generates pulses, the ESP counts them, and the reports carry the counts.
 
 **Tests**
 
@@ -909,6 +1025,7 @@ Add a large capacitor across the servo supply if the board resets when the servo
 | REL1-T3 | **Devnet reset drill:** following the written steps, a new key and contracts are up in under 15 minutes |
 | REL1-T4 | Every claim in the demo is backed by an item in `docs/evidence/` |
 | REL1-T5 | Fallback video recorded, in case the live demo or network fails |
+| REL1-T7 | During the run, the Pico's count, the ESP's count and the ledger's `lastTotal` agree at each report |
 | REL1-T6 | Someone other than the builder can follow the README setup |
 
 ---
@@ -949,11 +1066,40 @@ Add a large capacitor across the servo supply if the board resets when the servo
 
 ---
 
+# Demo story
+
+**"meter-001 signs for itself."** A prepaid electricity meter that holds its own post-quantum key, counts its own pulses, pays no gas, can be told to take care by an AI but never to relax, and leaves a record nobody has to trust a server for.
+
+**Setting, in one line:** in Indian housing societies, shops and rentals, prepaid sub-meters are read through a vendor's server, and tenants, owners and maintenance staff each have reasons to doubt a reading. Mohar makes the meter itself the signer, and puts the shared record where all three can check it.
+
+**On the table:** the Pico H (the meter's pulse output, its LED flashing per pulse), the NodeMCU (counting, deciding, signing; two LEDs), both on a two-port power bank, with the phone hotspot. A phone shows the dashboard. The laptop is closed for beat 3.
+
+| Time | Beat | What the audience sees | What's real | Track |
+|---|---|---|---|---|
+| 0:00 to 0:15 | The problem | One sentence each: who reads the meter, who pays, who's trusted | | |
+| 0:15 to 0:40 | **Identity** | Typing `meter-001.<fleet>.eth` on the phone finds the meter's account, ledger and paymaster. Its post-quantum root in ENS matches `root()` on the account | Live ENS on Sepolia, live devnet reads | ENS |
+| 0:40 to 1:10 | **The meter signs for itself** | Pico and ESP LEDs flash together; the counts match. A report goes out: 2,400-byte hash-based signature, admitted by the alt mempool, four frames succeed, the meter's balance stays 0, quota falls by one, credit falls by the usage | Everything, with the laptop closed | EF |
+| 1:10 to 1:35 | **AI adds caution** | `s` on the Pico: load above the sanctioned limit but within the meter's range, so no fixed rule fires. 0G judges it: inspect, with its request ID. The status LED changes to `INSPECT`; the hold appears on-chain | Real 0G call from the device | 0G |
+| 1:35 to 2:00 | **Only people clear holds** | Back to normal: 0G says run, but the device stays `INSPECT`. The operator clears the hold, and the LED returns to `RUN`. The maintenance key updates `mohar.maintenance.status`, then is refused on `mohar.pq.root`, with the contract's real error | Ledger and ENS permissions | ENS, ledger |
+| 2:00 to 2:20 | **Credit is recorded, not enforced** | `h` drains credit: `CREDIT_STOP`, arrears grow, counting continues. A phone top-up pays the arrears first, then `RUN` | Ledger | |
+| 2:20 to 2:35 | **No fake decisions** | 0G is blocked: `SAFE_STOP` with an empty request ID, LED solid, pulses still counted. Unblocked: a fresh decision brings `RUN` back | Device rule | 0G |
+| 2:35 to 2:55 | **The record** | Episode log on 0G Storage, its root in ENS `mohar.log`, replay matching the chain. Side by side: the canonical mempool refusing the same bytes the alt mempool admitted | 0G Storage, EF evidence | 0G, EF |
+
+**Fallback for each beat:** a recorded clip of that beat (REL1-T5). **Glitch scenario:** `g` shows the deterministic check: `INSPECT` immediately, with no network. Use it if 0G is down during the demo, and say so.
+
+**What we never say:** that the meter cuts power, that ENS controls the devnet, that the sensor reading is proven true, or that the cryptography is audited.
+
+**Needed for this story, beyond the phases:** with no computer attached, the Pico should run its automatic cycle by itself. That's added in DEV-7.
+
+---
+
 # Appendix: what we won't do
 
 | Temptation | Why not |
 |---|---|
 | Let AI decide credit or disconnection | Those stay deterministic |
+| Claim that low credit disconnects the supply | Nothing switches power. The ledger records arrears |
+| Bring back the servo | Not needed for the meter story, and it caused power-supply problems |
 | Put telemetry in ENS | ENS is identity, plus one log pointer |
 | Let 0G or ENS hold keys or sign | Breaks the core claim |
 | Pass model text to GPIO | Allowlist only |

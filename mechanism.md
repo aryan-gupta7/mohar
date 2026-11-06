@@ -2,7 +2,7 @@
 
 This describes only what is **built and tested so far**. For what comes next, see [dev-plan.md](dev-plan.md). For the history of each step, see [update-log.md](update-log.md).
 
-**Last updated:** Thursday, November 5, 2026, 23:58 IST
+**Last updated:** Friday, November 6, 2026, 09:00 IST
 
 ---
 
@@ -13,9 +13,11 @@ This describes only what is **built and tested so far**. For what comes next, se
 | WOTS-like signer | [signer/src/wots.ts](signer/src/wots.ts) | Working, 9 unit tests pass |
 | Machine account | [contracts/yul/MoharAccount.yul](contracts/yul/MoharAccount.yul) | Working on the local chain |
 | Quota paymaster | [contracts/yul/QuotaPaymaster.yul](contracts/yul/QuotaPaymaster.yul) | Working on the local chain |
-| Transaction builder | [signer/src/mohar.ts](signer/src/mohar.ts) | Working, 26 integration tests pass |
+| Machine ledger | [contracts/src/MachineLedger.sol](contracts/src/MachineLedger.sol) | Working on the local chain, 12 tests pass |
+| Transaction builder | [signer/src/mohar.ts](signer/src/mohar.ts) | Working, 38 integration tests pass |
 | Local chain | [devnet/](devnet/) | Working: same client build as the public devnet |
 | Board benchmark | [firmware/bench/](firmware/bench/) | Working on the real ESP8266 |
+| Meter simulator | [firmware/pico-meter/](firmware/pico-meter/) | Working on the real Pico H; not yet wired to the ESP8266 |
 
 ### Proven and not yet proven
 
@@ -24,7 +26,8 @@ This describes only what is **built and tested so far**. For what comes next, se
 | A WOTS-signed frame transaction can be mined | **Proven on the local chain** | Mined with status `0x1`; test `end to end` |
 | The canonical rules refuse the paymaster | **Proven on the local chain** | Violation: `StorageReadNonSender` |
 | The public devnet caps validation at 100,000 gas | **Proven for an unstaked sender** | `exceeds MAX_VERIFY_GAS 100000`. The source has no staking exception, but a staked sender hasn't been tried live |
-| The alt mempool admits our transaction | **Not proven** | Needs public devnet funds, and the faucet is empty. A local sidecar build was blocked by the permission system |
+| Reports update the ledger through the full 4-frame path | **Proven on the local chain** | DEV3-T8 and T9: events match every field |
+| The alt mempool admits our transaction | **Not proven** | Needs public devnet funds, and the faucet is empty. You approved a local sidecar build at 08:20; not yet run |
 | Anything on the public devnet with our contracts | **Not proven** | Same funding block |
 | The ESP8266 can sign these transactions | **Not proven** | Its speed is measured, but the signing firmware isn't written |
 | ENS and 0G integrations | **Not started** | Docs and endpoints checked only |
@@ -46,7 +49,7 @@ This describes only what is **built and tested so far**. For what comes next, se
  Chain executes four frames, in order
    Frame 0  VERIFY   MoharAccount     checks layout and signature, approves EXECUTION
    Frame 1  VERIFY   QuotaPaymaster   checks policy and quota, approves PAYMENT
-   Frame 2  SENDER   target contract  runs the report, called by the account
+   Frame 2  SENDER   MachineLedger    records the reading, called by the account
    Frame 3  DEFAULT  QuotaPaymaster   settle(): charges one transaction to the quota
 ```
 
@@ -151,7 +154,9 @@ So one nonce form fits the budget. The protocol's nonce doubles as the replay gu
 
 ## 6. MoharAccount
 
-Written in Yul because Solidity can only reach frame opcodes through helper contracts, and each helper call starts at 2,600 gas for cold access. Runtime size is 495 bytes.
+Written in Yul because Solidity can only reach frame opcodes through helper contracts, and each helper call starts at 2,600 gas for cold access. Runtime size is 615 bytes.
+
+**Getters:** `root()` and `pubSeed()` return the key, so a dashboard can compare it with ENS. A frame transaction calls the account with empty calldata, so validation never enters the getter branch: the branch added 15 gas to validation. Calls with any other selector, or with value, revert.
 
 **Constructor (7 words after the creation code):** `root`, `pubSeed`, `target`, `selector`, `registry`, `stake`, `unstakeDelay`.
 
@@ -219,6 +224,48 @@ Pays gas for registered machines within a policy the fleet owner sets. Runtime s
 
 ---
 
+## 7a. MachineLedger
+
+The shared record for one electricity meter: readings, prepaid credit, arrears and inspection holds. Solidity, 3,568 bytes of runtime code. One ledger per meter.
+
+**A reading** is the meter's cumulative pulse count (`total`). The meter simulator, like many Indian meters, gives 3,200 pulses per kWh.
+
+### Behaviour
+
+| Rule | How it's enforced |
+|---|---|
+| Only the meter's account can report | `msg.sender` must equal `machine`, set once by `bindMachine` (owner only) |
+| No replays or rollbacks | `seq` must rise; `total` can't fall |
+| Usage is charged against prepaid credit | `usage = total − lastTotal`; charge = usage × `tariffWeiPerPulse` |
+| **Usage beyond credit isn't lost** | It becomes arrears. The next top-up pays arrears first, then adds credit |
+| An inspection hold needs a person to clear it | `INSPECT` sets `hold`; only the operator's `clearHold` clears it. No report mode, and no top-up, clears it |
+| The owner takes only what usage paid for | `withdraw` is limited to `earned` |
+| The ledger's ETH always matches its books | ETH held = credit + earned (asserted by the tests after every step) |
+| Bad fields are refused | Mode above 3, confidence above 100, request ID over 64 bytes |
+
+**Nothing is disconnected.** Running out of credit is recorded as arrears and shown as `CREDIT_STOP`. It doesn't switch off any supply.
+
+`ledgerMode()` gives what the ledger alone implies: `INSPECT` while held, `CREDIT_STOP` when credit can't cover one more pulse, otherwise `RUN`. The device reports the first that applies of `SAFE_STOP`, `INSPECT`, `CREDIT_STOP`, `RUN`, so it can add caution but can't remove it.
+
+### Why credit and arrears share one number
+
+Creating a storage slot costs about **98,600 gas** on this devnet (measured), close to a report frame's whole 100,000 state-gas limit. A separate `arrears` slot would have been created again every time credit ran out. So one signed value, `balance`, holds both: positive is credit, negative is arrears. It shares a slot with `lastTotal` and `earned`, and the other slot a report writes holds `machine`, which is set at binding. After the first reading, **a report never creates storage.**
+
+### Storage
+
+| Slot | Fields |
+|---|---|
+| 0 | `machine` (160 bits) · `lastSeq` (64) · `lastMode` (8) · `hold` (8) |
+| 1 | `lastTotal` (64) · `balance`, signed (96) · `earned` (96) |
+| 2 | `operator` |
+| Immutable | `owner`, `tariffWeiPerPulse` |
+
+### Events
+
+`Report` carries every reported field, plus `usage`, `charged` and `owed`, so the whole history can be rebuilt from logs. Also: `HoldSet`, `HoldCleared`, `TopUp` (with the arrears it paid), `Withdrawn`, `MachineBound`, `OperatorSet`.
+
+---
+
 ## 8. Measured numbers
 
 All are from the local client, build `9aa3645d`, the same build the public devnet reports.
@@ -227,13 +274,28 @@ All are from the local client, build `9aa3645d`, the same build the public devne
 
 | Item | Gas |
 |---|---:|
-| Account validation at 495 steps | 73,786 |
-| Account validation at 630 steps (the device's limit) | **89,146** of 90,000 |
+| Account validation at 495 steps | 73,801 |
+| Account validation at 630 steps (the device's limit) | **89,161** of 90,000 |
 | Account validation at 645 steps | Fails with `out_of_gas` in frame 0 |
 | Paymaster validation | 7,556 of 9,900 |
-| Report frame, against a minimal test contract | 4,066 |
+| Report frame, `MachineLedger`, typical | 24,338 to 35,413 of 50,000 |
+| Report frame, worst case (first reading, `INSPECT`, 64-byte request ID) | 35,686 of 50,000 |
 | Settle frame | 11,670 of 40,000 |
-| Total transaction | 170,352 |
+| Total transaction, typical report | 188,784 to 192,880 |
+| Total transaction, a report that creates the ledger's slot 1 | 286,704 to 290,800 |
+| Maximum cost the paymaster approves | About 0.00069 ETH at 2 gwei |
+
+Before DEV-3, against a minimal stand-in contract, the report frame used 4,066 gas and the total was 170,352.
+
+### Storage and code are expensive on this devnet
+
+| Item | Cost | How measured |
+|---|---:|---|
+| Creating a storage slot | About 98,600 gas | Total gas minus frame gas, for a report that created one slot |
+| Deploying code | About 1,670 gas per byte | `eth_estimateGas` on the ledger at three code sizes |
+| Deploying `MachineLedger` | About 6.0 million gas | Same; at 100,000 optimizer runs it was 8.4 million, so we use 200 |
+
+So deployments now estimate their gas instead of using a fixed limit, and the ledger is packed so reports don't create slots.
 
 - **Rule of thumb:** account validation costs about 17,350 + 114 per hash step.
 - **Total stays constant:** it was the same across different digests, so validation frames appear to be charged at their declared limit. We've observed this but haven't traced why.
@@ -300,8 +362,16 @@ Most integration tests hold a **valid signing key**, modelling a thief. Every ca
 | Replay a mined transaction | Rejected | Nonce check |
 | Non-owner changes policy or withdraws | Reverts | Normal call |
 | `refill` within 24 hours | Reverts | Normal call |
+| Anyone but the bound meter reports, the owner included | `NotMachine` | Ledger |
+| Repeat or lower `seq` | `StaleSeq` | Ledger |
+| Lower `total`, to undo usage | `TotalWentDown` | Ledger |
+| Mode 4, confidence 101, or a 65-byte request ID | `BadMode`, `BadConfidence`, `RequestIdTooLong` | Ledger |
+| Clear a hold as the owner, the meter or a stranger | `NotOperator` | Ledger |
+| Clear a hold with a `RUN` report or a top-up | Hold stays set | Ledger |
+| Bind a second meter | `AlreadyBound` | Ledger |
+| Withdraw more than was earned | `OverEarned` | Ledger |
 
-**What a stolen key can still do:** post false reports, within quota, until the owner revokes it.
+**What a stolen key can still do:** post false readings, within quota, until the owner revokes it. It can't lower the total, and it can't clear a hold.
 
 ---
 
@@ -326,7 +396,7 @@ The public devnet's faucet is empty, and it can be reset at any time, so develop
 - **No key migration:** one fixed root and verifier. After 256 transactions the account can't sign. Moving to a new root or scheme is future work.
 - **Sensor truth:** a signature shows the key signed something, not that the reading is correct.
 - **Maturity:** EIP-8141 and ERC-8421 are drafts, and this runs only on devnets.
-- **Target contract:** tests use a minimal stand-in. `MachineLedger` comes in phase DEV-3.
+- **The meter is simulated:** the Pico generates the pulses a real meter's impulse output would. Nothing measures real electricity, and nothing disconnects a supply.
 
 ---
 
@@ -343,9 +413,9 @@ npm install --ignore-scripts
 npm run build
 ```
 
-**Expected:** these lines, plus experiment contracts:
+**Expected:** Forge compiles the ledger (`Compiler run successful!`, or `No files changed` on a rerun), then these lines, plus experiment contracts:
 ```text
-MoharAccount: creation 606 bytes, runtime 495 bytes
+MoharAccount: creation 743 bytes, runtime 615 bytes
 QuotaPaymaster: creation 786 bytes, runtime 710 bytes
 ```
 
@@ -376,20 +446,23 @@ cast block-number --rpc-url http://127.0.0.1:18545
 ```
 **Expected:** the number goes up.
 
-### Test 4: Account and paymaster, including attacks
+### Test 4: Account, paymaster and ledger, including attacks
 
 ```sh
 npm run test:integration
 ```
-**Expected, in about a minute:** `tests 26`, `pass 26`, `fail 0`, with lines like these. Step counts vary, because each run uses new keys:
+**Expected, in about two minutes:** `tests 38`, `pass 38`, `fail 0`, with lines like these. Step counts and gas vary, because each run uses new keys:
 ```text
-steps 495, account 73786 gas, paymaster 7556 gas, settle 11670 gas, total 170352 gas, ...
+steps 495, account 73801 gas, paymaster 7556 gas, settle 11670 gas, total 286704 gas, ...
 canonical violation: StorageReadNonSender
-mined: total gas 170352, frames 73786, 7556, 4066, 11670
+mined: total gas 286704, frames 73801, 7556, 33814, 11670
 replay verdict: Invalid Transaction: Nonce mismatch: expected 4, got 1
-630 steps used 89146 of 90000 gas
+630 steps used 89161 of 90000 gas
 645 steps fails in frame 0: out_of_gas
+seq 1: steps 495, frames 73801 / 7556 / 33796 / 11670, total 188784 gas, ...
+worst case: report frame 35686 gas, ...
 ```
+The first report on a new ledger costs about 98,600 more, because it creates a storage slot (section 7a).
 
 ### Test 5: Send one WOTS-signed transaction yourself
 
@@ -429,10 +502,13 @@ MOHAR_NET=public node signer/exp/e02_budget_probe.ts
 
 ### Test 8: Board benchmark
 
+Port numbers like `/dev/ttyACM0` change when boards are replugged, so use the fixed names under `/dev/serial/by-id/`. On this machine the ESP8266 is `usb-1a86_USB_Single_Serial_5717135611-if00`.
+
 ```sh
 cd firmware/bench
-pio run -t upload --upload-port /dev/ttyACM0
-pio device monitor --port /dev/ttyACM0 --baud 115200
+ESP=/dev/serial/by-id/usb-1a86_USB_Single_Serial_5717135611-if00
+pio run -t upload --upload-port $ESP
+pio device monitor --port $ESP --baud 115200
 ```
 Press **RST** on the board. Quit with `Ctrl+C`. Some garbage characters at boot are normal.
 
@@ -446,6 +522,20 @@ RESULT sign_worst hashes=1005 ms=883
 === DONE ===
 ```
 Timings can vary slightly.
+
+### Test 9: Pico meter simulator
+
+The Pico runs CircuitPython 10.0.3 and our `code.py`. Open its console, which doesn't reset it:
+```sh
+pio device monitor --port /dev/serial/by-id/usb-Raspberry_Pi_Pico_E662588817693B2C-if00 --baud 115200
+```
+**Expected:** a line every 2 seconds, and the onboard LED flashing once per pulse:
+```text
+METER {"event":"tick","mode":"normal","watts":900,"pulses":3,"glitches":0,"wh":0.9375,"auto":false}
+```
+Type single letters (no Enter needed): `h` heavy, `s` surge, `g` glitch, `x` off, `n` normal, `r` reset counters, `?` status. Measured: 900 W gives a pulse about every 1.25 seconds, 3,000 W gave 10 pulses in 4 seconds, 12,000 W gave 21 in 2 seconds, and `g` added 3 spikes of 2 ms in 6 seconds. Quit with `Ctrl+C`.
+
+To reinstall it: copy `firmware/pico-meter/code.py` and `boot.py` onto the `CIRCUITPY` drive.
 
 ### Stop everything
 

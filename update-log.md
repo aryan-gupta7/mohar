@@ -89,13 +89,57 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 
 ---
 
+## Friday, November 6, 2026
+
+### 08:20 New instructions received
+- Pico H connected; flash it and use it, without touching its ROM. Wi-Fi details for the ESP received. Servo dropped: the story is now an electricity meter. Sidecar may be built locally. DEV-3 to proceed.
+- The ESP8266 is still `/dev/ttyACM0` and the Pico is `/dev/ttyACM1`. From now on the docs use the fixed `/dev/serial/by-id/` names, which don't change when boards are replugged.
+
+### 08:21 Pico inspected and backed up
+- It runs **CircuitPython 10.0.3**, so no reflashing was needed. The firmware and boot ROM were left untouched.
+- Its whole drive was copied to `../pico-circuitpy-backup-original/`, with SHA-256 sums in `../pico-circuitpy-backup-original.sha256`.
+
+### 08:22 **Security: keystroke-injection payload found on the Pico**
+- The existing `code.py` (dated May 11, 2026) acted as a USB keyboard: 3 seconds after power-up it pressed Ctrl+Alt+T, then typed a command that downloads a script from the internet and runs it with `bash`, then `exit`. It runs every time the board powers up.
+- Replaced it at once with a harmless placeholder, and added a `boot.py` that turns the Pico's USB keyboard and mouse off.
+- Checked this computer, without reading file contents: no startup, autostart, systemd, SSH or shell-config files changed since 08:00, and no unexpected processes started after the Pico was connected. **Your fish history does contain the domain 4 times**; the permission system stopped me reading it, so when those ran is for you to check.
+- In the backup, the payload is renamed `code.py.KEYSTROKE-PAYLOAD-do-not-restore` (contents unchanged), so copying the backup back can't re-arm it.
+
+### 08:25 Pico meter simulator installed and tested
+- Wrote `firmware/pico-meter/code.py`: an electricity meter's pulse output at 3,200 pulses per kWh, 30 ms pulses on GP0, open-collector style, with load scenarios selected over USB serial.
+- Measured on the board: 900 W gave a pulse about every 1.25 s; 3,000 W gave 10 pulses in 4 s (10.7 expected); 12,000 W gave 21 in 2 s (21.3 expected); glitch mode added 3 spikes of 2 ms in 6 s.
+- Wi-Fi details stored only in git-ignored files. They are never written to tracked files or logs.
+
+### 08:30 DEV-3: ledger written; first deployment ran out of gas
+- Wrote `contracts/src/MachineLedger.sol`, added `root()` and `pubSeed()` getters to `MoharAccount.yul`, plus ledger helpers and tests.
+- Deployment used all 5,000,000 gas. **Measured: code costs about 1,670 gas per byte on this devnet** (mainnet: 200). At 100,000 optimizer runs the ledger cost 8.4 million gas to deploy; at 200 runs, 6.0 million. Switched to 200 runs, and deployments now estimate their gas.
+
+### 08:36 DEV-3: storage slots are expensive too, so the ledger was repacked
+- A report that created a new storage slot used about **98,600 extra gas**, close to the report frame's whole 100,000 state-gas limit. A separate arrears slot would be recreated each time credit ran out.
+- **Decision:** credit and arrears became one signed `balance` in a slot reports already write. After the first reading, a report never creates storage.
+- **Decision:** usage beyond credit becomes arrears, paid first by the next top-up. Without a servo nothing stops consumption, so it has to be recorded.
+- Test fixes: funding new test keys needs more than 21,000 gas here, and the node refuses `eth_call` from an address with code.
+
+### 08:40 DEV-3 passed
+- `npm test`: 9 of 9. Ledger tests: 12 of 12, including a worst-case report (35,686 of 50,000 gas) and the check that ETH held equals credit plus earned.
+- The 26 earlier tests now run against the real ledger: 26 of 26. A 630-step signature uses 89,161 of 90,000 gas; the getters added 15 gas.
+- Reran manual Test 5: still mined, status `0x1`, 169,146 total gas.
+- Wrote `firmware/vectors/report.json`: 8 encoded reports for the firmware to match.
+
+### 08:46 Documents updated for the meter story
+- `dev-plan.md`: DEV-3 marked done, with its changes. DEV-7 renamed "Meter signal acquisition and device behaviour": servo removed, Pico serial messages replaced by pulse generation and counting, and modes shown on LEDs instead of positions. 0G-3 now updates device state and LED. Dashboard gets pulse count, consumption and anomaly status. New phase EF-2L (local sidecar), and a demo story. Schedule moved.
+- `mechanism.md`: ledger section, measured costs, attack table, and manual tests 8 and 9.
+- `../plan.md`: a note about the story change.
+
+---
+
 ## Current state
 
-**Done:** DEV-0, DEV-1 and DEV-2, on the local chain.
-**Next:** DEV-3, the machine ledger.
+**Done:** DEV-0 to DEV-3 on the local chain. Pico meter simulator on the board.
+**Next:** EF-2L (local sidecar), then DEV-4 (keys and signing on the ESP8266).
 
 **Blocked on you:**
 1. Devnet ETH for `0xcfb296f635254A4B3281D2e285174E98D643Ef60`.
-2. 2.4 GHz Wi-Fi details.
-3. 0G API key and credits.
-4. Sepolia ETH for the same address.
+2. 0G API key and credits.
+3. Sepolia ETH for the same address.
+4. The two wires between the Pico and the ESP8266.
