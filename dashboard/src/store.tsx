@@ -25,7 +25,7 @@ type Ctx = {
   chain: ChainState; ens: EnsState; ids: Ids; receipts: Record<string, any>; txInfo: Record<string, any>;
   connectPico: () => Promise<void>; connectEsp: () => Promise<void>; disconnect: () => void; sendPico: (c: string) => Promise<void>;
   startReplay: (url: string, speed?: number) => Promise<void>; stopReplay: () => void; replayName?: string;
-  resetMeter: () => Promise<void>; refreshChain: () => Promise<void>; refreshEns: () => Promise<void>; now: number;
+  refreshChain: () => Promise<void>; refreshEns: () => Promise<void>; now: number;
 };
 const C = createContext<Ctx>(null as any);
 export const useStore = () => useContext(C);
@@ -33,17 +33,6 @@ export const useStore = () => useContext(C);
 export function Provider({ children }: { children: ReactNode }) {
   const [settings, setS] = useState<Settings>(load);
   const setSettings = (p: Partial<Settings>) => setS((s) => { const n = { ...s, ...p }; try { localStorage.setItem("mohar.settings", JSON.stringify(n)); } catch { /* */ } return n; });
-  // Default meter: public/meter.json. Applied once for any setting the visitor (or the URL) has not set, so no address lives in the source.
-  const loadDefaults = useCallback(async (force = false) => {
-    try {
-      const d = await (await fetch("meter.json", { cache: "no-store" })).json();
-      let saved: any = {}; try { saved = JSON.parse(localStorage.getItem("mohar.settings") ?? "{}"); } catch { /* */ }
-      const q = new URLSearchParams(location.search), p: any = {};
-      for (const k of Object.keys(d)) if (force || (saved[k] === undefined && !q.has(k))) p[k] = d[k];
-      if (Object.keys(p).length) setSettings(p);
-    } catch { /* no default meter file: the Connect page still works */ }
-  }, []);
-  useEffect(() => { void loadDefaults(); }, [loadDefaults]);
   useEffect(() => { document.documentElement.dataset.theme = settings.theme; }, [settings.theme]);
 
   const [meter, setMeter] = useState<MeterLine | null>(null);
@@ -167,7 +156,7 @@ export function Provider({ children }: { children: ReactNode }) {
 
   const cps = useMemo(() => groupCheckpoints(evs), [evs]);
   const v: Ctx = {
-    settings, setSettings, resetMeter: () => loadDefaults(true), meter, meterHist, evs, cps, deviceKey, pico, esp, mode, serial: serialSupported(), chain: mergedChain, ens, ids,
+    settings, setSettings, meter, meterHist, evs, cps, deviceKey, pico, esp, mode, serial: serialSupported(), chain: mergedChain, ens, ids,
     receipts: mergedReceipts, txInfo, connectPico, connectEsp, disconnect, sendPico, startReplay, stopReplay, replayName, refreshChain, refreshEns, now,
   };
   return <C.Provider value={v}>{children}</C.Provider>;

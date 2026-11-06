@@ -19,24 +19,31 @@ const PAGES = [
 
 const NETS = [{ value: "https://altmempool.forshtat.com", label: "EF devnet" }, { value: "http://127.0.0.1:18545", label: "Local chain" }];
 
+type Draft = { chainRpc: string; manualLedger: string; manualAccount: string; manualPaymaster: string; forceManual: string };
+
 function Settings() {
-  const { settings, setSettings, ens, chain, ids, refreshEns, resetMeter } = useStore();
+  const { settings, setSettings, ens, chain, ids, refreshEns } = useStore();
+  const [d, setD] = useState<Draft>({ chainRpc: settings.chainRpc, manualLedger: settings.manualLedger, manualAccount: settings.manualAccount, manualPaymaster: settings.manualPaymaster, forceManual: (settings as any).forceManual ?? "" });
   const [link, setLink] = useState(""), [note, setNote] = useState<string>(), [copied, setCopied] = useState(false);
-  const f = (k: keyof typeof settings, label: string, ph?: string) => (
-    <label className="block text-sm"><span className="text-mute">{label}</span><input value={settings[k] as string} placeholder={ph} onChange={(e) => setSettings({ [k]: e.target.value } as any)} className={`${inputCls} mt-1.5 font-mono text-xs`} /></label>
+  // The fields are prefilled from public/meter.json when nothing is set yet. Nothing is applied until Connect is pressed.
+  useEffect(() => {
+    if (settings.manualLedger) return;
+    fetch("meter.json", { cache: "no-store" }).then((r) => r.json()).then((j) => setD((x) => (x.manualLedger ? x : { ...x, ...j }))).catch(() => {});
+  }, []); // eslint-disable-line
+  const field = (k: keyof Draft, label: string, ph?: string) => (
+    <label className="block text-sm"><span className="text-mute">{label}</span><input value={d[k]} placeholder={ph} onChange={(e) => setD({ ...d, [k]: e.target.value })} className={`${inputCls} mt-1.5 font-mono text-xs`} /></label>
   );
   const apply = () => {
     try {
       const q = new URL(link.trim()).searchParams, p: any = {};
-      for (const k of ["chainRpc", "manualLedger", "manualAccount", "manualPaymaster", "ensName", "forceManual"]) if (q.get(k)) p[k] = q.get(k);
+      for (const k of ["chainRpc", "manualLedger", "manualAccount", "manualPaymaster", "forceManual"]) if (q.get(k)) p[k] = q.get(k);
       if (!Object.keys(p).length) return setNote("That link has no meter settings.");
-      setSettings(p); setNote("Applied."); setLink("");
+      setD({ ...d, ...p }); setNote("Filled in. Press Connect."); setLink("");
     } catch { setNote("That isn't a link."); }
   };
+  const connect = () => { setSettings({ ...d, forceManual: d.manualLedger ? "1" : d.forceManual } as any); setNote("Connecting…"); };
   const share = () => {
-    const q = new URLSearchParams(); const s = settings as any;
-    for (const k of ["chainRpc", "manualLedger", "manualAccount", "manualPaymaster"]) if (s[k]) q.set(k, s[k]);
-    if (s.manualLedger) q.set("forceManual", "1");
+    const q = new URLSearchParams(); for (const [k, v] of Object.entries(d)) if (v) q.set(k, v);
     navigator.clipboard?.writeText(`${location.origin}${location.pathname}?${q}#overview`).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
   };
   const ok = chain.status === "ok";
@@ -44,22 +51,21 @@ function Settings() {
     <Page title="Connect" aside={<span className={`text-sm ${ok ? "text-ok" : chain.status === "error" ? "text-bad" : "text-mute"}`}>{ok ? `Connected · block ${chain.head}` : chain.status === "error" ? "Can't reach the chain" : chain.status === "loading" ? "Connecting…" : "Not connected"}</span>}>
       <Card>
         <H>Network</H>
-        <Segmented id="net" options={NETS} value={NETS.find((n) => n.value === settings.chainRpc)?.value ?? ""} onChange={(v) => setSettings({ chainRpc: v })} />
-        <div className="mt-4">{f("chainRpc", "RPC address")}</div>
-        {chain.error && <div className="mt-2 text-xs text-bad">{chain.error}</div>}
+        <Segmented id="net" options={NETS} value={NETS.find((n) => n.value === d.chainRpc)?.value ?? ""} onChange={(v) => setD({ ...d, chainRpc: v })} />
+        <div className="mt-4">{field("chainRpc", "RPC address")}</div>
       </Card>
       <Card>
         <H>Meter</H>
-        <div className="flex gap-2"><input aria-label="Setup link" value={link} onChange={(e) => setLink(e.target.value)} placeholder="Paste a dashboard link to fill everything in" className={inputCls} /><Button onClick={apply} disabled={!link}>Apply</Button></div>
-        {note && <div className="mt-2 text-xs text-mute">{note}</div>}
-        <div className="mt-5 grid gap-4 sm:grid-cols-3">{f("manualLedger", "Ledger", "0x…")}{f("manualAccount", "Account", "0x…")}{f("manualPaymaster", "Paymaster", "0x…")}</div>
-        <label className="mt-4 flex items-center gap-2 text-sm text-mute"><input type="checkbox" checked={(settings as any).forceManual === "1"} onChange={(e) => setSettings({ forceManual: e.target.checked ? "1" : "" } as any)} />Use these addresses instead of the meter's name</label>
-        <div className="mt-5 flex flex-wrap gap-2"><Button variant="ghost" onClick={resetMeter}>Reset to default meter</Button><Button variant="ghost" onClick={share}>{copied ? "Copied" : "Copy setup link"}</Button></div>
-        <div className="mt-3 text-xs text-faint">Addresses in use: {ids.from === "none" ? "none" : ids.from === "ens" ? "from the name" : "entered above"}</div>
+        <div className="grid gap-4 sm:grid-cols-3">{field("manualLedger", "Ledger", "0x…")}{field("manualAccount", "Account", "0x…")}{field("manualPaymaster", "Paymaster", "0x…")}</div>
+        <div className="mt-5 flex flex-wrap items-center gap-2"><Button onClick={connect} disabled={!d.manualLedger || !d.chainRpc}>Connect</Button><Button variant="ghost" onClick={share}>{copied ? "Copied" : "Copy link"}</Button></div>
+        {chain.error && <div className="mt-3 text-xs text-bad">{chain.error}</div>}
+        {note && <div className="mt-3 text-xs text-mute">{note}</div>}
+        <div className="mt-5 flex gap-2"><input aria-label="Setup link" value={link} onChange={(e) => setLink(e.target.value)} placeholder="Or paste a dashboard link" className={inputCls} /><Button variant="ghost" onClick={apply} disabled={!link}>Fill in</Button></div>
+        <div className="mt-3 text-xs text-faint">Addresses in use: {ids.from === "none" ? "none" : ids.from === "ens" ? "from the meter's name" : "entered here"}</div>
       </Card>
       <Card>
         <H>Name</H>
-        <div className="flex gap-2"><div className="flex-1">{f("ensName", "Meter name on Sepolia")}</div><Button variant="ghost" onClick={refreshEns} className="self-end">Look up</Button></div>
+        <div className="flex gap-2"><label className="block flex-1 text-sm"><span className="text-mute">Meter name on Sepolia</span><input value={settings.ensName} onChange={(e) => setSettings({ ensName: e.target.value })} className={`${inputCls} mt-1.5 font-mono text-xs`} /></label><Button variant="ghost" onClick={refreshEns} className="self-end">Look up</Button></div>
         <div className="mt-2 text-xs text-faint">{ens.status === "ok" ? "Resolved" : ens.status === "error" ? ens.error : ens.status}</div>
       </Card>
     </Page>
