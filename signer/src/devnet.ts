@@ -6,11 +6,19 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import type { Address, Hex } from "viem";
 
 export const CHAIN_ID = 1337;
-/** "local" is our private ethrex node (see devnet/up.sh). "public" is the shared hackathon devnet. */
-export const NETWORK = (process.env.MOHAR_NET ?? "local") as "local" | "public";
+/**
+ * Where frame transactions go. Switching is this one variable, with no code change:
+ *   local      our ethrex (devnet/up.sh), privileged submission that skips mempool rules
+ *   local-alt  our ethrex, submitted through our own sidecar (devnet/sidecar.sh): real alt mempool rules
+ *   public     the shared EF devnet and its gateway
+ * Sepolia isn't an option: frame transactions exist only on the EF devnet. ENS on Sepolia is configured separately.
+ */
+export const NETWORK = (process.env.MOHAR_NET ?? "local") as "local" | "local-alt" | "public";
+if (!["local", "local-alt", "public"].includes(NETWORK)) throw new Error(`MOHAR_NET must be local, local-alt or public, not ${NETWORK}`);
 const LOCAL_RPC = "http://127.0.0.1:18545";
-/** Sidecar gateway on the public devnet: alt mempool submission, plus reads and raw transactions forwarded to ethrex. */
-export const GATEWAY_URL = NETWORK === "public" ? "https://altmempoolgateway.forshtat.com/rpc" : LOCAL_RPC;
+const LOCAL_SIDECAR = "http://127.0.0.1:14337/rpc";
+/** The sidecar: alt mempool submission, plus reads and raw transactions forwarded to ethrex. */
+export const GATEWAY_URL = NETWORK === "public" ? "https://altmempoolgateway.forshtat.com/rpc" : NETWORK === "local-alt" ? LOCAL_SIDECAR : LOCAL_RPC;
 /** ethrex directly, for read-only methods the gateway doesn't proxy, such as simulation. */
 export const ETHREX_URL = NETWORK === "public" ? "https://altmempool.forshtat.com" : LOCAL_RPC;
 export const EXPLORER_URL = "https://explorer.altmempool.wtf/";

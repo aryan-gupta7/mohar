@@ -27,7 +27,8 @@ This describes only what is **built and tested so far**. For what comes next, se
 | The canonical rules refuse the paymaster | **Proven on the local chain** | Violation: `StorageReadNonSender` |
 | The public devnet caps validation at 100,000 gas | **Proven for an unstaked sender** | `exceeds MAX_VERIFY_GAS 100000`. The source has no staking exception, but a staked sender hasn't been tried live |
 | Reports update the ledger through the full 4-frame path | **Proven on the local chain** | DEV3-T8 and T9: events match every field |
-| The alt mempool admits our transaction | **Not proven** | Needs public devnet funds, and the faucet is empty. You approved a local sidecar build at 08:20; not yet run |
+| The alt mempool's rules admit our transaction, and the canonical rules refuse the same bytes | **Proven with the real sidecar code, on our local chain** | EF-2L; [evidence](docs/evidence/ef-2-local-alt.json). Not yet on the public devnet |
+| An unstaked paymaster is refused | **Proven, same setup** | `unstaked payer accessed payer slot 0x…01` |
 | Anything on the public devnet with our contracts | **Not proven** | Same funding block |
 | The ESP8266 can sign these transactions | **Not proven** | Its speed is measured, but the signing firmware isn't written |
 | ENS and 0G integrations | **Not started** | Docs and endpoints checked only |
@@ -383,7 +384,25 @@ The public devnet's faucet is empty, and it can be reset at any time, so develop
 - **[devnet/make-genesis.ts](devnet/make-genesis.ts)** builds the genesis from [devnet/snapshot.json](devnet/snapshot.json), a saved copy of the public devnet's chain config and system contracts. All forks are active from block 0. Only our local deployer is funded.
 - **[devnet/producer.ts](devnet/producer.ts)** plays the consensus client through the Engine API, making one block every 2 seconds by default. The client's built-in `--dev` mode can't produce Hegota blocks.
 
-**Differences from the public devnet:** a single node, no sidecar, no peers, and all forks active from genesis.
+**Differences from the public devnet:** a single node, no peers, and all forks active from genesis.
+
+### The local alt mempool
+
+**[devnet/sidecar.sh](devnet/sidecar.sh)** runs the same sidecar code as the public devnet, `forshtat/mempool-workshop-sidecar` at commit `2e22ff0`, in standalone mode against the local chain. It uses the public devnet's rules: staking registry `0xd51c…2d2f` and a 0.01 ETH minimum stake, with admission reports on. It listens on `127.0.0.1:14337/rpc`. Its relayer is a local key in `.secrets/sidecar-relayer.key`, funded on the local chain only.
+
+**What happens to a submission,** as on the public node: `eth_sendFrameTransaction` → one traced simulation on ethrex → the ERC-8421 rules → the mempool → relayed to ethrex's privileged route → mined.
+
+**Switching networks** is the `MOHAR_NET` variable, with no code change:
+
+| `MOHAR_NET` | Submission | Proves |
+|---|---|---|
+| `local` (default) | Privileged route, skipping mempool rules | Execution only |
+| `local-alt` | Our sidecar | Execution and the alt mempool's rules, on our copy |
+| `public` | The public gateway | Everything, on the shared network |
+
+Frame transactions don't exist on Sepolia, so it isn't an option here. ENS uses Sepolia separately.
+
+**Run the EF-2 proof:** `MOHAR_NET=local-alt node signer/tools/ef2.ts`. It signs one report, sends the bytes to the canonical path (refused) and to the sidecar (admitted), saves the admission record, then checks the refusals on throwaway contracts. The same script runs on `public` once funded.
 
 **Keys:** [signer/src/devnet.ts](signer/src/devnet.ts) creates a throwaway deployer key in `.secrets/`, which git ignores. Devices never use it. We don't use the devnet's published genesis key: the repo that publishes it says it's an operator key, and it's also the node's relayer, so using it could disrupt others.
 
@@ -522,6 +541,32 @@ RESULT sign_worst hashes=1005 ms=883
 === DONE ===
 ```
 Timings can vary slightly.
+
+### Test 8a: The alt mempool, locally
+
+With the chain and producer running (Test 3), in a third terminal:
+```sh
+./devnet/sidecar.sh
+```
+The first run builds the sidecar into `.state/sidecar-src`, which takes a few minutes and about 1 GB. To reuse an existing build, set `SIDECAR_SRC` to its folder. **Expected:** `HTTP server listening at http://127.0.0.1:14337/rpc`.
+
+Then:
+```sh
+MOHAR_NET=local-alt node signer/tools/ef2.ts
+```
+**Expected, in about a minute:**
+```text
+EF2-T1 canonical eth_sendRawTransaction: {"refused":true,"error":"... StorageReadNonSender"}
+EF2-T2 alt eth_sendFrameTransaction: {"hash":"0x…","matchesLocal":true}
+EF2-T4 receipt: {"status":"0x1", ... "frames":[{"status":"0x1",...} × 4]}
+accountBalanceWei: 0
+EF2-T5 quota: {"before":"10","after":"9"}
+EF2-T8 replay: {"refused":true, ... "Nonce mismatch ..."}
+EF2-T7 unstaked paymaster: {"refused":true,"error":"... unstaked payer accessed payer slot ..."}
+EF2-T6 second report over quota: {"refused":true,"error":"... validation frame 1: reverted"}
+EF2-T9 revoked device: {"refused":true,"error":"... validation frame 1: reverted"}
+```
+Evidence is written to `docs/evidence/ef-2-local-alt.json`. Stop the sidecar with `Ctrl+C`.
 
 ### Test 9: Pico meter simulator
 

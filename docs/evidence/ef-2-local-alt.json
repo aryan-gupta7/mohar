@@ -1,0 +1,440 @@
+{
+  "network": "local-alt",
+  "gateway": "http://127.0.0.1:14337/rpc",
+  "startedAt": "2026-11-06T03:22:31.858Z",
+  "chainId": 1337,
+  "clientVersion": "ethrex/v23.0.0-eip8141-tracer-9aa3645d795945c64400f41a70aace0edfa7f383/x86_64-unknown-linux-gnu/rustc-v1.93.1",
+  "deployerBalanceWei": "999979767763371357999995",
+  "contracts": {
+    "ledger": "0x743e2ba29bca2a4d8e24402259b951ddbeb62ef9",
+    "account": "0xce24cb66fe8b1af0e8cf436013755715483c02e9",
+    "paymaster": "0xf184bc2d7fb082977a3cd68bf40030183bd2c8d4"
+  },
+  "localHash": "0x4db1f42a173708e1708b863b7c2e7deaaa8f4f670c8df6bd16e3d0710e45ed50",
+  "simulation": {
+    "executionStatus": "success",
+    "canonicalMempoolValid": false,
+    "canonicalMempoolViolation": "StorageReadNonSender",
+    "prefixShape": "OnlyVerifyPay",
+    "payer": "0xf184bc2d7fb082977a3cd68bf40030183bd2c8d4"
+  },
+  "EF2-T1 canonical eth_sendRawTransaction": {
+    "refused": true,
+    "error": "eth_sendRawTransaction: Invalid params: Frame transaction validation-prefix simulation failed: StorageReadNonSender"
+  },
+  "EF2-T2 alt eth_sendFrameTransaction": {
+    "hash": "0x4db1f42a173708e1708b863b7c2e7deaaa8f4f670c8df6bd16e3d0710e45ed50",
+    "matchesLocal": true
+  },
+  "EF2-T3 admission": {
+    "hash": "0x4db1f42a173708e1708b863b7c2e7deaaa8f4f670c8df6bd16e3d0710e45ed50",
+    "entry": {
+      "txHash": "0x4db1f42a173708e1708b863b7c2e7deaaa8f4f670c8df6bd16e3d0710e45ed50",
+      "sender": "0xCE24cb66fE8B1AF0e8CF436013755715483c02e9",
+      "payer": "0xF184Bc2d7FB082977a3cd68Bf40030183bd2c8d4",
+      "nonce": "0x1",
+      "nonceKeys": [
+        "0x0"
+      ],
+      "status": "New",
+      "frames": 4,
+      "maxFeePerGas": "0x77359400",
+      "submittedTime": 1793935366147,
+      "lastUpdatedTime": 1793935366150,
+      "source": "rpc",
+      "tx": {
+        "chainId": "0x539",
+        "nonceKeys": [
+          "0x0"
+        ],
+        "nonceSeq": "0x1",
+        "sender": "0xCE24cb66fE8B1AF0e8CF436013755715483c02e9",
+        "frames": [
+          {
+            "mode": 1,
+            "flags": 2,
+            "target": null,
+            "limits": {
+              "execution": "0x15f90",
+              "state": "0x0"
+            },
+            "value": "0x0",
+            "data": "0x"
+          },
+          {
+            "mode": 1,
+            "flags": 1,
+            "target": "0xF184Bc2d7FB082977a3cd68Bf40030183bd2c8d4",
+            "limits": {
+              "execution": "0x26ac",
+              "state": "0x0"
+            },
+            "value": "0x0",
+            "data": "0x"
+          },
+          {
+            "mode": 2,
+            "flags": 0,
+            "target": "0x743e2bA29bca2A4D8E24402259b951DDbEb62ef9",
+            "limits": {
+              "execution": "0xc350",
+              "state": "0x186a0"
+            },
+            "value": "0x0",
+            "data": "0x6e5141ba0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000000"
+          },
+          {
+            "mode": 0,
+            "flags": 0,
+            "target": "0xF184Bc2d7FB082977a3cd68Bf40030183bd2c8d4",
+            "limits": {
+              "execution": "0x9c40",
+              "state": "0x0"
+            },
+            "value": "0x0",
+            "data": "0x11da60b4"
+          }
+        ],
+        "signatures": [
+          {
+            "scheme": 0,
+            "signer": "0x",
+            "msg": "0x",
+            "signature": "0x9e88d31f5466a6cf7117c46f82c198f4de18988bd3fc37f7caa49399f3ceeabab38406ff5e8adc7ac6314e9e81c3815a04555ede3c9584dcd488be3debd5d1860039a5add44cbb6fd845991ae7b8db579ac815607832c4810da7e557697186d25d6ac10f18b6b0094735ea635e274ca75c0e750495ad70399c7e4bcb9e0dc2a9d5666aa80589b1e807194ef8207c2fbce2e0b34e79a907182e582b758c234f23009dd7d9384cfc6d4067b7d3c92fa72510b029f588a0848ee8dd77d643157ce1033686576ad62c280e232863428c146bb02088f78b852fe06fc5933ae7e44294d315ced58589e067a58fd311f54a8f01de6df4d352a8651b0fd6c5217c9422cc59f9ce06b942c853b6f44171de18f35136784f9b2bd4ffa57503df5e08129d08670c9145ebaa04603db56c59cdb28d0514d16b65943e015ce68aa9990fb95ddc326978c1102a966c5e56d017ef80366ddd3690cde5c71b03d2ce6df8883a042bf9962afeaf9f73d4824806a0e561c1964b3abeacb04a082638b9ec75c355e2b07bf8d1d94fd9bcd6ddc82c3bf10fbea7667e5c20d98d3c276532c64a4ef4a443891f2d007fbc4d5674dff4afdff0f60a158953a2631092a18e709962ed1763b410595d91cee3895fa4347bf4be766261818af2b772ccdf74b58fe32ba841bc8f3bea5edd005b208bcddc00eac9906d19329826f092de00a1c07dca40191ae1f27358e3472eb0da23063e03e4efd78d5832e7021ab1c1a900235e5975e9b410510cb2a473c4dd6795622fbf474dac01d2172bdb33d04b64fb4eb07d408923f14863b230a5bc09d3e4df7fa8daf3f547aadbe28c3801dff0879889b11c69105c9db72ac188c89bdafaf9b35965669fb8199e1f6edc1e94d0daeb429ac348fcff9a87945b604b135c99f7f82a2df31323127c0ad70c35e4bb8618eac403a763c72b906b0ff36f85e6be375e616f00efb5e02bb2a38a6e921371dcce6304e42a60e68ede80c1f3647f8ced1ec7c20a82d795fc491f77294b350931195667ae159914122d5dac59bc40728a3537dacc4e2820c807ff0c208a88c9a96e830194123c5f0fd821a8e4304f8c51b34ac8615befc4dd356f919dd215c305435555a0dd6544242e87f6d32cdd03e3949724ca6dbe621fcb438deffeec9d229ca99efaf5556463776d2994be371932898255156973163ce89a80adf54160484c7fa68f61717d031b69c4bdcb1d9ea1bfc95cc351a6674647e5ace41c939f195b5814d4f913f5c32ad61c41e652cc4f052166914a79f9a00a48ddb559d8a71c8106ceed838f41189918ec9a1dd5b7f94beb96abbb2daac24ed63c7ba79a542290bb3b30f815e4c58d577d082c88938258323b8909ef1c3186322002783c7d0050b0a75627dc83574dce42e99c743df7d3d42b7a8630d760266b741c5a4a6b3109b5801ae7d480439478afb92ba8a2d4ba7e2085789e0d63a590a3e5b75c6f8cf2e95358993a080051737ce5d1080a660c7a3fc5637dbf462c6580b20dbf86c7d631237d59dc0f30eb602e561150bf6bce67798442e1895c6f441ba1f2ff5030182c16c1d2357c9325034dfc44972610002089d48488bc853204bb1800660b1efc4e06c7de1a591cb8fd621fbb901c034def306ee5f467e848368eb7c7903dd3b20746e86848dd1b89818f18b69377bbb380e00639e41d6fe033a6ebf9e79b99fb7bb9aa857bc6e6b5d9e52ecb876f707fc7d1e319330463e1e5695963712b3856c85a3baf77286678379f402bfc00076e22e779f7e671b70aed8094ffa2b999040f105007325985e29efb86eff4e285a6459b6537489e30a3460492a235148494b361b4e4db71eeeac9f9202f2e557d32eb6c194d06b2dd81cde4aa833cdcb57ea2e8995bcc36e7287e4af26964a338fdd0707d542f1a1788ed7e162b3c1e848cce684537febdf5f8243af07e1915453e3c0a617af0dc5313a2cb561670b7ed713fd98d31f03e366470d682d688745dfbaa2f67cace1adb04fdae1e2c769b852e6ec64d35fc05acd9502263aa8145e401ea2b3fa66f1b58f1083dbf084dc706f49a77db2899bcf07c209671a13f0968285e775fb849a40d2b9f858a161547268973dca5b095df6d28d82786064c89c76f15baea3465249af34ac2361cfb5fca72def06ececbf9da911b67027652ef01baf44eea23d553ec7469203ab59e6d671f96b9fd7aa57157290bdb26ae1b5008215f3b157b6d2bae3674eb39bede8a9af492068032464283630903aeabdf36e55b4ad863124c52a75248bf6cb433fa85b3fa316de02f5e888e1d2852258e945e3877491478c259e23fbafb9ab63a1484f7b2aee00ea054129f294f2cf8a50fbcfc3a616c62a7982c02e54391048165b4e4b376afb59df7b796f57b5005d950f3b3e9e50302a439c1389af3d6d4db0c5d8731840e6a21eaac2396a14a9666935f0270dc3038d28d7a666c87fe512a6551df3d43b0aa8eb39d08f8a659c5672ef72d265e43246f5546b8f1f6a8e00cf8158142ba88a0ac25523c3b065712fde7fda186684e513ab9e52cdf7ee85a0f0333054d63727ae0cbf91122ce424e676f1f3acb787a3c4a35cc7d5540e1c104e70804c7fdd080c0442a4134c7bc3da0ab9f4ed4628eea59240554f6c689b698fcd935e12b42dcff795219bface5f74cd9f41ac641c6e562254c2865f870fd37a029bc92c0f5c57b246d3f1bd093ec26509a3c3bbe187297b5f7b90b0928e1848cd9537143bc44a4ad77a99821b0ce915022294f4a8c898548a6120615c8d4217b59c608a2f248737778c6319647ec378b078c1f5fe92472117b11cd4a512f8c036b3d64670a4780818269efb286aa83df5fc1cd9a733c2765f15cc632d5b266d96495fff415e3c81b29b561efe721b1c33470010109560a24bc91538f930eb29c854336baf5a52ae924bc7aa9506e41875f27142f27ebbc56c9d6f16a8b3e0640d75ca85dcca66d34473c32cb3129fa35129d88a50312f916871124d2ff263176ab8f40f6f775cb48072c33d03504d326805c625452828b48ca29c3791ff1ad32180aebe47a4dfe34d4f023f39cda6dcc38aa79a50d772e1e657eb40f15bdbf72f59e3ace2ddbfe1014672e7f06ed4d4d56e54b510bead50a148bd91f501a6206d2be92040de738c33716ef605d6df16fac1e107cd5838338b50ada3b5d67adb6a459cb40a8b97404a52c5c55cb598c19899f5db86d71cc2d288c810a7c9cb7e09c39535d75c69bf1ffca11b7e6c8478c6a9ea86a09f449e191ab718afe9ec9345208bdf81fa8e7916c7d7db916bc42831775e1531ff6f027d3b4bbdf5d1f052b6eccb559f66ac0af78f79bd7eb1e88a7b0cf4b5cab306798dd84ff4c74ec471dc0e333ba31e94e0b"
+          }
+        ],
+        "fees": {
+          "maxPriorityFeePerGas": "0xf4240",
+          "maxFeePerGas": "0x77359400",
+          "maxFeePerBlobGas": "0x0"
+        },
+        "blobVersionedHashes": [],
+        "recentRootReferences": []
+      }
+    },
+    "admission": {
+      "id": 1,
+      "txHash": "0x4db1f42a173708e1708b863b7c2e7deaaa8f4f670c8df6bd16e3d0710e45ed50",
+      "sender": "0xce24cb66fe8b1af0e8cf436013755715483c02e9",
+      "nonce": "0x1",
+      "nonceKeys": [
+        "0x0"
+      ],
+      "at": 1793935366120,
+      "source": "rpc",
+      "outcome": "accepted",
+      "checks": [
+        {
+          "rule": "gas-limit",
+          "verdict": "pass"
+        },
+        {
+          "rule": "recent-root",
+          "verdict": "pass"
+        },
+        {
+          "rule": "prefix",
+          "verdict": "pass"
+        },
+        {
+          "rule": "structure",
+          "verdict": "pass"
+        },
+        {
+          "rule": "signature",
+          "verdict": "pass"
+        },
+        {
+          "rule": "simulation",
+          "verdict": "pass"
+        },
+        {
+          "rule": "trace-alignment",
+          "verdict": "pass"
+        },
+        {
+          "rule": "OP-061",
+          "verdict": "pass"
+        },
+        {
+          "rule": "execution",
+          "verdict": "pass"
+        },
+        {
+          "rule": "trace-alignment",
+          "frameIndex": 0,
+          "entity": "sender",
+          "verdict": "pass"
+        },
+        {
+          "rule": "out-of-gas",
+          "frameIndex": 0,
+          "entity": "sender",
+          "verdict": "pass"
+        },
+        {
+          "rule": "OP-011",
+          "frameIndex": 0,
+          "entity": "sender",
+          "verdict": "pass"
+        },
+        {
+          "rule": "create",
+          "frameIndex": 0,
+          "entity": "sender",
+          "verdict": "pass"
+        },
+        {
+          "rule": "storage",
+          "frameIndex": 0,
+          "entity": "sender",
+          "verdict": "pass"
+        },
+        {
+          "rule": "COD-010",
+          "frameIndex": 0,
+          "entity": "sender",
+          "verdict": "pass"
+        },
+        {
+          "rule": "entrypoint-access",
+          "frameIndex": 0,
+          "entity": "sender",
+          "verdict": "pass"
+        },
+        {
+          "rule": "trace-alignment",
+          "frameIndex": 1,
+          "entity": "payer",
+          "verdict": "pass"
+        },
+        {
+          "rule": "out-of-gas",
+          "frameIndex": 1,
+          "entity": "payer",
+          "verdict": "pass"
+        },
+        {
+          "rule": "OP-011",
+          "frameIndex": 1,
+          "entity": "payer",
+          "verdict": "pass"
+        },
+        {
+          "rule": "create",
+          "frameIndex": 1,
+          "entity": "payer",
+          "verdict": "pass"
+        },
+        {
+          "rule": "storage",
+          "frameIndex": 1,
+          "entity": "payer",
+          "verdict": "pass"
+        },
+        {
+          "rule": "COD-010",
+          "frameIndex": 1,
+          "entity": "payer",
+          "verdict": "pass"
+        },
+        {
+          "rule": "entrypoint-access",
+          "frameIndex": 1,
+          "entity": "payer",
+          "verdict": "pass"
+        },
+        {
+          "rule": "mempool",
+          "verdict": "pass"
+        }
+      ],
+      "frames": [
+        {
+          "mode": 1,
+          "flags": 2,
+          "target": null,
+          "limits": {
+            "execution": "0x15f90",
+            "state": "0x0"
+          },
+          "value": "0x0",
+          "data": "0x"
+        },
+        {
+          "mode": 1,
+          "flags": 1,
+          "target": "0xf184bc2d7fb082977a3cd68bf40030183bd2c8d4",
+          "limits": {
+            "execution": "0x26ac",
+            "state": "0x0"
+          },
+          "value": "0x0",
+          "data": "0x"
+        },
+        {
+          "mode": 2,
+          "flags": 0,
+          "target": "0x743e2ba29bca2a4d8e24402259b951ddbeb62ef9",
+          "limits": {
+            "execution": "0xc350",
+            "state": "0x186a0"
+          },
+          "value": "0x0",
+          "data": "0x6e5141ba0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "mode": 0,
+          "flags": 0,
+          "target": "0xf184bc2d7fb082977a3cd68bf40030183bd2c8d4",
+          "limits": {
+            "execution": "0x9c40",
+            "state": "0x0"
+          },
+          "value": "0x0",
+          "data": "0x11da60b4"
+        }
+      ],
+      "frameStatuses": [
+        "success",
+        "success",
+        "success",
+        "success"
+      ]
+    },
+    "events": [
+      {
+        "seq": 1,
+        "txHash": "0x4db1f42a173708e1708b863b7c2e7deaaa8f4f670c8df6bd16e3d0710e45ed50",
+        "at": 1793935366151,
+        "kind": "admitted",
+        "status": "New"
+      }
+    ]
+  },
+  "EF2-T4 receipt": {
+    "status": "0x1",
+    "block": 1049,
+    "payer": "0xf184bc2d7fb082977a3cd68bf40030183bd2c8d4",
+    "gasUsed": 188784,
+    "frames": [
+      {
+        "status": "0x1",
+        "gasUsed": 75511
+      },
+      {
+        "status": "0x1",
+        "gasUsed": 7556
+      },
+      {
+        "status": "0x1",
+        "gasUsed": 33796
+      },
+      {
+        "status": "0x1",
+        "gasUsed": 11670
+      }
+    ]
+  },
+  "accountBalanceWei": "0",
+  "EF2-T5 quota": {
+    "before": "10",
+    "after": "9"
+  },
+  "sidecarStatus": {
+    "tx": {
+      "chainId": "0x539",
+      "nonceKeys": [
+        "0x0"
+      ],
+      "nonceSeq": "0x1",
+      "sender": "0xCE24cb66fE8B1AF0e8CF436013755715483c02e9",
+      "frames": [
+        {
+          "mode": "0x1",
+          "flags": "0x2",
+          "target": null,
+          "limits": {
+            "execution": "0x15f90",
+            "state": "0x0"
+          },
+          "value": "0x0",
+          "data": "0x"
+        },
+        {
+          "mode": "0x1",
+          "flags": "0x1",
+          "target": "0xF184Bc2d7FB082977a3cd68Bf40030183bd2c8d4",
+          "limits": {
+            "execution": "0x26ac",
+            "state": "0x0"
+          },
+          "value": "0x0",
+          "data": "0x"
+        },
+        {
+          "mode": "0x2",
+          "flags": "0x0",
+          "target": "0x743e2bA29bca2A4D8E24402259b951DDbEb62ef9",
+          "limits": {
+            "execution": "0xc350",
+            "state": "0x186a0"
+          },
+          "value": "0x0",
+          "data": "0x6e5141ba0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "mode": "0x0",
+          "flags": "0x0",
+          "target": "0xF184Bc2d7FB082977a3cd68Bf40030183bd2c8d4",
+          "limits": {
+            "execution": "0x9c40",
+            "state": "0x0"
+          },
+          "value": "0x0",
+          "data": "0x11da60b4"
+        }
+      ],
+      "signatures": [
+        {
+          "scheme": "0x0",
+          "signer": "0x",
+          "msg": "0x",
+          "signature": "0x9e88d31f5466a6cf7117c46f82c198f4de18988bd3fc37f7caa49399f3ceeabab38406ff5e8adc7ac6314e9e81c3815a04555ede3c9584dcd488be3debd5d1860039a5add44cbb6fd845991ae7b8db579ac815607832c4810da7e557697186d25d6ac10f18b6b0094735ea635e274ca75c0e750495ad70399c7e4bcb9e0dc2a9d5666aa80589b1e807194ef8207c2fbce2e0b34e79a907182e582b758c234f23009dd7d9384cfc6d4067b7d3c92fa72510b029f588a0848ee8dd77d643157ce1033686576ad62c280e232863428c146bb02088f78b852fe06fc5933ae7e44294d315ced58589e067a58fd311f54a8f01de6df4d352a8651b0fd6c5217c9422cc59f9ce06b942c853b6f44171de18f35136784f9b2bd4ffa57503df5e08129d08670c9145ebaa04603db56c59cdb28d0514d16b65943e015ce68aa9990fb95ddc326978c1102a966c5e56d017ef80366ddd3690cde5c71b03d2ce6df8883a042bf9962afeaf9f73d4824806a0e561c1964b3abeacb04a082638b9ec75c355e2b07bf8d1d94fd9bcd6ddc82c3bf10fbea7667e5c20d98d3c276532c64a4ef4a443891f2d007fbc4d5674dff4afdff0f60a158953a2631092a18e709962ed1763b410595d91cee3895fa4347bf4be766261818af2b772ccdf74b58fe32ba841bc8f3bea5edd005b208bcddc00eac9906d19329826f092de00a1c07dca40191ae1f27358e3472eb0da23063e03e4efd78d5832e7021ab1c1a900235e5975e9b410510cb2a473c4dd6795622fbf474dac01d2172bdb33d04b64fb4eb07d408923f14863b230a5bc09d3e4df7fa8daf3f547aadbe28c3801dff0879889b11c69105c9db72ac188c89bdafaf9b35965669fb8199e1f6edc1e94d0daeb429ac348fcff9a87945b604b135c99f7f82a2df31323127c0ad70c35e4bb8618eac403a763c72b906b0ff36f85e6be375e616f00efb5e02bb2a38a6e921371dcce6304e42a60e68ede80c1f3647f8ced1ec7c20a82d795fc491f77294b350931195667ae159914122d5dac59bc40728a3537dacc4e2820c807ff0c208a88c9a96e830194123c5f0fd821a8e4304f8c51b34ac8615befc4dd356f919dd215c305435555a0dd6544242e87f6d32cdd03e3949724ca6dbe621fcb438deffeec9d229ca99efaf5556463776d2994be371932898255156973163ce89a80adf54160484c7fa68f61717d031b69c4bdcb1d9ea1bfc95cc351a6674647e5ace41c939f195b5814d4f913f5c32ad61c41e652cc4f052166914a79f9a00a48ddb559d8a71c8106ceed838f41189918ec9a1dd5b7f94beb96abbb2daac24ed63c7ba79a542290bb3b30f815e4c58d577d082c88938258323b8909ef1c3186322002783c7d0050b0a75627dc83574dce42e99c743df7d3d42b7a8630d760266b741c5a4a6b3109b5801ae7d480439478afb92ba8a2d4ba7e2085789e0d63a590a3e5b75c6f8cf2e95358993a080051737ce5d1080a660c7a3fc5637dbf462c6580b20dbf86c7d631237d59dc0f30eb602e561150bf6bce67798442e1895c6f441ba1f2ff5030182c16c1d2357c9325034dfc44972610002089d48488bc853204bb1800660b1efc4e06c7de1a591cb8fd621fbb901c034def306ee5f467e848368eb7c7903dd3b20746e86848dd1b89818f18b69377bbb380e00639e41d6fe033a6ebf9e79b99fb7bb9aa857bc6e6b5d9e52ecb876f707fc7d1e319330463e1e5695963712b3856c85a3baf77286678379f402bfc00076e22e779f7e671b70aed8094ffa2b999040f105007325985e29efb86eff4e285a6459b6537489e30a3460492a235148494b361b4e4db71eeeac9f9202f2e557d32eb6c194d06b2dd81cde4aa833cdcb57ea2e8995bcc36e7287e4af26964a338fdd0707d542f1a1788ed7e162b3c1e848cce684537febdf5f8243af07e1915453e3c0a617af0dc5313a2cb561670b7ed713fd98d31f03e366470d682d688745dfbaa2f67cace1adb04fdae1e2c769b852e6ec64d35fc05acd9502263aa8145e401ea2b3fa66f1b58f1083dbf084dc706f49a77db2899bcf07c209671a13f0968285e775fb849a40d2b9f858a161547268973dca5b095df6d28d82786064c89c76f15baea3465249af34ac2361cfb5fca72def06ececbf9da911b67027652ef01baf44eea23d553ec7469203ab59e6d671f96b9fd7aa57157290bdb26ae1b5008215f3b157b6d2bae3674eb39bede8a9af492068032464283630903aeabdf36e55b4ad863124c52a75248bf6cb433fa85b3fa316de02f5e888e1d2852258e945e3877491478c259e23fbafb9ab63a1484f7b2aee00ea054129f294f2cf8a50fbcfc3a616c62a7982c02e54391048165b4e4b376afb59df7b796f57b5005d950f3b3e9e50302a439c1389af3d6d4db0c5d8731840e6a21eaac2396a14a9666935f0270dc3038d28d7a666c87fe512a6551df3d43b0aa8eb39d08f8a659c5672ef72d265e43246f5546b8f1f6a8e00cf8158142ba88a0ac25523c3b065712fde7fda186684e513ab9e52cdf7ee85a0f0333054d63727ae0cbf91122ce424e676f1f3acb787a3c4a35cc7d5540e1c104e70804c7fdd080c0442a4134c7bc3da0ab9f4ed4628eea59240554f6c689b698fcd935e12b42dcff795219bface5f74cd9f41ac641c6e562254c2865f870fd37a029bc92c0f5c57b246d3f1bd093ec26509a3c3bbe187297b5f7b90b0928e1848cd9537143bc44a4ad77a99821b0ce915022294f4a8c898548a6120615c8d4217b59c608a2f248737778c6319647ec378b078c1f5fe92472117b11cd4a512f8c036b3d64670a4780818269efb286aa83df5fc1cd9a733c2765f15cc632d5b266d96495fff415e3c81b29b561efe721b1c33470010109560a24bc91538f930eb29c854336baf5a52ae924bc7aa9506e41875f27142f27ebbc56c9d6f16a8b3e0640d75ca85dcca66d34473c32cb3129fa35129d88a50312f916871124d2ff263176ab8f40f6f775cb48072c33d03504d326805c625452828b48ca29c3791ff1ad32180aebe47a4dfe34d4f023f39cda6dcc38aa79a50d772e1e657eb40f15bdbf72f59e3ace2ddbfe1014672e7f06ed4d4d56e54b510bead50a148bd91f501a6206d2be92040de738c33716ef605d6df16fac1e107cd5838338b50ada3b5d67adb6a459cb40a8b97404a52c5c55cb598c19899f5db86d71cc2d288c810a7c9cb7e09c39535d75c69bf1ffca11b7e6c8478c6a9ea86a09f449e191ab718afe9ec9345208bdf81fa8e7916c7d7db916bc42831775e1531ff6f027d3b4bbdf5d1f052b6eccb559f66ac0af78f79bd7eb1e88a7b0cf4b5cab306798dd84ff4c74ec471dc0e333ba31e94e0b"
+        }
+      ],
+      "fees": {
+        "maxPriorityFeePerGas": "0xf4240",
+        "maxFeePerGas": "0x77359400",
+        "maxFeePerBlobGas": "0x0"
+      },
+      "blobVersionedHashes": [],
+      "recentRootReferences": []
+    },
+    "sender": "0xCE24cb66fE8B1AF0e8CF436013755715483c02e9",
+    "payer": "0xF184Bc2d7FB082977a3cd68Bf40030183bd2c8d4",
+    "status": "Submitted",
+    "transaction": "0x4db1f42a173708e1708b863b7c2e7deaaa8f4f670c8df6bd16e3d0710e45ed50"
+  },
+  "EF2-T8 replay": {
+    "refused": true,
+    "error": "eth_sendFrameTransaction: Invalid Transaction: Nonce mismatch: expected 2, got 1"
+  },
+  "EF2-T7 unstaked paymaster": {
+    "refused": true,
+    "error": "eth_sendFrameTransaction: unstaked payer accessed payer slot 0x0000000000000000000000000000000000000000000000000000000000000001 ({\"payer\":\"0x41bB69Be6AEb35F82fE4253a2254B0d81E08E871\"})"
+  },
+  "EF2-T6 first report within quota": {
+    "hash": "0xd182ab36998b264e03570892f7b1fe4f37fcede95ea6e65f4346f5b984090fd3",
+    "status": "0x1"
+  },
+  "EF2-T6 second report over quota": {
+    "refused": true,
+    "error": "eth_sendFrameTransaction: validation frame 1: reverted"
+  },
+  "EF2-T9 revoked device": {
+    "refused": true,
+    "error": "eth_sendFrameTransaction: validation frame 1: reverted"
+  },
+  "finishedAt": "2026-11-06T03:23:44.846Z"
+}

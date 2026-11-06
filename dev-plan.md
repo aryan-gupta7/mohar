@@ -48,7 +48,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 3 | [DEV-2](#dev-2-quota-paymaster) | Quota paymaster | | ✅ Done locally |
 | 4 | [DEV-3](#dev-3-machine-ledger) | Machine ledger | Fri 01:00 | ✅ Done locally, Fri 09:00 |
 | 5 | [DEV-4](#dev-4-firmware-keys-and-signing) | Device keys and signing | Fri 12:00 | Next |
-| 6 | [EF-2L](#ef-2l-alt-mempool-rules-on-a-local-sidecar) | Alt mempool rules, local sidecar | Fri 12:00 | You approved the build |
+| 6 | [EF-2L](#ef-2l-alt-mempool-rules-on-a-local-sidecar) | Alt mempool rules, local sidecar | Fri 12:00 | ✅ Done Fri 08:55 |
 | 7 | [DEV-5](#dev-5-firmware-transactions-and-key-safety) | Device transactions, key safety | Fri 14:00 | |
 | 8 | [DEV-6](#dev-6-firmware-networking) | Device Wi-Fi, TLS and RPC | Fri 16:00 | Wi-Fi received |
 | 9 | [EF-1](#ef-1-wots-transaction-on-the-public-devnet) | WOTS transaction on the public devnet | **As soon as funded** | Needs funds |
@@ -615,7 +615,17 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 
 ## EF-2L: Alt mempool rules on a local sidecar
 
-**Status:** Next, approved Fri 08:20 · **Target:** Fri 12:00 · **Depends on:** DEV-3 · **Needs from you:** nothing
+**Status:** ✅ Done Fri 08:55, all 7 tests passed. Evidence: [docs/evidence/ef-2-local-alt.json](docs/evidence/ef-2-local-alt.json) · **Needs from you:** nothing
+
+| Test | Result |
+|---|---|
+| EF2L-T1 | Built from source at `2e22ff0`; running on `127.0.0.1:14337` |
+| EF2L-T2 | Canonical path: `Frame transaction validation-prefix simulation failed: StorageReadNonSender` |
+| EF2L-T3 | Same bytes admitted; hash equal to ours; block 1049, all four frames `0x1`, payer the paymaster, account balance 0, quota 10 → 9 |
+| EF2L-T4 | Admission record saved: 24 rule checks, all `pass`, outcome `accepted` |
+| EF2L-T5 | Unstaked paymaster: `unstaked payer accessed payer slot 0x…01` |
+| EF2L-T6 | Replay: `Nonce mismatch`. Over quota and revoked: `validation frame 1: reverted`, at submission |
+| EF2L-T7 | `MOHAR_NET=public`: same code reads chain 1337 from the public gateway |
 
 **Why:** the real alt mempool's admission rules are what the EF track judges, and the public faucet is empty. Running the same sidecar code against our local chain tests those rules now. It doesn't replace EF-2: a local run isn't the public network.
 

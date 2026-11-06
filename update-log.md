@@ -131,12 +131,29 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - `mechanism.md`: ledger section, measured costs, attack table, and manual tests 8 and 9.
 - `../plan.md`: a note about the story change.
 
+### 08:47 Committed locally
+- `3c2d01e` ledger, `30d5fa4` Pico simulator, `7cfe9ff` documents. Checked first: neither the deployer key nor the Wi-Fi details are in any commit.
+
+### 08:50 Your new request: speed up, and list what needs you
+- Public faucet rechecked: still empty, balance 0.
+- 0G checked: the API key is a 0G Private Computer `sk-…` key from pc.0g.ai. Credits are in 0G tokens, from the booth, a deposit or a card; it isn't Sepolia. The mainnet router accepts TLS 1.2, which the ESP8266 needs, but the testnet router `router-api-testnet.integratenetwork.work` didn't negotiate TLS 1.2. So the device must use mainnet.
+
+### 08:51 Sidecar built and running locally
+- Built `forshtat/mempool-workshop-sidecar` at `2e22ff0` from source, as you approved. Wrote `devnet/sidecar.sh` (pinned commit, local relayer key, public devnet's staking rules) and `devnet/fund.ts` (refuses anything but the local chain).
+- Added `MOHAR_NET=local-alt`. Switching networks is now one variable.
+
+### 08:55 **EF-2L passed: the alt mempool proof works with the real sidecar code**
+- Same signed bytes: refused by the canonical path (`StorageReadNonSender`), admitted by the sidecar with our hash, mined with all four frames succeeding, paid by the paymaster. Account balance 0, quota 10 → 9.
+- Admission record: 24 rule checks, all pass.
+- Refused as expected: unstaked paymaster (`unstaked payer accessed payer slot`), over quota and revoked device (frame 1, at submission), replay (`Nonce mismatch`).
+- The same code reads the public devnet with `MOHAR_NET=public`. Evidence: `docs/evidence/ef-2-local-alt.json`.
+
 ---
 
 ## Current state
 
-**Done:** DEV-0 to DEV-3 on the local chain. Pico meter simulator on the board.
-**Next:** EF-2L (local sidecar), then DEV-4 (keys and signing on the ESP8266).
+**Done:** DEV-0 to DEV-3 and EF-2L on the local chain. Pico meter simulator on the board.
+**Next:** DEV-4 (keys and signing on the ESP8266).
 
 **Blocked on you:**
 1. Devnet ETH for `0xcfb296f635254A4B3281D2e285174E98D643Ef60`.

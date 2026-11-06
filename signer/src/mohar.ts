@@ -205,8 +205,9 @@ export const simulate = (tx: ReturnType<typeof buildTx>): Promise<Simulation> =>
   rpc("ethrex_simulateFrameTransaction", [rawTx(tx), "latest", { trace: false }], ETHREX_URL);
 
 /**
- * Submits through the alt mempool on the public devnet. The local node has no sidecar, so there we use its
- * privileged route, which skips mempool rules. Local mining therefore proves execution, not admission.
+ * Submits through an alt mempool sidecar (MOHAR_NET=public or local-alt), which applies the ERC-8421 rules.
+ * With MOHAR_NET=local there's no sidecar, so we use the node's privileged route, which skips mempool rules:
+ * local mining then proves execution, not admission.
  */
 export const submit = (tx: ReturnType<typeof buildTx>): Promise<Hex> =>
-  NETWORK === "public" ? rpc("eth_sendFrameTransaction", [toWire(tx)]) : rpc("ethrex_submitPrivilegedFrameTransaction", [rawTx(tx)], ETHREX_URL);
+  NETWORK === "local" ? rpc("ethrex_submitPrivilegedFrameTransaction", [rawTx(tx)], ETHREX_URL) : rpc("eth_sendFrameTransaction", [toWire(tx)]);
