@@ -13,19 +13,30 @@ export const RECORDS = ["mohar.chainId", "mohar.ledger", "mohar.paymaster", "moh
 
 export class UserError extends Error {}
 
+// The endpoints to try, the preferred one first. Public RPCs sometimes answer empty or drop a call.
+let urlList: string[] = [ENS.rpc];
 async function read(url: string, name: string, data: string) {
   const out = await ethCall(url, ENS.universalResolver, encodeCall("resolve(bytes,bytes)", [dnsEncode(name), data]));
   return decodeArgs(["bytes", "address"], out)[0] as string;
 }
-async function text(url: string, name: string, key: string): Promise<string | null> {
-  try { return (decodeArgs(["string"], await read(url, name, encodeCall("text(bytes32,string)", [namehash(name), key])))[0] as string) || null; }
-  catch (e) { if (e instanceof RpcDead) throw e; return null; }
+// A record counts as "not set" only after an empty answer from several endpoints; one empty or failed read is retried.
+async function text(_url: string, name: string, key: string): Promise<string | null> {
+  for (let i = 0; i < 4; i++) {
+    try {
+      const v = decodeArgs(["string"], await read(urlList[i % urlList.length], name, encodeCall("text(bytes32,string)", [namehash(name), key])))[0] as string;
+      if (v) return v;
+    } catch (e) { if (e instanceof RpcDead && urlList.length === 1) throw e; }
+  }
+  return null;
 }
-async function addr(url: string, name: string): Promise<string | null> {
-  try {
-    const [b] = decodeArgs(["bytes"], await read(url, name, encodeCall("addr(bytes32,uint256)", [namehash(name), ENS.coinType])));
-    return b && b.length === 42 ? b : null;
-  } catch (e) { if (e instanceof RpcDead) throw e; return null; }
+async function addr(_url: string, name: string): Promise<string | null> {
+  for (let i = 0; i < 4; i++) {
+    try {
+      const [b] = decodeArgs(["bytes"], await read(urlList[i % urlList.length], name, encodeCall("addr(bytes32,uint256)", [namehash(name), ENS.coinType])));
+      if (b && b.length === 42) return b as string;
+    } catch (e) { if (e instanceof RpcDead && urlList.length === 1) throw e; }
+  }
+  return null;
 }
 
 export type Resolved = { name: string; resolver: string; records: Record<string, string | null>; account: string | null };
@@ -43,11 +54,20 @@ export async function resolveName(name: string, preferred = ENS.rpc): Promise<Re
   let id: number;
   try { id = Number(BigInt(await rpc(url, "eth_chainId"))); } catch { throw new UserError(`Cannot reach the ENS network (Sepolia) at ${url}.`); }
   if (id !== ENS.chainId) throw new UserError(`That RPC is chain ${id}, not Sepolia (${ENS.chainId}). Names are looked up on Sepolia.`);
-  let found: any[];
-  try { found = decodeArgs(["address", "bytes32", "uint256"], await ethCall(url, ENS.universalResolver, encodeCall("findResolver(bytes)", [dnsEncode(name)]))); }
-  catch (e) { if (e instanceof RpcDead) throw new UserError(`Cannot reach the ENS network (Sepolia) at ${url}.`); found = ["0x" + "0".repeat(40), null, 0n]; }
-  const [resolver, , offset] = found;
-  if (/^0x0{40}$/.test(resolver)) throw new UserError(`Unknown name: no resolver is registered for ${name}.`);
+  // A public RPC can answer an empty "no resolver" for a name that exists (stale or load-balanced reads). Ask again,
+  // across the other endpoints, several times, before saying the name is unknown.
+  let resolver = "0x" + "0".repeat(40), offset = 0n;
+  const urls = preferred === ENS.rpc ? [url, ...ENS_FALLBACKS.filter((u) => u !== url)] : [url];
+  urlList = urls;
+  for (let attempt = 0; attempt < 6 && /^0x0{40}$/.test(resolver); attempt++) {
+    const u = urls[attempt % urls.length];
+    try {
+      const f = decodeArgs(["address", "bytes32", "uint256"], await ethCall(u, ENS.universalResolver, encodeCall("findResolver(bytes)", [dnsEncode(name)])));
+      resolver = f[0] as string; offset = f[2] as bigint;
+    } catch (e) { if (e instanceof RpcDead && urls.length === 1) throw new UserError(`Cannot reach the ENS network (Sepolia) at ${u}.`); }
+    if (/^0x0{40}$/.test(resolver)) await new Promise((r) => setTimeout(r, 1200));
+  }
+  if (/^0x0{40}$/.test(resolver)) throw new UserError(`Unknown name: no resolver is registered for ${name} (asked ${Math.min(6, 6)} times across ${urls.length} endpoints).`);
   const values = await Promise.all(RECORDS.map((k) => text(url, name, k)));
   const records: Record<string, string | null> = {};
   RECORDS.forEach((k, i) => (records[k] = values[i]));
@@ -68,4 +88,11 @@ export async function simulateSetText(url: string, resolver: string, name: strin
     const d = e instanceof RpcError ? (typeof e.data === "string" ? e.data : (e.data as any)?.data) : undefined;
     return { ok: false, message: explainRevert(d) };
   }
+}
+
+/** `mohar.log` holds a real 0G Storage root only if it looks like 0g://0x<64 hex>. Anything else is a placeholder. */
+export function archiveOf(log: string | null | undefined): { archived: boolean; root?: string; note: string } {
+  const m = /^0g:\/\/(0x[0-9a-fA-F]{64})$/.exec((log ?? "").trim());
+  if (m) return { archived: true, root: m[1], note: "A 0G Storage root is published in ENS. Download it and run uploader/replay.ts to check it against the chain." };
+  return { archived: false, note: log ? `Not archived yet: the record holds "${log}", which is not a 0G Storage root.` : "Not archived yet: the record is empty." };
 }

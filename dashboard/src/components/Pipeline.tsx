@@ -1,3 +1,4 @@
+import { archiveOf } from "../lib/ens";
 import { useState } from "react";
 import { STAGES, REASONS, stageStatuses, evOf, type StageId, type StageView } from "../lib/events";
 import { useStore } from "../store";
@@ -142,6 +143,7 @@ function Detail({ id, s, cp, receipt, hash, confirmed, expected, view }: any) {
         <Row k="Credit left (demo credit)">{L.tariff > 0n ? `${(L.credit / L.tariff).toString()} pulses` : L.credit.toString() + " wei"}</Row>
         <Row k="Arrears">{L.tariff > 0n ? `${(L.arrears / L.tariff).toString()} pulses` : L.arrears.toString() + " wei"}</Row>
         <Row k="Hold">{L.hold ? "set" : "none"}</Row><Row k="Confirmation">{confirmed ? "yes" : "not yet"}</Row>
+        <Row k="0G Storage archive">{(() => { const a = archiveOf(s.ens.data?.records["mohar.log"]); return a.archived ? <><Badge k="ARCHIVED" /> <Mono>{a.root}</Mono></> : <span className="text-mute">not archived yet (no real 0G root in ENS)</span>; })()}</Row>
         {lr?.ok && <Row k="Device's count vs ledger">{w ? `${w.total} (device) vs ${L.lastTotal} (ledger)` : "—"}</Row>}
       </>
     ) : <p className="text-sm text-mute">No ledger to read yet. Set the name or a test ledger address in Settings.</p>;

@@ -21,6 +21,8 @@ void setup() {
 #else
   Serial.println("MOHAR firmware dev=0");
 #endif
+  // Why did we start? A watchdog or exception reset after a long run is exactly what a soak needs to explain.
+  Serial.printf("RESET reason=\"%s\" info=\"%s\"\n", ESP.getResetReason().c_str(), ESP.getResetInfo().c_str());
   if (!keystore::mount()) { Serial.println("ERROR fs_mount_failed"); return; }
   bool generated = false;
   uint32_t ms = 0;

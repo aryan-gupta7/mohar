@@ -5,7 +5,7 @@ import { evOf, REASONS } from "../lib/events";
 import { Badge, Card, Empty, ErrorBox, H, ModePill, Mono, Row, fmtKwh, short, kwh } from "../components/ui";
 import { usePipeline } from "../components/Pipeline";
 import { arrearsText, creditText } from "./Overview";
-import { simulateSetText, RECORDS, ENS_FALLBACKS } from "../lib/ens";
+import { simulateSetText, RECORDS, ENS_FALLBACKS, archiveOf } from "../lib/ens";
 import { getReceipt } from "../lib/chain";
 import { encodeCall } from "../lib/abi.js";
 
@@ -61,9 +61,9 @@ export function Ledger() {
         <Card className="border-sky/40"><div className="font-semibold">Credit exhausted · CREDIT_STOP</div><p className="text-sm text-mute mt-1">Your available credit has run out. The meter keeps recording consumption, and it accumulates as arrears. A top-up pays the arrears first; anything left becomes credit. This is a ledger state, not an electricity disconnection.</p></Card>
       ) : null}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card><div className="text-xs text-mute">Credit</div><div className="metric text-3xl mt-2">{creditText(L).split(" ")[0]}<span className="text-sm text-mute ml-1">pulses</span></div><div className="text-xs text-mute mt-1">demo credit · {L.credit.toString()} wei</div></Card>
-        <Card><div className="text-xs text-mute">Arrears</div><div className="metric text-3xl mt-2">{arrearsText(L).split(" ")[0]}<span className="text-sm text-mute ml-1">pulses</span></div></Card>
-        <Card><div className="text-xs text-mute">Charged so far</div><div className="metric text-3xl mt-2">{L.tariff > 0n ? (L.earned / L.tariff).toString() : "—"}<span className="text-sm text-mute ml-1">pulses</span></div></Card>
+        <Card><div className="text-xs text-mute">Credit</div><div className="metric text-3xl mt-2">{creditText(L).split(" ")[0]}<span className="text-sm text-mute ml-1"> pulses</span></div><div className="text-xs text-mute mt-1">demo credit · {L.credit.toString()} wei</div></Card>
+        <Card><div className="text-xs text-mute">Arrears</div><div className="metric text-3xl mt-2">{arrearsText(L).split(" ")[0]}<span className="text-sm text-mute ml-1"> pulses</span></div></Card>
+        <Card><div className="text-xs text-mute">Charged so far</div><div className="metric text-3xl mt-2">{L.tariff > 0n ? (L.earned / L.tariff).toString() : "—"}<span className="text-sm text-mute ml-1"> pulses</span></div></Card>
         <Card><div className="text-xs text-mute">Tariff</div><div className="metric text-xl mt-2">{L.tariff.toString()} wei</div><div className="text-xs text-mute mt-1">per pulse (devnet ETH, not rupees)</div></Card>
       </div>
       <Card><H>State</H>
@@ -100,7 +100,7 @@ export function Identity() {
       {E.status === "error" && <ErrorBox title={`Could not resolve ${s.settings.ensName}`}>{E.error}</ErrorBox>}
       {E.data && (<>
         <Card><H>{E.data.name}</H><Row k="Resolver"><Mono>{E.data.resolver}</Mono></Row><Row k="Account (chain 1337)"><Mono>{E.data.account ?? "—"}</Mono></Row>
-          {RECORDS.map((k) => <Row key={k} k={k}>{E.data!.records[k] ? <Mono>{E.data!.records[k]}</Mono> : <span className="text-mute">not set</span>}</Row>)}</Card>
+          {RECORDS.map((k) => <Row key={k} k={k}>{E.data!.records[k] ? <Mono>{E.data!.records[k]}</Mono> : <span className="text-mute">not set</span>}{k === "mohar.log" && (archiveOf(E.data!.records[k]).archived ? <> <Badge k="ARCHIVED" /></> : <span className="ml-2 text-xs text-warn" data-testid="archive-state">not archived yet</span>)}</Row>)}</Card>
         <Card><H>Key consistency</H>
           <Row k="Root published in ENS"><Mono>{short(root, 12, 8)}</Mono></Row><Row k="Root held by the account contract"><Mono>{short(acct, 12, 8)}</Mono></Row><Row k="Root the device reports"><Mono>{short(dev, 12, 8)}</Mono></Row>
           {match === false && <div className="mt-2 rounded-xl bg-bad/15 p-3 text-sm text-bad">Warning: the root in ENS does not match the account contract. Do not trust this meter’s identity until it is explained.</div>}

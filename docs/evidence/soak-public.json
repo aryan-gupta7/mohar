@@ -1,0 +1,40 @@
+{
+ "network": "public",
+ "ledger": "0xde1a12a99add47ccc79b1ccd2eb48f90b0b551d1",
+ "minutes": 30.0,
+ "checkpoints": 19,
+ "sentOk": 17,
+ "resets": 6,
+ "lowestHeap": 37416,
+ "finalLedger": {
+  "creditPulses": 2768,
+  "hold": false,
+  "lastSeq": 22,
+  "lastTotal": 632,
+  "earnedPulses": 632,
+  "arrearsPulses": 0,
+  "lastMode": 0,
+  "ledgerMode": 0
+ },
+ "cpLines": [
+  "CP mode=RUN reason=0 ai=0g rid=cff333f9-aba1-4b9b-81a8-278f06947e93 seq=6 nonce=6 total=547 valid=7 glitches=0 stuck=0 avgW=787 peakW=919 hold=0 credit=1666878976 intent=OK resent=0 sent=ok ms=26359 heap=37528 tx=0x38a07f5d4d047dbfefc28bac60bc79aff08dddbe80b2df9e814a5f9bf70c9813",
+  "CP mode=INSPECT reason=2 ai=none rid=- seq=7 nonce=7 total=632 valid=100 glitches=9 stuck=0 avgW=1302 peakW=3088 hold=0 credit=1141715456 intent=OK resent=0 sent=ok ms=14709 heap=37528 tx=0xdb14059a69cfdfd85296d3b4724e896c82b089996fcfdb83c434d9af232597c1",
+  "CP mode=RUN reason=0 ai=0g rid=0504cefe-5901-4aaa-9506-a23a7d32d5fa seq=8 nonce=8 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=1 sent=ok ms=24716 heap=37528 tx=0x46bf15c54a7bb35ee60a0a6e7d667f2dff71a4604ca9f490d4868709135c3284",
+  "CP mode=RUN reason=0 ai=0g rid=14cedd98-9f8b-446b-84d2-37c9e79dddec seq=9 nonce=9 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=1 sent=ok ms=26844 heap=37640 tx=0x9e8573739bf667c94d066c8568f88854f9fccaf333408495be40e61f13415f7a",
+  "CP mode=INSPECT reason=11 ai=0g rid=9442cc7e-29dc-401a-85b0-97230e24a8f7 seq=10 nonce=10 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=1 credit=2041061376 intent=OK resent=0 sent=ok ms=21003 heap=37416 tx=0x6d3e0eb2f8c200639011528bed00cefefa325cd006219c78973c04a57110d0f3",
+  "CP mode=RUN reason=0 ai=0g rid=737983fd-b969-471a-ad45-0d0d4acb0339 seq=11 nonce=11 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=0 sent=ok ms=20988 heap=37752 tx=0xc9dbd99133e8f2331739ac21983c091896aafea1c5ea6507fe39c1970a6ae265",
+  "CP mode=RUN reason=0 ai=0g rid=595ba811-8905-46b2-b2ed-e7ccb654dafe seq=12 nonce=12 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=1 sent=ok ms=26887 heap=37752 tx=0x73388d497b0bb0c43a8787bf30489ecc8ec47c2b9249b4b5c28ee5d50d85d6bd",
+  "CP mode=RUN reason=0 ai=0g rid=7615e2a5-c9b5-4e2d-b286-d93074f2975d seq=13 nonce=13 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=0 sent=ok ms=21809 heap=37528 tx=0x3a844395f91ceb4a14a275012dc3d1c8754e980d3d7dde46f2d56b62d5e9c16c",
+  "CP mode=RUN reason=0 ai=0g rid=e10beca9-a5e1-45ba-a8c4-086e46f2ab3a seq=14 nonce=14 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=0 sent=ok ms=25625 heap=37752 tx=0xc3801623d34f378ebb6b4303a5837d240201ed6eca8370a4d4d34263015321b1",
+  "CP mode=RUN reason=0 ai=0g rid=70cf973d-6e35-40dc-8107-c08a2e193598 seq=15 nonce=15 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=0 sent=ok ms=26556 heap=37528 tx=0xfed67eca8d6eac45cfcd58e35ee05a5f80906d57472e03642823c5a50e5773cd",
+  "CP mode=RUN reason=0 ai=0g rid=82fbfa31-49da-41b5-a7fb-a60f658614f2 seq=16 nonce=16 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=0 sent=ok ms=27218 heap=37528 tx=0x09e7acb052f8caff84e91ec271cd08ab82baf48177e9d7417972047a858066da",
+  "CP mode=RUN reason=0 ai=0g rid=ea598881-f761-4d3f-a13c-290dd40605ba seq=17 nonce=17 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=1 sent=ok ms=50263 heap=37528 tx=0xad774c8a56abfe17b5e738326a9f9306c5e2198e91ddc511efd2a9a438a482eb",
+  "CP mode=RUN reason=0 ai=0g rid=026f444c-ab1f-4ada-8989-332b2dc3b797 seq=18 nonce=18 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=0 sent=ok ms=21584 heap=37528 tx=0xe4e68edab8b628220710784004509eca6063bc53a52e2bc6495174a5e1eac723",
+  "CP mode=RUN reason=0 ai=0g rid=743bb9f8-e709-474b-90ff-d8359c13a50c seq=19 nonce=19 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=1 sent=ok ms=27336 heap=37560 tx=0xb6942ba317c708ccd11d3e5cb2c61c1a7ee3e5a5b69cb839b59143c43a4b676b",
+  "CP mode=RUN reason=0 ai=0g rid=8c7d12e9-f3ec-41dc-8cd2-099e32d1c7e4 seq=20 nonce=20 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=1 sent=ok ms=24739 heap=37640 tx=0x83a6c583723d47fef94a6c93d4b2092250bff5ad0eb89d2bcedf4d7bc8e57479",
+  "CP mode=RUN reason=0 ai=0g rid=9ee79a7b-3c91-4912-a840-45412c68f70b seq=21 nonce=21 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=0 sent=ok ms=20486 heap=37752 tx=0x3494b0b650dfe4074dcbb1c006f113396b53325ee975e12a355312aba4813cd8",
+  "CP mode=RUN reason=0 ai=0g rid=d2747cbc-1f97-4bca-95a7-2e448b65ac23 seq=22 nonce=22 total=632 valid=0 glitches=0 stuck=0 avgW=0 peakW=0 hold=0 credit=2041061376 intent=OK resent=0 sent=ok ms=26919 heap=37528 tx=0xd8ba2c6c3f726f804c3e85da237da180434f642b3452416795df85e8fafe92be",
+  "CP mode=SAFE_STOP reason=21 chain=down valid=0 glitches=0 total=632",
+  "CP mode=SAFE_STOP reason=21 chain=down valid=0 glitches=0 total=632"
+ ]
+}

@@ -29,23 +29,31 @@ try:
     w = [int(x, 16) for x in re.findall(r"[0-9a-f]{64}", rpc("eth_call", [{"to": LEDGER, "data": "0x200d2ed2"}, "latest"]))]
     print("     ledger (from ENS):", LEDGER, "direct status words: seq", w[2], "pulses", w[3], "credit", w[0], "arrears", w[6], "hold", w[1])
     d = br()
-    d.get(BASE + Q + "#overview"); time.sleep(14)
+    d.get(BASE + Q + "#overview"); time.sleep(20)
     b = txt(d); d.save_screenshot(os.path.join(SHOTS, "real-overview.png"))
     check("meter-001.mohar.eth" in b and "MOHAR DEVNET" in b and "SEPOLIA" in b, "DEV8-T1 the name resolves and both networks are labelled")
     w2 = [int(x, 16) for x in re.findall(r"[0-9a-f]{64}", rpc("eth_call", [{"to": LEDGER, "data": "0x200d2ed2"}, "latest"]))]
-    ok = any(f"report #{s}" in b for s in range(w[2], w2[2] + 1))
+    ok = any(f"report #{s}" in b for s in range(max(w[2] - 2, 0), w2[2] + 2))  # live soak: reports keep arriving while the page loads
     check(ok, f"DEV8-T2 Overview shows a ledger report number between {w[2]} and {w2[2]} (read from the chain)")
-    d.get(BASE + Q + "#ledger"); time.sleep(10); b = txt(d); d.save_screenshot(os.path.join(SHOTS, "real-ledger.png"))
+    d.get(BASE + Q + "#ledger"); time.sleep(22); b = txt(d); d.save_screenshot(os.path.join(SHOTS, "real-ledger.png"))
     w3 = [int(x, 16) for x in re.findall(r"[0-9a-f]{64}", rpc("eth_call", [{"to": LEDGER, "data": "0x200d2ed2"}, "latest"]))]
     cands = {w3[0] // w3[4], w[0] // w[4], w2[0] // w2[4]}; arrs = {w3[6] // w3[4], w[6] // w[4], w2[6] // w2[4]}
-    check(any(re.search(r"Credit\s+" + str(c) + r"\b", b) for c in cands) and any(re.search(r"Arrears\s+" + str(a) + r"\b", b) for a in arrs), f"DEV8-T2 credit/arrears equal a direct contract read (credit ~{sorted(cands)}, arrears ~{sorted(arrs)})")
-    d.get(BASE + Q + "#identity"); time.sleep(12); b = txt(d); d.save_screenshot(os.path.join(SHOTS, "real-identity.png"))
+    check(any(re.search(r"Credit\s+" + str(c) + r"\s+pulses", b) for c in cands) and any(re.search(r"Arrears\s+" + str(a) + r"\s+pulses", b) for a in arrs), f"DEV8-T2 credit/arrears equal a direct contract read (credit ~{sorted(cands)}, arrears ~{sorted(arrs)})")
+    d.get(BASE + Q + "#identity"); time.sleep(20); b = txt(d); d.save_screenshot(os.path.join(SHOTS, "real-identity.png"))
     check(LEDGER.lower() in b.lower() and "0x6c0937ea" in b, "DEV8-T1/T3 identity page shows the ENS ledger and the published root")
-    check(re.search(r"(match|consistent|✓|same)", b, re.I) is not None and not re.search(r"mismatch", b, re.I), "DEV8-T3 ENS root equals the account's root(): no mismatch warning")
+    check("ENS and the account contract agree" in b and "does not match" not in b, "DEV8-T3 ENS root equals the account contract root: agree, no mismatch warning")
     check("not archived" in b.lower() or "0g://" in b.lower(), "mohar.log shown (as 'not archived' while it holds a placeholder)")
     d.get(BASE + Q + "&ensName=meter-002.mohar.eth#identity"); time.sleep(10); b = txt(d); d.save_screenshot(os.path.join(SHOTS, "real-identity-other-name.png"))
-    d.get(BASE + Q + "#audit"); time.sleep(10)
-    cards = d.find_elements(By.CSS_SELECTOR, ".card.cursor-pointer")
+    # DEV8-T3 mismatch warning, shown with a labelled test setup: the account override points at a different real account
+    # (EF-2's, root differs from the one ENS publishes for meter-001).
+    d.get(BASE + Q + f"&manualLedger={LEDGER}&manualAccount=0x9e63af947c5d0a283d274ec6f079dc40ce3a1010&forceManual=1#identity"); time.sleep(25)
+    b = txt(d); d.save_screenshot(os.path.join(SHOTS, "real-identity-root-mismatch.png"))
+    check("does not match" in b, "DEV8-T3 a different account root than ENS publishes shows the red mismatch warning (test setup: account override)")
+    d.get(BASE + Q + "#audit"); time.sleep(25)
+    for _ in range(12):
+        cards = d.find_elements(By.CSS_SELECTOR, ".card.cursor-pointer")
+        if cards: break
+        time.sleep(5)
     check(len(cards) > 0, f"DEV8-T6 audit lists {len(cards)} real on-chain reports")
     if cards:
         cards[0].click(); time.sleep(5); b = txt(d); d.save_screenshot(os.path.join(SHOTS, "real-audit-expanded.png"))

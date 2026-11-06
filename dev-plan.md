@@ -437,7 +437,7 @@ First boot with no key generated one in 245 s. Both builds are in `firmware/moha
 | T4 | **Changed, see below.** The board signed and sent a real transaction over TLS to the **public** gateway in 11 s (heap low 11.6 KB). The node decoded it and judged it: `Nonce mismatch: expected 0, got 1`, since that account doesn't exist there. The mined-on-local-chain half is DEV5-T9 (USB forwarding) |
 | T5 | The streamed request body equals the library's JSON-RPC body (6,418 bytes) |
 | T6 | Wi-Fi dropped: the call failed cleanly (`-1`). Reconnected in 3.9 s, the next call worked, no reset |
-| T7 | Pending: runs as part of the DEV-7 loop |
+| T7 | **Attempted, not passed.** A 30-minute soak on the public devnet (19 checkpoints, 17 reports mined, ledger sequence 22) had **6 board resets** and, in the last 3 minutes, `SAFE_STOP` with the chain unreachable. Every reset recovered by itself with no key reuse and no lost report. Suspected cause of the resets: the TLS handshake computes for about 3 s without yielding, near the 3.2 s software watchdog. Mitigation added (watchdog disabled around the handshake, the 8 s hardware watchdog stays on) together with reset-reason logging; **needs a clean rerun.** The final `SAFE_STOP`s were the phone hotspot switching back to 5 GHz (seen on channel 124), which the ESP8266 can't join |
 
 **Why T4 changed:** the board couldn't open any TCP connection to the laptop over the phone hotspot, while reaching the internet fine. That's consistent with client isolation, though a laptop firewall can't be ruled out without root. Hosting a laptop access point needs `dnsmasq`, which isn't installed. So the board's own submission was tested against the public node, which needs no laptop at all.
 
@@ -1102,7 +1102,7 @@ Heap stayed above 37 KB across the calls. The key is in the git-ignored `secrets
 | T4 / T5 | Not run with a really blocked network. One checkpoint saw the public gateway unreachable for a moment and the board went `SAFE_STOP` (chain unreachable), as designed |
 | T6 | The surge used up the 400-pulse credit; the board reported **`CREDIT_STOP`** with 125 pulses of arrears on the public ledger, and the device **did not let 0G override it** |
 | T7 | Open: the release build must be inspected; it has no `inject` command |
-| T8 | Open: 30 minutes of checkpoints |
+| T8 | Attempted with the soak above; see DEV-6 T7. Needs the same clean rerun |
 | T9 | Open: leaf use across the demo and rehearsals (256 leaves per key) |
 
 Also seen: **a fixed check fires without calling 0G** (a glitching line gave `INSPECT`, reason 2, `ai=none`).

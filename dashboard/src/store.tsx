@@ -110,7 +110,9 @@ export function Provider({ children }: { children: ReactNode }) {
   const ids: Ids = useMemo(() => {
     const r = ens.data?.records;
     const fromEns = { ledger: r?.["mohar.ledger"] ?? undefined, account: ens.data?.account ?? undefined, paymaster: r?.["mohar.paymaster"] ?? undefined };
-    if (fromEns.ledger) return { ...fromEns, from: "ens" as const };
+    // TESTING ONLY: ?forceManual=1 lets the manual fields win over ENS, to show the root-mismatch warning with a different account.
+    const force = (settings as any).forceManual === "1" && settings.manualLedger;
+    if (fromEns.ledger && !force) return { ...fromEns, from: "ens" as const };
     if (settings.manualLedger) return { ledger: settings.manualLedger, account: settings.manualAccount || undefined, paymaster: settings.manualPaymaster || undefined, from: "manual" as const };
     return { from: "none" as const };
   }, [ens.data, settings.manualLedger, settings.manualAccount, settings.manualPaymaster]);

@@ -1,6 +1,6 @@
 # DEV-8 handoff: Mohar Console
 
-**Status: MVP and Strong levels built; most of Polish built. 20 of 20 automated browser checks pass. Not yet tested against real hardware or real ENS records.**
+**Status (Fri ~17:00): MVP, Strong and most of Polish built. 20 of 20 replay/local checks and 14 of 14 REAL-data checks pass (real `meter-001.mohar.eth` on Sepolia -> public Mohar devnet, while the board was running its soak). Not yet tested with real Web Serial (a person must do that: dashboard/README.md).**
 
 ## What exists
 `dashboard/`: Vite + React + TypeScript + Tailwind static site. `npm run build` → `dashboard/dist`; `npm run dev` → http://127.0.0.1:8088.
@@ -51,3 +51,24 @@ Run: `cd dashboard && npm run build && cd .. && uv run --no-project --with selen
 
 ## Files
 `dashboard/` (all new: `src/`, `replay/`, `public/replay/`, `test/e2e.py`, `package.json`, configs), `docs/evidence/dashboard/*.png`, this note. No other file was edited; nothing committed. `dashboard/dist` and `node_modules` should be git-ignored.
+
+
+## Update: run against REAL data (this pass)
+
+`dashboard/test/real.py` (headless Firefox): name `meter-001.mohar.eth` -> Sepolia -> ledger `0xde1a…51d1` on the public devnet (RPC `https://altmempool.forshtat.com`, CORS open) -> live status and Report events. **14 of 14 pass:**
+
+| Test | Result |
+|---|---|
+| DEV8-T1 | Name resolves to account, ledger, paymaster; SEPOLIA and MOHAR DEVNET badges; no meter address in the source |
+| DEV8-T2 | Overview report number and Credit & ledger credit / arrears equal a direct `eth_call` (live soak running, so compared inside a small window) |
+| DEV8-T3 | ENS root equals the account's `root()`: "ENS and the account contract agree". The red mismatch warning appears when the account override points at a different real account (EF-2's): **a labelled test setup (`forceManual=1`)** |
+| DEV8-T6 | Audit lists 19 real reports; an expanded one shows its transaction hash, the four frame results and the real 0G request ID |
+| DEV8-T7 | Overview, Meter, Identity at 400 px, no horizontal overflow |
+| DEV8-T8 | Dead devnet RPC with a real ENS name: "Cannot read the chain" |
+| mohar.log | Shown as **"not archived yet"** while it holds `0g://test-root-placeholder`; shows an ARCHIVED badge and root only when it holds `0g://0x<64 hex>` (`archiveOf` in `lib/ens.ts`). The pipeline's final stage shows the same state |
+
+Screenshots: `docs/evidence/dashboard/real-*.png`. The earlier suite (`test/e2e.py`) still passes (ALL PASS).
+
+**Bugs found on real data and fixed:** (1) one empty answer from a public Sepolia RPC made a real name look "unknown" or its records "not set": ENS reads now retry across four endpoints before concluding anything; (2) number and unit had no space in the text ("2768pulses"); (3) added landmarks, `aria-current`, `aria-expanded` and a skip link.
+
+**Still not verified:** Web Serial with the real boards (README has the exact steps); DEV8-T4 against a live ESP (the page shows ledger pulses and kWh; the device-side count needs the serial feed); DEV8-T5 on live hardware (passes in replay); DEV8-T10 with a real wallet; DEV8-T11 (needs a real archived 0G root in `mohar.log`); the light theme isn't screenshot-checked. `npm run build` is clean.

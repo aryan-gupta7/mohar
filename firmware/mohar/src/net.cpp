@@ -28,7 +28,12 @@ int net_post_json(const char *host, uint16_t port, const char *path, const char 
   client.setInsecure();                 // first version: no certificate check (see dev-plan DEV-6)
   client.setBufferSizes(16709, 512);    // a full TLS record in, small buffer out
   client.setTimeout(timeoutMs);
-  if (!client.connect(host, port)) return -1;
+  // The TLS handshake (elliptic-curve maths) can compute for about 3 s without yielding, close to the 3.2 s software
+  // watchdog. The 8 s hardware watchdog stays on.
+  ESP.wdtDisable();
+  bool connected = client.connect(host, port);
+  ESP.wdtEnable(8000);
+  if (!connected) return -1;
   st->connectMs = millis() - t0;
   if (ESP.getFreeHeap() < st->heapLowest) st->heapLowest = ESP.getFreeHeap();
   client.printf("POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: application/json\r\nContent-Length: %u\r\nConnection: close\r\n", path, host, (unsigned)bodyLen);
@@ -157,7 +162,10 @@ int net_submit_frame_tx(const char *host, uint16_t port, bool tls, const char *p
     client = &secure;
   }
   client->setTimeout(timeoutMs);
-  if (!client->connect(host, port)) return -1;
+  ESP.wdtDisable();
+  bool connected = client->connect(host, port);
+  ESP.wdtEnable(8000);
+  if (!connected) return -1;
   st->connectMs = millis() - t0;
   if (ESP.getFreeHeap() < st->heapLowest) st->heapLowest = ESP.getFreeHeap();
   client->printf("POST %s HTTP/1.1\r\nHost: %s\r\nContent-Type: application/json\r\nContent-Length: %u\r\nConnection: close\r\n\r\n", path, host, (unsigned)counter.n);

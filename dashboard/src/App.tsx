@@ -46,21 +46,22 @@ function Shell() {
   const cur = PAGES.find((p) => p.id === page) ?? PAGES[0];
   return (
     <div className="flex min-h-full">
-      <aside className="hidden md:flex w-60 shrink-0 flex-col gap-1 bg-graph/60 border-r border-line p-4 sticky top-0 h-screen">
+      <aside aria-label="Main navigation" className="hidden md:flex w-60 shrink-0 flex-col gap-1 bg-graph/60 border-r border-line p-4 sticky top-0 h-screen">
         <div className="mb-4 flex items-center gap-2"><div className="h-8 w-8 rounded-xl bg-lime" /><div><div className="font-bold leading-none">mohar</div><div className="text-[10px] text-mute">Console</div></div></div>
-        {PAGES.map((p) => <button key={p.id} onClick={() => go(p.id)} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-left ${page === p.id ? "bg-lime text-black font-semibold" : "text-mute hover:bg-card hover:text-text"}`}><p.icon size={16} />{p.label}</button>)}
+        {PAGES.map((p) => <button key={p.id} aria-current={page === p.id ? "page" : undefined} onClick={() => go(p.id)} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-left ${page === p.id ? "bg-lime text-black font-semibold" : "text-mute hover:bg-card hover:text-text"}`}><p.icon size={16} />{p.label}</button>)}
         <div className="mt-auto space-y-2 text-[11px] text-mute">
           <div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${s.mode === "live" ? "bg-lime" : s.mode === "replay" ? "bg-warn" : "bg-line"}`} />{s.mode === "live" ? "Live hardware" : s.mode === "replay" ? "REPLAY" : "No device"}</div>
           <button onClick={() => s.setSettings({ theme: s.settings.theme === "dark" ? "light" : "dark" })} className="flex items-center gap-2 underline">{s.settings.theme === "dark" ? <Sun size={12} /> : <Moon size={12} />}{s.settings.theme === "dark" ? "Light" : "Dark"} mode</button>
         </div>
       </aside>
-      <main className="flex-1 min-w-0 px-4 md:px-8 py-5 pb-28 md:pb-8 max-w-[1300px]">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-lime focus:px-3 focus:py-2 focus:text-black" onClick={(e) => { e.preventDefault(); document.getElementById("main-content")?.focus(); }}>Skip to content</a>
+      <main id="main-content" tabIndex={-1} className="flex-1 min-w-0 px-4 md:px-8 py-5 pb-28 md:pb-8 max-w-[1300px]">
         {cur.id === "settings" ? <Settings /> : cur.el}
       </main>
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t border-line bg-mid/95 backdrop-blur" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-        {more && <div className="absolute bottom-full inset-x-2 mb-2 card p-2 grid grid-cols-2 gap-1">{PAGES.filter((p) => !p.mobile).map((p) => <button key={p.id} onClick={() => go(p.id)} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-left hover:bg-card"><p.icon size={16} />{p.label}</button>)}</div>}
-        <div className="flex">{PAGES.filter((p) => p.mobile).map((p) => <button key={p.id} onClick={() => go(p.id)} className={`flex-1 py-2 text-[10px] flex flex-col items-center gap-0.5 ${page === p.id ? "text-lime" : "text-mute"}`}><p.icon size={20} />{p.label.split(" ")[0]}</button>)}
-          <button onClick={() => setMore(!more)} className={`flex-1 py-2 text-[10px] flex flex-col items-center gap-0.5 ${more ? "text-lime" : "text-mute"}`}><MoreHorizontal size={20} />More</button></div>
+      <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 inset-x-0 z-20 border-t border-line bg-mid/95 backdrop-blur" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+        {more && <div className="absolute bottom-full inset-x-2 mb-2 card p-2 grid grid-cols-2 gap-1">{PAGES.filter((p) => !p.mobile).map((p) => <button key={p.id} aria-current={page === p.id ? "page" : undefined} onClick={() => go(p.id)} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-left hover:bg-card"><p.icon size={16} />{p.label}</button>)}</div>}
+        <div className="flex">{PAGES.filter((p) => p.mobile).map((p) => <button key={p.id} aria-current={page === p.id ? "page" : undefined} onClick={() => go(p.id)} className={`flex-1 py-2 text-[10px] flex flex-col items-center gap-0.5 ${page === p.id ? "text-lime" : "text-mute"}`}><p.icon size={20} />{p.label.split(" ")[0]}</button>)}
+          <button aria-expanded={more} aria-label="More pages" onClick={() => setMore(!more)} className={`flex-1 py-2 text-[10px] flex flex-col items-center gap-0.5 ${more ? "text-lime" : "text-mute"}`}><MoreHorizontal size={20} />More</button></div>
       </nav>
     </div>
   );

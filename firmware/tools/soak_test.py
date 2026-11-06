@@ -29,6 +29,8 @@ while time.time() - t_start < MINUTES * 60:
     with b.lock:
         new = b.lines[seen:]; seen = len(b.lines)
     for _, l in new:
+        if l.startswith("RESET") or "xception" in l or l.startswith(("epc1", "ets ", "Soft WDT", "wdt")):
+            print("   board says:", l[:140], flush=True)
         if l.startswith("KEY READY") and time.time() - t_start > 20:
             resets += 1; print("!! the board reset:", l[:60], flush=True)
         if l.startswith("CP "):
