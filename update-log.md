@@ -260,6 +260,14 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - Ten pages became five plus Settings: Overview, Console, Ledger, Identity, Activity. Live Meter, Verified Report and AI Insights are folded into Overview, Console and Activity; Usage is dropped (it only drew a chart once enough history exists). Uppercase provenance badges are now a few plain tags (Replay, Simulated, Stale, Sepolia, Devnet) used only where the source changes a number's meaning. Explanatory paragraphs and tooltips are removed.
 - Data, store, chain, ENS and serial code are unchanged. **Not rerun:** `dashboard/test/e2e.py` still names the old pages and labels, so it needs updating before it counts as evidence. Checked only by build, typecheck and a replay in the browser.
 
+### Fri 19:30 to 21:00 Report-size experiment (parked), local end-to-end run, finalise
+- **Question from you:** can the signed report be smaller and cheaper? **Measured on the local chain with real signatures:** gas = 3,248 + 64 x raw bytes exactly, while the size floor binds; a 63-byte compact report saves 328 bytes and 7.4% gas; **w=32 costs 11 to 13% more gas** (validation 74k to 115k, slower ESP signing) so w=16 is the minimum. Public-devnet confirmation was not possible (see below).
+- **Decision:** you asked to keep the older contract. All of it is parked on the branch `exp/report-optimization`; main has the original ledger, firmware and signer. A bug the work caught in my first compact version (replay checks missing) is in the branch notes.
+- **Public devnet stopped mining:** its sidecar admits our transactions (`New`) but its bundler never includes them: same result with the original code and a fresh key. Not our bug; the local chain is the demo path.
+- **Run end to end, locally:** board behaviour test ALL PASS (counting, INSPECT hold, credit-stop, arrears, top-up recovery); unit 9/9; integration 38 (1 timeout from running board tests at the same time, passes alone); control centre doctor: nothing wrong.
+- **Test-harness fix:** board tests now switch the checkpoint loop off after boot (a provisioned board interleaved its own traffic and made the transaction-vector test time out). Safety test T9a needs the fixed test key, so the board is given the fixed key for the test and a real key afterwards.
+- **Frontend connections checked:** the dashboard talks only to the chain RPC (local 18545 or the EF devnet), four Sepolia RPCs for ENS, and the boards over Web Serial; all three RPC kinds send CORS `*`, so a browser can call them. No hard-coded addresses or keys; no text claims a disconnection.
+
 ---
 
 ## Current state (Fri 17:30)

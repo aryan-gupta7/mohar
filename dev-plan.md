@@ -55,11 +55,11 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 10 | [0G-1](#0g-1-choose-and-test-the-decision-model) | Decision model chosen and tested | Fri 14:00 | ✅ Done Fri ~17:00: T1–T8 (T6: no TEE attestation for this model) |
 | 11 | [EF-2](#ef-2-the-alt-mempool-proof) | Alt mempool proof, public | After EF-1 | ✅ Done Fri ~15:35, T1–T9 on the public devnet |
 | 12 | [ENS-1](#ens-1-fleet-name-and-registry) | Fleet name and registry | Fri 16:00 | ✅ Done Fri ~10:55 |
-| 13 | [DEV-7](#dev-7-meter-signal-acquisition-and-device-behaviour) | Meter signal acquisition and device behaviour | Fri 18:00 | Partly done: counting T1–T4, T13 passed; T5–T12 open |
+| 13 | [DEV-7](#dev-7-meter-signal-acquisition-and-device-behaviour) | Meter signal acquisition and device behaviour | Fri 18:00 | ✅ T1–T4, T6–T13 passed on the local chain Fri ~20:40 (behaviour test, ALL PASS); T5 (pulse wire unplugged) needs you |
 | 14 | [EF-3](#ef-3-device-signed-transaction-with-the-laptop-off) | Device-signed, laptop off | Fri 19:00 | |
 | 15 | [ENS-2](#ens-2-machine-identity-and-permissions) | Machine identity and roles | Fri 19:00 | ✅ Done Fri ~15:40 (T6 differs: see below) |
-| 16 | [DEV-8](#dev-8-mohar-console-dashboard) | Mohar Console (dashboard) | Fri 22:00 | ✅ Built; needs hardware and real-data tests |
-| 17 | [ENS-3](#ens-3-discovery-and-permission-demo) | Discovery and permission demo | Fri 22:00 | |
+| 16 | [DEV-8](#dev-8-mohar-console-dashboard) | Mohar Console (dashboard) | Fri 22:00 | ✅ Built and redesigned (five pages, light and dark); real-data test 14/14; browser test partly stale; real boards over Web Serial needs you |
+| 17 | [ENS-3](#ens-3-discovery-and-permission-demo) | Discovery and permission demo | Fri 22:00 | ✅ Done (dashboard Identity page dry-runs edits against the live resolver) |
 | 18 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 22:00 | ✅ Done Fri ~15:20 (T1, T3, T4-equivalent; T2, T5 open) |
 | 19 | [ENS-4](#ens-4-the-device-reads-its-policy-from-ens) | Device reads ENS policy | Sat 00:00 | Optional |
 | 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | ✅ T1–T3, T6 on the public devnet Fri ~15:45; T4, T5, T7, T8, T9 open |
@@ -1290,3 +1290,20 @@ SDK `@0gfoundation/0g-storage-ts-sdk` 1.2.12 (1.2.13 was under 2 weeks old). Cos
 | Call `debug_*` or privileged methods on the public devnet | They affect everyone |
 | Add World ID or a token | No real need |
 | Say "first" or "proven secure" | We can't back either |
+
+
+## Status, Fri 21:00 (what is done, what is open)
+
+**Done and verified today:** DEV-0 to DEV-8, EF-1, EF-2, EF-2L, 0G-1 to 0G-4 (0G-3 and 0G-2 partly, see below), ENS-1 to ENS-3. The whole stack was run end to end on the local chain with the alt mempool sidecar: board behaviour test ALL PASS; unit tests 9/9; integration tests 38 (one timed out only because the board tests were using the chain at the same time, and passes alone); `npm run ctl doctor`: nothing wrong.
+
+**Open, in order of importance:**
+1. **EF-3, laptop off** and **DEV-7 T5 (unplug the pulse wire)**: need you at the hardware.
+2. **Dashboard with the real boards over Web Serial and a real wallet**: needs you. The browser test `dashboard/test/e2e.py` still uses labels from the old layout (3 checks); update it or rely on `real.py` (14/14).
+3. **0G-2 T2/T5, 0G-3 T4/T5/T7/T8/T9** (20 consecutive calls, blackhole, leaf budget).
+4. **REL-1** (two rehearsals with a fresh key and fresh contracts, fallback video) and **REL-2** (GitHub repo by you, team contacts).
+5. ENS-4 stays skipped (optional).
+6. Open question: 4 of 12 soak checkpoints failed over Wi-Fi to the public devnet (cause unknown).
+
+**Public devnet, Fri ~20:30:** its bundler stopped picking up transactions (the sidecar lists them as `New`, nothing is mined, with both our original code and a fresh key). Not caused by us. The local chain is the demo path; the earlier public evidence in `docs/evidence` stands.
+
+**Report-size optimisation (EF track): measured, parked.** Compact 63-byte report: -7.4% gas; WOTS w=32: +11 to +13% gas (worse). Decision: contracts and firmware stay as they were; the work is on branch `exp/report-optimization` and written up in `docs/optimization.md` there.

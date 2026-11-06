@@ -884,3 +884,8 @@ Your original flash is saved at `../esp8266-flash-backup-original.bin`, with SHA
 ```sh
 esptool --port /dev/ttyACM0 write-flash 0 ../esp8266-flash-backup-original.bin
 ```
+
+
+## Measured: what a report costs, and why w=16 and ABI stay (Fri 21:00)
+
+On this chain a frame transaction's gas is the larger of a size floor and its execution: **gas = 3,248 + 64 x raw bytes** fitted exactly over 48 simulations while size binds. At w=16 the 2,400-byte signature is most of the 2,963-byte transaction. Shrinking the report to 63 bytes saves 328 bytes (-7.4% gas), but raising w to 32 (signature 2,016 bytes) needs about 860 verification hash steps instead of 500, so validation gas rises from ~74k to ~115k and total gas goes up 11 to 13%: **w=16 is the minimum of the cost curve.** The shipped design keeps the original ledger and ABI report; the compact report is on the branch `exp/report-optimization`, not adopted.

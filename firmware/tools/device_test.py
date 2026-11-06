@@ -55,7 +55,15 @@ def check(ok, msg):
 
 def boot(dev, timeout=400):
     dev.reset()
-    return fields(dev.read_until("KEY READY", timeout))
+    r = fields(dev.read_until("KEY READY", timeout))
+    # A board that was provisioned runs its checkpoint loop; switch it off so Wi-Fi and RPC traffic can't interleave with the test.
+    for _ in range(8):
+        try:
+            dev.cmd("loop off", "OK", 3)
+            break
+        except TimeoutError:
+            pass
+    return r
 
 
 def t_keccak(dev):
