@@ -277,9 +277,15 @@ void machine_tick() {
   if (!haveCfg) return;
   meter_poll();
   if (force || (enabled && (int32_t)(millis() - nextCheckpoint) >= 0)) {
+    bool forced = force;
     force = false;
+    uint32_t started = millis();
     checkpoint();
-    nextCheckpoint = millis() + (uint32_t)cfg.checkpointS * 1000;
+    // The period counts from the start of a checkpoint, so a 25 s checkpoint doesn't stretch a 60 s period to 85 s.
+    // A checkpoint that outlasts the period is followed after a short pause, not immediately.
+    uint32_t period = (uint32_t)cfg.checkpointS * 1000;
+    nextCheckpoint = forced ? millis() + period : started + period;
+    if ((int32_t)(nextCheckpoint - millis()) < 5000) nextCheckpoint = millis() + 5000;
   }
 }
 
