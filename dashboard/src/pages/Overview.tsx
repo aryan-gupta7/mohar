@@ -1,4 +1,4 @@
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useStore } from "../store";
 import { evOf } from "../lib/events";
 import { Card, Empty, ErrorBox, H, ModePill, Page, Stat, Tag, ago, fmtKwh, short, kwh } from "../components/ui";
@@ -17,6 +17,7 @@ export function Overview() {
   const { s, cp, hash, receipt } = usePipeline();
   const W = useWindows(); const lastW = W[W.length - 1];
   const dec = evOf(cp, "decision");
+  const series = [...s.meterHist.slice(-180).map((m) => ({ at: m.at, watts: m.watts as number | undefined, avgW: undefined as number | undefined })), ...W.map((w) => ({ at: w.t, watts: undefined as number | undefined, avgW: w.avgW }))].sort((a, b) => a.at - b.at);
   const L = s.chain.ledger; const lastRow = s.chain.rows[s.chain.rows.length - 1];
   const live = lastW ? lastW.total : s.meter ? s.meter.pulses : undefined;
   const deviceSeen = Math.max(s.esp.lastAt, s.pico.lastAt);
@@ -45,11 +46,15 @@ export function Overview() {
       </div>
 
       <Card>
-        <H>Power</H>
-        {W.length < 2 ? <Empty>Waiting for two measurement windows.</Empty> : (
-          <div className="h-56"><ResponsiveContainer><AreaChart data={W} margin={{ left: -12, right: 4 }}><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--fg)" stopOpacity={0.14} /><stop offset="100%" stopColor="var(--fg)" stopOpacity={0} /></linearGradient></defs>
-            <XAxis dataKey="time" stroke="var(--faint)" fontSize={11} tickLine={false} axisLine={false} minTickGap={40} /><YAxis stroke="var(--faint)" fontSize={11} tickLine={false} axisLine={false} unit=" W" width={56} />
-            <Tooltip contentStyle={{ background: "var(--card)", border: "none", boxShadow: "0 0 0 1px var(--line)", borderRadius: 10, fontSize: 12 }} /><Area type="monotone" dataKey="avgW" name="Average" stroke="var(--fg)" strokeWidth={1.5} fill="url(#g)" /></AreaChart></ResponsiveContainer></div>
+        <H right={s.meter ? <span className="text-xs text-mute">{s.meter.mode} · {s.meter.watts} W{s.mode === "live" && s.now - s.pico.lastAt < 8000 ? " · live" : ""}</span> : undefined}>Power</H>
+        {series.length < 2 ? <Empty>Connect the Pico or play a replay to see power live.</Empty> : (
+          <div className="h-56"><ResponsiveContainer><LineChart data={series} margin={{ left: -12, right: 4 }}>
+            <XAxis dataKey="at" type="number" domain={["dataMin", "dataMax"]} tickFormatter={(v) => new Date(v).toLocaleTimeString([], { minute: "2-digit", second: "2-digit" })} stroke="var(--faint)" fontSize={11} tickLine={false} axisLine={false} minTickGap={50} />
+            <YAxis stroke="var(--faint)" fontSize={11} tickLine={false} axisLine={false} unit="W" width={64} />
+            <Tooltip labelFormatter={(v) => new Date(v as number).toLocaleTimeString()} contentStyle={{ background: "var(--card)", border: "none", boxShadow: "0 0 0 1px var(--line)", borderRadius: 10, fontSize: 12 }} />
+            <Line type="stepAfter" dataKey="watts" name="Meter (Pico)" stroke="var(--fg)" strokeWidth={1.5} dot={false} isAnimationActive={false} connectNulls />
+            <Line type="monotone" dataKey="avgW" name="Measured by ESP" stroke="var(--ok)" strokeWidth={1.5} dot={{ r: 2 }} isAnimationActive={false} connectNulls />
+          </LineChart></ResponsiveContainer></div>
         )}
       </Card>
 
