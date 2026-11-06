@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mohar meter dashboard</title>
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Mohar</h1>
+  <p class="tag">A prepaid electricity meter that signs for itself. Enter a name, get the meter.</p>
+</header>
+
+<main>
+  <form id="lookup" autocomplete="off">
+    <label for="name">Meter name</label>
+    <div class="row">
+      <input id="name" name="name" type="text" value="meter-001.mohar.eth" spellcheck="false" autocapitalize="none" inputmode="url">
+      <button type="submit">Look up</button>
+    </div>
+
+    <details id="settings">
+      <summary>Network settings</summary>
+      <label for="ensRpc">ENS network RPC (Sepolia)</label>
+      <input id="ensRpc" type="text" spellcheck="false">
+      <label for="chainPick">Device chain RPC</label>
+      <div class="row">
+        <select id="chainPick"></select>
+        <input id="chainRpc" type="text" spellcheck="false">
+      </div>
+      <p class="hint">These RPC URLs are the only settings. The meter's account, ledger and paymaster all come from the name's ENS records.</p>
+    </details>
+
+    <details id="testing">
+      <summary>Testing only: skip ENS</summary>
+      <p class="hint">For checking the page without ENS records. Leave empty normally. When any of these is set, a banner says so.</p>
+      <label for="ovLedger">Ledger address</label><input id="ovLedger" type="text" spellcheck="false">
+      <label for="ovAccount">Account address</label><input id="ovAccount" type="text" spellcheck="false">
+      <label for="ovPaymaster">Paymaster address</label><input id="ovPaymaster" type="text" spellcheck="false">
+      <label for="ovRoot">Pretend ENS <code>mohar.pq.root</code> is</label><input id="ovRoot" type="text" spellcheck="false">
+      <label for="ovChain">Pretend ENS <code>mohar.chainId</code> is</label><input id="ovChain" type="text" inputmode="numeric" spellcheck="false">
+    </details>
+  </form>
+
+  <div id="error" class="error" role="alert" hidden></div>
+  <div id="banner" class="banner" hidden></div>
+  <div id="status" class="status" aria-live="polite"></div>
+
+  <section id="out" hidden>
+    <article class="card" id="identity">
+      <h2>Identity <small>from ENS</small></h2>
+      <div id="identityBody"></div>
+      <div id="rootCheck"></div>
+    </article>
+
+    <article class="card" id="meter">
+      <h2>Meter state <small>from the ledger</small></h2>
+      <div id="modeBox"></div>
+      <dl id="meterBody" class="grid"></dl>
+    </article>
+
+    <article class="card" id="latest">
+      <h2>Latest report <small>signed by the meter</small></h2>
+      <dl id="latestBody" class="grid"></dl>
+    </article>
+
+    <article class="card" id="actions">
+      <h2>Actions <small>through your wallet</small></h2>
+      <p class="hint" id="walletNote"></p>
+      <div class="row"><input id="topupAmount" type="text" inputmode="decimal" value="0.001" aria-label="Top-up amount in ETH"><button id="btnTopup" type="button">Top up (ETH)</button></div>
+      <div class="row"><button id="btnClear" type="button">Clear inspection hold</button></div>
+      <div class="sep"></div>
+      <label for="recKey">Edit an ENS text record (on Sepolia)</label>
+      <div class="row"><input id="recKey" type="text" value="mohar.maintenance.status" spellcheck="false"><input id="recVal" type="text" placeholder="new value" spellcheck="false"></div>
+      <div class="row"><button id="btnRecord" type="button">Send edit</button></div>
+      <pre id="actionOut" class="mono small" hidden></pre>
+    </article>
+
+    <article class="card" id="history">
+      <h2>Recent reports</h2>
+      <div class="scroll"><table id="histTable"><thead><tr><th>Seq</th><th>Mode</th><th>Total pulses</th><th>Usage</th><th>Charged</th><th>Reason</th><th>0G request</th></tr></thead><tbody></tbody></table></div>
+    </article>
+
+    <article class="card" id="live">
+      <h2>Live pulses <small>local serial view, not chain data</small></h2>
+      <p class="hint">Reads a board's USB serial directly in this browser (Chrome or Edge). Nothing here is on the chain.</p>
+      <div class="row"><button id="btnSerial" type="button">Connect board or Pico</button><span id="serialState" class="hint"></span></div>
+      <dl id="liveBody" class="grid"></dl>
+      <pre id="serialLog" class="mono small"></pre>
+    </article>
+  </section>
+</main>
+
+<footer>
+  <p>No backend and no trackers: this page talks only to the RPC URLs above. Meter readings are what the meter reported; a signature shows the meter's key signed it, not that the reading is true. Nothing here switches any power supply.</p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

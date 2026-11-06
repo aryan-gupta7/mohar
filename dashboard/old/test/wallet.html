@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Wallet action check</title>
+<style>body{margin:0;font:13px monospace;padding:8px} iframe{width:900px;height:600px;border:1px solid #888}</style>
+<iframe id="f"></iframe>
+<pre id="result">waiting</pre>
+<script>
+// Loads the dashboard with a MOCK wallet (window.ethereum) that records what it is asked to do, then clicks a button.
+// The page's own simulation (eth_call) still runs against the real chain, so rejections show real contract errors.
+//   ?acct=<wallet address>&chain=0x539&click=btnClear|btnTopup|btnRecord&q=<dashboard query string>&rec=key|value
+const p = new URLSearchParams(location.search);
+const log = [];
+const mock = `
+  window.__walletLog = [];
+  window.ethereum = { request: async ({ method, params }) => {
+    window.__walletLog.push({ method, params });
+    if (method === "eth_requestAccounts") return ["${p.get("acct")}"];
+    if (method === "eth_chainId") return "${p.get("chain") ?? "0x539"}";
+    if (method === "eth_sendTransaction") return "0x" + "ab".repeat(32);
+    throw new Error("mock wallet: unsupported " + method);
+  } };`;
+(async () => {
+  let html = await (await fetch("../index.html")).text();
+  html = html.replace("<head>", `<head><base href="../"><script>${mock}<\/script>`);
+  const f = document.getElementById("f");
+  f.srcdoc = html;
+  window.addEventListener("error", (e) => { document.getElementById("result").textContent = "wrapper error: " + e.message; });
+  f.addEventListener("load", () => setTimeout(async () => {
+    const d = f.contentDocument;
+    const dash = new URLSearchParams(p.get("q") ?? "");
+    for (const [param, id] of [["ledger", "ovLedger"], ["account", "ovAccount"], ["paymaster", "ovPaymaster"], ["root", "ovRoot"], ["chainid", "ovChain"], ["name", "name"]]) if (dash.get(param)) d.getElementById(id).value = dash.get(param);
+    d.getElementById("lookup").requestSubmit();          // like a user pressing "Look up"
+    setTimeout(() => {
+      if (p.get("rec")) { const [k, v] = p.get("rec").split("|"); d.getElementById("recKey").value = k; d.getElementById("recVal").value = v; }
+      d.getElementById(p.get("click")).click();
+      setTimeout(() => {
+        document.getElementById("result").textContent = JSON.stringify({ actionOut: d.getElementById("actionOut").textContent, walletCalls: f.contentWindow.__walletLog });
+      }, 6000);
+    }, 7000);
+  }, 1500));
+})();
+</script>

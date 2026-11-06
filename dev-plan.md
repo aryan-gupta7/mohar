@@ -57,13 +57,13 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 12 | [ENS-1](#ens-1-fleet-name-and-registry) | Fleet name and registry | Fri 16:00 | ✅ Done Fri ~10:55 |
 | 13 | [DEV-7](#dev-7-meter-signal-acquisition-and-device-behaviour) | Meter signal acquisition and device behaviour | Fri 18:00 | Partly done: counting T1–T4, T13 passed; T5–T12 open |
 | 14 | [EF-3](#ef-3-device-signed-transaction-with-the-laptop-off) | Device-signed, laptop off | Fri 19:00 | |
-| 15 | [ENS-2](#ens-2-machine-identity-and-permissions) | Machine identity and roles | Fri 19:00 | |
-| 16 | [DEV-8](#dev-8-mohar-console-dashboard) | Mohar Console (dashboard) | Fri 22:00 | In progress |
+| 15 | [ENS-2](#ens-2-machine-identity-and-permissions) | Machine identity and roles | Fri 19:00 | ✅ Done Fri ~15:40 (T6 differs: see below) |
+| 16 | [DEV-8](#dev-8-mohar-console-dashboard) | Mohar Console (dashboard) | Fri 22:00 | ✅ Built; needs hardware and real-data tests |
 | 17 | [ENS-3](#ens-3-discovery-and-permission-demo) | Discovery and permission demo | Fri 22:00 | |
-| 18 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 22:00 | |
+| 18 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 22:00 | ✅ Done Fri ~15:20 (T1, T3, T4-equivalent; T2, T5 open) |
 | 19 | [ENS-4](#ens-4-the-device-reads-its-policy-from-ens) | Device reads ENS policy | Sat 00:00 | Optional |
-| 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | |
-| 21 | [0G-4](#0g-4-episode-log-and-replay) | Episode log and replay | Sat 03:00 | Needs 0G tokens |
+| 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | ✅ T1–T3, T6 on the public devnet Fri ~16:00; T4, T5, T7, T8, T9 open |
+| 21 | [0G-4](#0g-4-episode-log-and-replay) | Episode log and replay | Sat 03:00 | ✅ Pipeline done Fri ~15:00; redo on real data after 0G-3 |
 | 22 | [REL-1](#rel-1-full-rehearsal) | Full rehearsal, following the [demo story](#demo-story) | Sat 05:30 | |
 | 23 | [REL-2](#rel-2-submission) | Submission | **Sat 08:00** | |
 
@@ -589,7 +589,7 @@ The second LED (D0, GPIO16) flashes once for each valid pulse counted, so the tw
 
 ## DEV-8: Mohar Console (dashboard)
 
-**Status:** Restarted Fri ~15:15 with the expanded brief below. An earlier partial build exists in `dashboard/`. · **Depends on:** DEV-3, ENS-2 for the identity page; the event protocol in [docs/event-protocol.md](docs/event-protocol.md) for everything live · **Needs from you:** hosting choice in REL-2
+**Status:** Built by an agent Fri ~16:00: MVP and Strong levels, most of Polish; 20 of 20 headless-Firefox checks. **Not yet run against the real boards (Web Serial) or the real `meter-001` ENS records;** the ARCHIVED stage is not wired; the replay logs are synthesised. Details: [docs/handoff/dev-8.md](docs/handoff/dev-8.md). · **Depends on:** DEV-3, ENS-2 for the identity page; the event protocol in [docs/event-protocol.md](docs/event-protocol.md) for everything live · **Needs from you:** hosting choice in REL-2
 
 **Why:** this is the interface for the demo, and the product view. A person should understand the whole system from the screen: **a user picks a meter scenario → the physical device measures it → AI assesses it → the device signs its own report → Ethereum verifies it → the dashboard shows the evidence.** The dashboard presents; the hardware produces. It is a static frontend with **no backend and no trackers**, and no key or secret ever enters the browser.
 
@@ -889,7 +889,20 @@ Same script as the local run (`MOHAR_NET=public node signer/tools/ef2.ts`), no c
 
 ## ENS-2: Machine identity and permissions
 
-**Status:** Not started · **Target:** Fri 16:00 · **Depends on:** ENS-1, DEV-3 · **Needs from you:** nothing further
+**Status:** ✅ Done Fri ~15:40 on Sepolia, all eight tests run for real. Evidence: [docs/evidence/ens-2.json](docs/evidence/ens-2.json); record keys, values and addresses: [docs/handoff/ens-2.md](docs/handoff/ens-2.md). · **Needs from you:** nothing
+
+| Test | Result |
+|---|---|
+| T1 | 15 text records and the chain-1337 address read back through the Universal Resolver |
+| T2 | The maintenance key set `mohar.maintenance.status` |
+| T3 | The same key editing `mohar.pq.root` is **refused with `EACUnauthorizedAccountRoles`**; the root is unchanged |
+| T4 | The uploader key set `mohar.log`; editing `mohar.policy` is refused with the same error |
+| T5 | `meter-002`'s resolver refuses `meter-001`'s maintenance key |
+| T6 | **Different from the plan:** transferring `meter-001` reverts with `TransferUnsafeUntilRegistryIsEmancipated`, not `TransferDisallowed`. The name can't be moved, but that is a rule of the registry's state, **so we do not claim a per-name "non-transferable" role** |
+| T7 | A name with a 100 s lease read `REGISTERED`, then `AVAILABLE` after expiry, with an empty resolution and a zero owner |
+| T8 | The owner unregistered a test subname |
+
+**Bug found by the agent:** reading the resolver straight after registration returned the zero address (the public RPC serves state a few seconds old), so the first writes went to address zero, which "succeeds" and does nothing. That is why every record read back empty. The script now retries the lookup. **Placeholders still to replace** with real values: the chain-1337 address, `mohar.ledger`, `mohar.paymaster` (local-chain addresses) and `agent-endpoint[web]`. Roles and keys: owner and operator `0xcfb2…Ef60`; maintenance key `0xFA12…5391` (only `mohar.maintenance.status`); uploader key `0x4ab4…6AFf` (only `mohar.log`), both in `.secrets/`.
 
 **Why:** this is the core of the ENS track. Each party can edit only its own records, which is the multi-party problem Mohar is about.
 
@@ -1044,7 +1057,15 @@ Same script as the local run (`MOHAR_NET=public node signer/tools/ef2.ts`), no c
 
 ## 0G-2: The device calls 0G
 
-**Status:** Not started · **Target:** Fri 21:00 · **Depends on:** 0G-1, DEV-6 · **Needs from you:** nothing further
+**Status:** ✅ Done Fri ~15:20 on the real board. **T2 (20 consecutive calls) and T5 (blocked network) are not run yet.** · **Needs from you:** nothing
+
+| Test | Result |
+|---|---|
+| T1 | The ESP8266 made **real 0G calls over TLS from Wi-Fi**, each returning a genuine request ID, about 6.2 s per call (3 s of that is the TLS handshake). Five windows: normal → `RUN`, heavy but sanctioned → `RUN`, 8 kW overload → `INSPECT`, 5 glitches → `INSPECT`, silence after load (with the previous-window context) → `INSPECT`. **5 of 5** |
+| T3 | The parser accepts only the exact words `RUN` and `INSPECT` and a present request ID (code in `zerog.cpp`); the bad-response set isn't run yet |
+| T4 (laptop vs board) | Not compared yet; the laptop evaluation (19 of 19) and the board's five agree |
+
+Heap stayed above 37 KB across the calls. The key is in the git-ignored `secrets.h`.
 
 **What gets built:** `firmware/mohar/src/zerog.*`. The API key goes in the ignored `secrets.h`, and should be a low-limit key, since flash is readable.
 
@@ -1071,7 +1092,20 @@ Same script as the local run (`MOHAR_NET=public node signer/tools/ef2.ts`), no c
 
 ## 0G-3: Decision loop and safe stop
 
-**Status:** Not started · **Target:** Fri 23:30 · **Depends on:** 0G-2, DEV-7 · **Needs from you:** nothing further
+**Status:** ✅ T1, T2, T3 and T6 passed Fri ~16:00 on the **public devnet** with the board on Wi-Fi, real 0G decisions and real Pico pulses. **Open: T4/T5 (a real network block), T7, T8 (30-minute run), T9.** Evidence: [docs/evidence/live-run-public.json](docs/evidence/live-run-public.json) (every `EV` and `CP` line) · **Needs from you:** nothing
+
+| Test | Result |
+|---|---|
+| T1 | Normal load → 0G `RUN` → `RUN` report, **mined on the public devnet, with the real request ID** (`e44e6d2c-…`); 20 s end to end |
+| T2 | 12 kW surge → **0G `INSPECT`** → the device moved to `INSPECT` (reason 4) and the hold was set on the ledger |
+| T3 | Back to normal: 0G was asked again, and the device **stayed `INSPECT`** because of the ledger hold |
+| T4 / T5 | Not run with a really blocked network. One checkpoint saw the public gateway unreachable for a moment and the board went `SAFE_STOP` (chain unreachable), as designed |
+| T6 | The surge used up the 400-pulse credit; the board reported **`CREDIT_STOP`** with 125 pulses of arrears on the public ledger, and the device **did not let 0G override it** |
+| T7 | Open: the release build must be inspected; it has no `inject` command |
+| T8 | Open: 30 minutes of checkpoints |
+| T9 | Open: leaf use across the demo and rehearsals (256 leaves per key) |
+
+Also seen: **a fixed check fires without calling 0G** (a glitching line gave `INSPECT`, reason 2, `ai=none`).
 
 **Why:** this is what qualifies for the track: a real 0G decision changes what a real device does. Here that's the device's operating state, shown on its status LED and recorded on-chain.
 
@@ -1103,7 +1137,17 @@ Same script as the local run (`MOHAR_NET=public node signer/tools/ef2.ts`), no c
 
 ## 0G-4: Episode log and replay
 
-**Status:** Not started · **Target:** Sat 02:00 · **Depends on:** 0G-3 · **Needs from you:** Galileo testnet tokens
+**Status:** ✅ The pipeline is built and tested by an agent (T1, T3, T4, T5 pass; T2 partial; T6 is a hook until the ENS record is wired). **To redo on real data after 0G-3.** Evidence: [docs/evidence/0g-4.json](docs/evidence/0g-4.json), notes: [docs/handoff/0g-4.md](docs/handoff/0g-4.md) · **Needs from you:** nothing (the 0.1 0G arrived)
+
+| Test | Result |
+|---|---|
+| T1 | An upload returns a root; the proof-verified download is 2,771 bytes identical to the bytes rebuilt from the chain |
+| T2 | **Partial:** the 5 board-built `SAFE_STOP` records have a null request ID and are marked as not decisions; the decision records so far carry the injected ID `dev-injected`, not a real 0G ID. The live run fills in real IDs |
+| T3 | Replay matched every record against the chain (23 records, 6 batches) |
+| T4 | A one-watt edit is caught as `MISMATCH in meter`; an edit plus a removed record is caught too |
+| T5 | Killing the uploader before and after it saved progress gave contiguous batches with no gap or duplicate; re-uploading identical bytes returned the same root |
+
+SDK `@0gfoundation/0g-storage-ts-sdk` 1.2.12 (1.2.13 was under 2 weeks old). Cost about 0.0013 to 0.0015 0G per batch of 2.8 KB; about 0.088 0G left.
 
 **What gets built:** `uploader/` in TypeScript with `@0gfoundation/0g-storage-ts-sdk`, and `uploader/replay.ts`.
 

@@ -227,6 +227,12 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - **Plan rewritten:** DEV-8 is now the Mohar Console from your brief: a live pipeline with eight real stages and provenance badges, a Demo Console (Web Serial, desktop), and a Meter Dashboard (phone-friendly), built in MVP / Strong / Polish levels with eleven tests.
 - **The hotspot** went off at about 14:30 and was back at about 15:15. 0G-2 (the board calling 0G) still needs a Wi-Fi test.
 
+### About 15:20 to 15:50 0G-2 on the board, the live run on the public devnet, ENS-2 and 0G-4 merged
+- **The ESP8266 called 0G itself over Wi-Fi:** five meter windows, five answers as expected (normal and heavy → RUN; 8 kW overload, five glitches, and silence after load → INSPECT), each with a real request ID, about 6.2 s a call. My first "silence" test left out the previous-window sentence and got RUN; the fault was in my test text, not the model. Heap stayed above 37 KB.
+- **The live run on the public devnet** (board on Wi-Fi, real 0G, real Pico pulses, fresh account, ledger and paymaster deployed there): checkpoint 1, normal → RUN, request ID on the report, mined, 20 s end to end; surge 12 kW → 0G said INSPECT → hold set on the ledger; back to normal → still INSPECT because of the hold. One checkpoint saw the public gateway unreachable for a moment and the board went SAFE_STOP, as designed; the test now retries that.
+- **ENS-2 (agent): all eight tests pass on Sepolia.** The maintenance key edits maintenance status and is refused on the cryptographic root; the uploader key edits only the log pointer; a second meter's resolver refuses the first meter's key. **One surprise: a transfer is refused with `TransferUnsafeUntilRegistryIsEmancipated`, not `TransferDisallowed`, so I will not claim a per-name non-transferable role.** The agent also found why its first run read empty: the RPC returned a stale zero resolver right after registration.
+- **0G-4 (agent):** the upload / proof-verified download / replay / tamper-detection / crash-safe-batching pipeline passes T1, T3, T4, T5. It is built on test data (injected decisions), so it is redone on the live run's data.
+
 ---
 
 ## Current state

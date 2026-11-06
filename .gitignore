@@ -22,3 +22,6 @@ firmware/**/secrets.h
 .DS_Store
 *.log
 devnet/genesis.local.json
+dashboard/node_modules/
+dashboard/dist/
+uploader/node_modules/

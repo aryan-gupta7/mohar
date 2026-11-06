@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Phone-width check</title>
+<style>body{margin:0;background:#888;font:14px monospace} iframe{display:block;border:0;background:#fff}</style>
+<iframe id="f" width="400" height="2400"></iframe>
+<pre id="result">waiting</pre>
+<script>
+// Loads the dashboard in a 400 px wide frame (a true 400 CSS px viewport) and measures horizontal overflow.
+const q = new URLSearchParams(location.search);
+const f = document.getElementById("f");
+f.src = "../index.html?" + (q.get("q") ?? "");
+f.addEventListener("load", () => setTimeout(() => {
+  const d = f.contentDocument.documentElement;
+  const wide = [...f.contentDocument.querySelectorAll("body *")].filter((n) => n.getBoundingClientRect().right > 400.5 && !n.closest(".scroll")).map((n) => n.tagName + "#" + (n.id || n.className)).slice(0, 8);
+  const live = q.get("live");
+  if (live) for (const line of live.split("||")) f.contentWindow.__mohar.liveLine(line);
+  const hosts = [...new Set(f.contentWindow.performance.getEntriesByType("resource").map((e) => new URL(e.name).host))];
+  const text = f.contentDocument.body.innerText;
+  document.getElementById("result").textContent = JSON.stringify({ hosts, liveText: f.contentDocument.getElementById("liveBody").innerText, viewport: f.contentWindow.innerWidth, scrollWidth: d.scrollWidth, overflowsHorizontally: d.scrollWidth > f.contentWindow.innerWidth, elementsPastRightEdge: wide });
+}, 9000));
+</script>

@@ -6,10 +6,10 @@
       "detail": "15 text records and the chain-1337 address read back through the Universal Resolver"
     },
     "ENS2-T2": {
-      "pass": true,
+      "pass": false,
       "detail": {
         "simulation": "ok",
-        "readBack": "inspected 2026-11-06"
+        "readBack": "ok"
       }
     },
     "ENS2-T3": {
@@ -47,32 +47,41 @@
       "detail": {
         "note": "observed only; nothing here is a claim beyond what was seen",
         "before": {
-          "status": "AVAILABLE",
-          "expiry": 1793958414,
+          "status": "REGISTERED",
+          "expiry": 1793958970,
           "resolvesToZeroAddress": "ok:0x"
         },
         "after": {
           "status": "AVAILABLE",
-          "expiry": 1793958710,
+          "expiry": 1793958970,
           "ownerOf": "0x0000000000000000000000000000000000000000",
           "resolution": "ok:0x"
         },
         "reRegisterSimulation": "ok"
       }
+    },
+    "ENS2-T8": {
+      "pass": true,
+      "detail": {
+        "before": "REGISTERED",
+        "simulation": "ok",
+        "after": "AVAILABLE"
+      }
     }
   },
   "txs": {
-    "meter-001 records": "0xd299cc7ffcf04ea9f03918afbb90dd0d507345b50f028f6223330b0f5011fd55",
-    "grant mohar.maintenance.status": "0x80c3914ed9703bebd65e10cacc0a0f95434d2c9f5b1aaaaee3ed1536801fc9c5",
-    "grant mohar.log": "0x06e48495e3f196d84deb8f516d2977874ad0fd4202207bf6ab70e63e8da46699",
-    "T2 maintenance edits status": "0xf4e1e8e921f4f318d04e4768ee0f1a7fa2b2ae108940baf87b9aa30d1207194b",
-    "T4 uploader edits log": "0x5c0503f1846f20f8a1f81cea4a3b29adb468304048ca0206e8bb311a521e9b24",
-    "deploy resolver lease-test": "0x127d10fe0d8af3d978f53808dd0dca6d8fc37ee460409862a530fc5532e8e500",
-    "register lease-test": "0x9943f481594858857bf0952da94b1951ac0bdbd6d370d9bc25a77135398733c7",
-    "deploy resolver temp-test": "0xbd9bf5f18762ac5dc8e84b71e798c2a4c669d48e19f5d613c1911e5ddab81f07",
-    "register temp-test": "0x1b3ac9fb93b5300816e8da632b18d5130fa2badb74683affafb30f21c3c20367"
+    "meter-001 records": "0xa76213e418e35a2812395de496f58ddb5947fe41fd8ca5c0df2eeef8ed963937",
+    "grant mohar.maintenance.status": "0x6f8f6655c58215d238822ef6f7a492b6dd071f4d4431918dcee7be71f4b73c5c",
+    "grant mohar.log": "0x62f2a65a8fca6e3fe49dcae4254a3dfb15d355a1b445520019896bd441639c6e",
+    "T2 maintenance edits status": "0x44bb1fcff2b5a31c92a0fdab644da5a69425b9c7253a29140147ce089a19a2b9",
+    "T4 uploader edits log": "0x6ef6a128b99f14e83b13ae93deecbe96cbf93db732340cdcd665ccff108ca37a",
+    "deploy resolver lease-test": "0xef2465cd5df676f821a0ccb6fe2e03e243e4d791bf9cfb1091bc7a9f5867d834",
+    "register lease-test": "0x0fcd45f1620ea305891369e545cb48b0836705adbc7109f1ab2af1b7bfa8e580",
+    "deploy resolver temp-test": "0x192b08e815db6e95ed06bc699d5a912f6eed2f891e240826fb5a9f20a85d9c8b",
+    "register temp-test": "0xbbc5dc8ce699c3f46319098a74349dffa2b5da3fe04fa5fdfff42e87f16ac884",
+    "T8 owner unregisters temp-test": "0xeb25f815d95b0d8ad9ac53d1a14f8357f075fed5d7db2f02b3c0adc42b4fd6bc"
   },
-  "startedAt": "2026-11-06T09:48:44.866Z",
+  "startedAt": "2026-11-06T09:53:08.353Z",
   "accounts": {
     "owner": "0xcfb296f635254A4B3281D2e285174E98D643Ef60",
     "maintenance": "0xFA129F48deF75d7d870e2F60142dc56a906D5391",
@@ -91,5 +100,6 @@
   "fleet": {
     "registry": "0x53AD330F425412DCFFf888d58d7CB21f28BEeA01",
     "resolver": "0x7c0768Ca185865Ab3A10D65e5CFD8Fc29288B6ab"
-  }
+  },
+  "finishedAt": "2026-11-06T09:57:19.766Z"
 }

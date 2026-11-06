@@ -1,0 +1,42 @@
+{
+ "network": "public",
+ "ledger": "0xde1a12a99add47ccc79b1ccd2eb48f90b0b551d1",
+ "account": "0xdfa2765aba66e1949eec8851d99e3829eb6c4276",
+ "paymaster": "0xee2271689fd1ea51f9953b31fa8fd85002e35ba6",
+ "finalLedger": {
+  "creditPulses": 0,
+  "hold": true,
+  "lastSeq": 5,
+  "lastTotal": 525,
+  "earnedPulses": 400,
+  "arrearsPulses": 125,
+  "lastMode": 1,
+  "ledgerMode": 1
+ },
+ "log": [
+  "EV {\"cp\":1,\"ms\":31337,\"e\":\"cp_start\"}",
+  "EV {\"cp\":1,\"ms\":31338,\"e\":\"window\",\"valid\":9,\"glitches\":0,\"stuck\":0,\"avgW\":836,\"peakW\":927,\"windowMs\":12103,\"gapMs\":1347,\"total\":23}",
+  "EV {\"cp\":1,\"ms\":38154,\"e\":\"ledger_read\",\"ok\":true,\"credit\":0,\"arrears\":460392448,\"hold\":0,\"lastSeq\":3,\"lastTotal\":452,\"tariff\":1000000000,\"ledgerMode\":2,\"nonce\":4}",
+  "EV {\"cp\":1,\"ms\":38158,\"e\":\"local_check\",\"result\":\"pass\"}",
+  "EV {\"cp\":1,\"ms\":38163,\"e\":\"ai_request\",\"model\":\"qwen3.8-flash\",\"provider\":\"0G Private Computer\"}",
+  "EV {\"cp\":1,\"ms\":44446,\"e\":\"ai_response\",\"answer\":\"RUN\",\"rid\":\"b379d91d-dce2-4e66-8beb-98a1c6b60fe8\",\"latencyMs\":6273,\"http\":200,\"why\":\"\"}",
+  "EV {\"cp\":1,\"ms\":44447,\"e\":\"decision\",\"mode\":\"CREDIT_STOP\",\"reason\":10,\"aiWanted\":\"RUN\",\"ledgerHold\":0,\"ledgerMode\":2,\"aiSource\":\"0g\"}",
+  "EV {\"cp\":1,\"ms\":44469,\"e\":\"sign_start\",\"nonce\":4,\"leaf\":3}",
+  "EV {\"cp\":1,\"ms\":44989,\"e\":\"sign_done\",\"result\":\"OK\",\"ms\":521,\"steps\":495,\"leaf\":3,\"leavesLeft\":252,\"resent\":1}",
+  "EV {\"cp\":1,\"ms\":45010,\"e\":\"submit\",\"transport\":\"wifi\"}",
+  "EV {\"cp\":1,\"ms\":51793,\"e\":\"submitted\",\"result\":\"ok\",\"hash\":\"0x658624ee24fe3ae251633f2183b3efe6f5bbba77f1886683c07e0b940067dd10\"}",
+  "EV {\"cp\":1,\"ms\":51794,\"e\":\"cp_end\",\"mode\":\"CREDIT_STOP\",\"totalMs\":20457}",
+  "CP mode=CREDIT_STOP reason=10 ai=0g rid=b379d91d-dce2-4e66-8beb-98a1c6b60fe8 seq=4 nonce=4 total=452 valid=9 glitches=0 stuck=0 avgW=836 peakW=927 hold=0 credit=0 intent=OK resent=1 sent=ok ms=20463 heap=37752 tx=0x658624ee24fe3ae251633f2183b3efe6f5bbba77f1886683c07e0b940067dd10",
+  "EV {\"cp\":2,\"ms\":89925,\"e\":\"cp_start\"}",
+  "EV {\"cp\":2,\"ms\":89925,\"e\":\"window\",\"valid\":47,\"glitches\":11,\"stuck\":0,\"avgW\":902,\"peakW\":927,\"windowMs\":58588,\"gapMs\":2062,\"total\":522}",
+  "EV {\"cp\":2,\"ms\":97110,\"e\":\"ledger_read\",\"ok\":true,\"credit\":0,\"arrears\":460392448,\"hold\":1,\"lastSeq\":4,\"lastTotal\":452,\"tariff\":1000000000,\"ledgerMode\":1,\"nonce\":5}",
+  "EV {\"cp\":2,\"ms\":97114,\"e\":\"local_check\",\"result\":\"glitch\"}",
+  "EV {\"cp\":2,\"ms\":97119,\"e\":\"decision\",\"mode\":\"INSPECT\",\"reason\":2,\"aiWanted\":\"INSPECT\",\"ledgerHold\":1,\"ledgerMode\":1,\"aiSource\":\"none\"}",
+  "EV {\"cp\":2,\"ms\":97131,\"e\":\"sign_start\",\"nonce\":5,\"leaf\":4}",
+  "EV {\"cp\":2,\"ms\":97654,\"e\":\"sign_done\",\"result\":\"OK\",\"ms\":518,\"steps\":555,\"leaf\":4,\"leavesLeft\":251,\"resent\":0}",
+  "EV {\"cp\":2,\"ms\":97674,\"e\":\"submit\",\"transport\":\"wifi\"}",
+  "EV {\"cp\":2,\"ms\":104351,\"e\":\"submitted\",\"result\":\"ok\",\"hash\":\"0xd5725bb2a244590cb5b2ba88383dbc4128f2941666bad6d501656c102fc6cd78\"}",
+  "EV {\"cp\":2,\"ms\":104352,\"e\":\"cp_end\",\"mode\":\"INSPECT\",\"totalMs\":14427}",
+  "CP mode=INSPECT reason=2 ai=none rid=- seq=5 nonce=5 total=525 valid=47 glitches=11 stuck=0 avgW=902 peakW=927 hold=1 credit=0 intent=OK resent=0 sent=ok ms=14433 heap=37640 tx=0xd5725bb2a244590cb5b2ba88383dbc4128f2941666bad6d501656c102fc6cd78"
+ ]
+}
