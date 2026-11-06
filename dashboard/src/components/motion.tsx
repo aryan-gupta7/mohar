@@ -38,8 +38,8 @@ export function Segmented<T extends string>({ options, value, onChange, id, clas
   return (
     <div role="radiogroup" className={`flex flex-wrap gap-1 ${className}`}>
       {options.map((o) => (
-        <button key={o.value} role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)} className={`relative rounded-full px-3.5 py-1.5 text-sm transition-colors ${value === o.value ? "text-bg" : "text-mute hover:text-fg"}`}>
-          {value === o.value && <motion.span layoutId={`seg-${id}`} className="absolute inset-0 rounded-full bg-accent" transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 36 }} />}
+        <button key={o.value} role="radio" aria-checked={value === o.value} onClick={() => onChange(o.value)} className={`relative px-3.5 py-1.5 font-mono text-[12px] uppercase tracking-[0.06em] transition-colors ${value === o.value ? "text-bg" : "text-mute hover:text-fg"}`}>
+          {value === o.value && <motion.span layoutId={`seg-${id}`} className="absolute inset-0 bg-fg" transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 36 }} />}
           <span className="relative">{o.label}{o.hint && <span className={`ml-1.5 text-xs ${value === o.value ? "opacity-60" : "text-faint"}`}>{o.hint}</span>}</span>
         </button>
       ))}

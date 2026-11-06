@@ -18,12 +18,14 @@ const box = (w: number, h: number, d: number, color: number, x = 0, y = 0, z = 0
 
 export type Callout = { pos: [number, number, number]; label: string; dx: number; dy: number };
 
-export function Meter3D({ onOpen, callouts }: { onOpen: () => void; callouts: Callout[] }) {
+export function Meter3D({ onOpen, callouts = [], compact = false, kwh: kwhProp, watts: wattsProp }: { onOpen?: () => void; callouts?: Callout[]; compact?: boolean; kwh?: number; watts?: number }) {
   const host = useRef<HTMLDivElement>(null);
   const svg = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState(false);
   const [ok, setOk] = useState(true);
   const open = useRef(onOpen); open.current = onOpen;
+  const kwhRef = useRef(kwhProp); kwhRef.current = kwhProp;
+  const wattsRef = useRef(wattsProp); wattsRef.current = wattsProp;
 
   useEffect(() => {
     const el = host.current!;
@@ -83,7 +85,7 @@ export function Meter3D({ onOpen, callouts }: { onOpen: () => void; callouts: Ca
       if (dragging) { const dx = e.clientX - lx; lx = e.clientX; moved += Math.abs(dx); tY += dx * 0.008; }
       const h = pick(e); if (h !== hovering) { hovering = h; setHover(h); }
     };
-    const up = (e: PointerEvent) => { dragging = false; if (moved < 5 && pick(e) && !entering) entering = performance.now(); };
+    const up = (e: PointerEvent) => { dragging = false; if (!compact && moved < 5 && pick(e) && !entering) entering = performance.now(); };
     canvas.addEventListener("pointerdown", down); canvas.addEventListener("pointermove", move); canvas.addEventListener("pointerup", up);
     const onScroll = () => { sx = clamp01(scrollY / innerHeight); };
     const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -93,18 +95,27 @@ export function Meter3D({ onOpen, callouts }: { onOpen: () => void; callouts: Ca
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       const dt = Math.min(0.05, (now - t0) / 1000); t0 = now;
-      if (auto) tY = 0.45 + Math.sin(now / 2600) * 0.22 - sx * 0.9;
+      if (auto) tY = 0.45 + Math.sin(now / 2600) * 0.22 - (compact ? 0 : sx * 0.9);
       rotY += (tY - rotY) * 0.08; rotX += (tX - rotX) * 0.08;
       meter.rotation.set(rotX, rotY, 0);
-      disc.rotation.z -= dt * 1.6;
-      // a pulse every 1.1 s: the LED lights and the display ticks, like a real impulse output
-      const pulse = (now % 1100) < 160; ledMat.color.setHex(pulse ? ACCENT : 0x5a2a1c);
-      if (pulse && now - lastPulse > 600) { lastPulse = now; kwh += 0.3125 / 1000; }
-      if (now - lastDisp > 400) { lastDisp = now; drawDisp(kwh); }
+      if (compact) {
+        // working dashboard: the display shows the real count, the disc and LED follow the real power
+        const w = wattsRef.current ?? 0;
+        disc.rotation.z -= dt * Math.min(8, w / 450);
+        const per = w > 0 ? 1125000 / w : 0;
+        ledMat.color.setHex(per && (now % per) < Math.min(140, per / 2) ? ACCENT : 0x5a2a1c);
+        if (now - lastDisp > 400) { lastDisp = now; drawDisp(kwhRef.current ?? 0); }
+      } else {
+        disc.rotation.z -= dt * 1.6;
+        // a pulse every 1.1 s: the LED lights and the display ticks, like a real impulse output
+        const pulse = (now % 1100) < 160; ledMat.color.setHex(pulse ? ACCENT : 0x5a2a1c);
+        if (pulse && now - lastPulse > 600) { lastPulse = now; kwh += 0.3125 / 1000; }
+        if (now - lastDisp > 400) { lastDisp = now; drawDisp(kwh); }
+      }
       // layout: meter sits right on wide screens
       const wide = el.clientWidth > 900;
-      let z = (wide ? 13.5 : 17) - sx * 1.5, x = wide ? 1.4 : 0, y = wide ? -0.1 : 1.6;
-      if (entering) { const k = Math.min(1, (now - entering) / 1000); const e = 1 - Math.pow(1 - k, 3); zoom = e; z = z + (4.0 - z) * e; x = x * (1 - e); y = y + (-1.0 - y) * e + 0; tY = rotY * (1 - e); if (k >= 1) { entering = 0; open.current(); } }
+      let z = compact ? 10.2 : (wide ? 13.5 : 17) - sx * 1.5, x = compact ? 0 : wide ? 1.4 : 0, y = compact ? 0 : wide ? -0.1 : 1.6;
+      if (entering) { const k = Math.min(1, (now - entering) / 1000); const e = 1 - Math.pow(1 - k, 3); zoom = e; z = z + (4.0 - z) * e; x = x * (1 - e); y = y + (-1.0 - y) * e + 0; tY = rotY * (1 - e); if (k >= 1) { entering = 0; open.current?.(); } }
       camera.position.set(0, 0, z); meter.position.set(x, y, 0); camera.lookAt(0, 0, 0);
       renderer.render(scene, camera);
       // callouts
@@ -127,7 +138,7 @@ export function Meter3D({ onOpen, callouts }: { onOpen: () => void; callouts: Ca
   }, []); // eslint-disable-line
 
   return (
-    <div ref={host} className="absolute inset-0" style={{ cursor: hover ? "pointer" : "grab" }}>
+    <div ref={host} className="absolute inset-0" style={{ cursor: hover && !compact ? "pointer" : "grab" }}>
       {!ok && <div className="absolute inset-0 grid place-items-center text-sm text-mute">3D isn't available in this browser.</div>}
       <svg ref={svg} className="pointer-events-none absolute inset-0 h-full w-full overflow-visible" fontFamily="JetBrains Mono Variable, monospace" fontSize="11">
         {callouts.map((c) => <g key={c.label}><line stroke="#111" strokeWidth="1" /><rect width="6" height="6" fill="#ff4a1c" /><text fill="#111" style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}>{c.label}</text></g>)}

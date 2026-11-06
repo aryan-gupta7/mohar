@@ -22,13 +22,14 @@ export function Stage({ id, height = 300, children, className = "" }: { id?: str
 }
 
 /** Section title that wipes in from the left when it enters the view. */
-export function Title({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Title({ children, className = "", as = "h2" }: { children: ReactNode; className?: string; as?: "h1" | "h2" }) {
   const ref = useRef<HTMLHeadingElement>(null);
   const on = useInView(ref, { once: true, amount: 0.5 });
+  const H = as;
   return (
-    <h2 ref={ref} className={className}>
+    <H ref={ref} className={className}>
       <motion.span className="block" initial={{ clipPath: "inset(0 100% 0 0)", opacity: 0.2 }} animate={on ? { clipPath: "inset(0 0% 0 0)", opacity: 1 } : {}} transition={{ duration: 0.9, ease: [0.2, 0.7, 0.2, 1] }}>{children}</motion.span>
-    </h2>
+    </H>
   );
 }
 

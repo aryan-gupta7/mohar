@@ -4,17 +4,18 @@
 
 :root {
   color-scheme: light;
-  --bg: #f7f7f5; --card: #ffffff; --fg: #17171a; --mute: #6b6b73; --faint: #a1a1a8; --line: rgba(23,23,26,.09);
-  --accent: #17171a; --ok: #1f8a5b; --warn: #b7791f; --bad: #c2410c;
+  --bg: #ecebe6; --card: #f4f3ee; --fg: #111111; --mute: #5d5c57; --faint: #8f8e88; --line: rgba(17,17,17,.16);
+  --accent: #ff4a1c; --ok: #0b7a4b; --warn: #a5650a; --bad: #d4220f;
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0c0c0e; --card: #141417; --fg: #f1f1f3; --mute: #8e8e98; --faint: #55555d; --line: rgba(255,255,255,.08);
-  --accent: #f1f1f3; --ok: #5fd39a; --warn: #e5b45a; --bad: #f08a5d;
+  --bg: #0f0f0d; --card: #161614; --fg: #ecebe6; --mute: #9b9a93; --faint: #62615c; --line: rgba(236,235,230,.16);
+  --accent: #ff5a2c; --ok: #4cc38a; --warn: #e0a84a; --bad: #f2704a;
 }
+*, *::before, *::after { border-radius: 0 !important; }
 html, body, #root { height: 100%; }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: "Inter Variable", system-ui, sans-serif; font-feature-settings: "cv11", "ss03"; -webkit-font-smoothing: antialiased; }
-.surface { background: var(--card); box-shadow: 0 0 0 1px var(--line); border-radius: 14px; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: "Inter Variable", system-ui, sans-serif;  -webkit-font-smoothing: antialiased; }
+.surface { background: var(--card); border: 1px solid var(--line); }
 .num { font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
 :focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
@@ -27,3 +28,5 @@ body { margin: 0; background: var(--bg); color: var(--fg); font-family: "Inter V
 .land { --bg: #ecebe6; --card: #f6f5f1; --fg: #111111; --mute: #5d5c57; --faint: #8f8e88; --line: rgba(17,17,17,.16); --accent: #ff4a1c; --ok: #0b7a4b; --bad: #d4220f; background: var(--bg); color: var(--fg); }
 .land *, .land *::before, .land *::after { border-radius: 0 !important; }
 .land-root, .land-root body { background: #ecebe6; }
+
+@keyframes march { to { stroke-dashoffset: -20; } }

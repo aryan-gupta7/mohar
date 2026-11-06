@@ -28,9 +28,9 @@ function Marker({ n, status }: { n: number; status: Status }) {
   return (
     <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center">
       <motion.span className="absolute inset-0 rounded-full" initial={false}
-        animate={{ backgroundColor: done ? "var(--ok)" : bad ? "var(--bad)" : "rgba(0,0,0,0)", boxShadow: done || bad ? "inset 0 0 0 0 transparent" : `inset 0 0 0 1.5px ${busy ? "var(--fg)" : "var(--faint)"}` }} transition={{ duration: reduce ? 0 : 0.25 }} />
-      {busy && !reduce && <motion.span className="absolute inset-0 rounded-full border border-fg" initial={{ scale: 1, opacity: 0.5 }} animate={{ scale: 1.7, opacity: 0 }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }} />}
-      {busy && <svg className="absolute inset-0" viewBox="0 0 28 28" style={{ animation: reduce ? undefined : "spin 1.1s linear infinite" }}><circle cx="14" cy="14" r="12.75" fill="none" stroke="var(--fg)" strokeWidth="2" strokeLinecap="round" strokeDasharray="20 80" /></svg>}
+        animate={{ backgroundColor: done ? "var(--ok)" : bad ? "var(--bad)" : "rgba(0,0,0,0)", boxShadow: done || bad ? "inset 0 0 0 0 transparent" : `inset 0 0 0 1.5px ${busy ? "var(--accent)" : "var(--faint)"}` }} transition={{ duration: reduce ? 0 : 0.25 }} />
+      {busy && !reduce && <motion.span className="absolute inset-0 rounded-full border border-accent" initial={{ scale: 1, opacity: 0.5 }} animate={{ scale: 1.7, opacity: 0 }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }} />}
+      {busy && <svg className="absolute inset-0" viewBox="0 0 28 28"><rect x="1" y="1" width="26" height="26" fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="10 10" style={{ animation: reduce ? undefined : "march 0.8s linear infinite" }} /></svg>}
       <AnimatePresence mode="wait" initial={false}>
         {done ? (
           <motion.svg key="c" viewBox="0 0 28 28" className="relative h-7 w-7" initial={{ opacity: 1 }}><motion.path d="M8.5 14.5l3.6 3.6 7.4-8" fill="none" stroke="var(--bg)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: reduce ? 1 : 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.35, ease: "easeOut" }} /></motion.svg>
@@ -91,7 +91,7 @@ export function Pipeline() {
 }
 
 /* ---------- one small picture per stage, drawn from that stage's real data ---------- */
-const Frame = ({ children }: { children: React.ReactNode }) => <div className="mb-5 flex min-h-[72px] items-center rounded-lg bg-fg/[.035] px-5 py-4">{children}</div>;
+const Frame = ({ children }: { children: React.ReactNode }) => <div className="mb-5 flex min-h-[72px] items-center rounded-lg border border-line px-5 py-4">{children}</div>;
 
 function PicoPicture({ watts, alive }: { watts?: number; alive: boolean }) {
   const pps = (watts ?? 0) / 1125; // pulses per second at 3,200 pulses/kWh
@@ -111,8 +111,8 @@ function Choice({ options, value, pending }: { options: string[]; value?: string
   return (
     <Frame><div className="flex w-full gap-1">{options.map((o) => (
       <div key={o} className={`relative flex-1 rounded-md py-2 text-center text-sm ${value === o ? "text-bg" : "text-mute"}`}>
-        {value === o && <motion.span layoutId={`choice-${options.join()}`} className="absolute inset-0 rounded-md bg-accent" transition={{ type: "spring", stiffness: 420, damping: 36 }} />}
-        <span className="relative">{o}</span>
+        {value === o && <motion.span layoutId={`choice-${options.join()}`} className="absolute inset-0 bg-fg" transition={{ type: "spring", stiffness: 420, damping: 36 }} />}
+        <span className="relative font-mono text-[12px]">{o}</span>
       </div>))}</div>{pending && !value && <span className="ml-3 shrink-0 animate-pulse text-xs text-mute">asking…</span>}</Frame>
   );
 }
@@ -137,7 +137,7 @@ function Ladder({ mode }: { mode?: string }) {
   const rows = ["SAFE_STOP", "INSPECT", "CREDIT_STOP", "RUN"], label: Record<string, string> = { SAFE_STOP: "Safe stop", INSPECT: "Inspect", CREDIT_STOP: "Credit stop", RUN: "Run" };
   return (
     <Frame><div className="w-full"><div className="mb-2 text-xs text-faint">Most cautious wins</div>{rows.map((r) => (
-      <div key={r} className={`relative rounded-md px-3 py-1 text-sm ${mode === r ? "text-bg" : "text-mute"}`}>{mode === r && <motion.span layoutId="ladder" className="absolute inset-0 rounded-md bg-accent" transition={{ type: "spring", stiffness: 420, damping: 36 }} />}<span className="relative">{label[r]}</span></div>))}</div></Frame>
+      <div key={r} className={`relative rounded-md px-3 py-1 text-sm ${mode === r ? "text-bg" : "text-mute"}`}>{mode === r && <motion.span layoutId="ladder" className="absolute inset-0 bg-fg" transition={{ type: "spring", stiffness: 420, damping: 36 }} />}<span className="relative font-mono text-[12px] uppercase tracking-[0.06em]">{label[r]}</span></div>))}</div></Frame>
   );
 }
 function LedgerPicture({ device, ledger }: { device?: number; ledger?: number }) {

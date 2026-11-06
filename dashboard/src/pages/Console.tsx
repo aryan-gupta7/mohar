@@ -29,8 +29,8 @@ function ReplayList({ value, onPick }: { value?: string; onPick: (file: string) 
   return (
     <div role="radiogroup" aria-label="Recorded runs" className="grid gap-2 sm:grid-cols-2">
       {REPLAYS.map((r) => (
-        <button key={r.file} role="radio" aria-checked={value === r.file} onClick={() => onPick(r.file)} className="relative rounded-lg px-4 py-3 text-left text-sm shadow-[inset_0_0_0_1px_var(--line)] hover:bg-fg/[.03]">
-          {value === r.file && <motion.span layoutId="replay-ring" className="pointer-events-none absolute inset-0 rounded-lg shadow-[inset_0_0_0_1.5px_var(--fg)]" transition={{ type: "spring", stiffness: 420, damping: 36 }} />}
+        <button key={r.file} role="radio" aria-checked={value === r.file} onClick={() => onPick(r.file)} className="relative px-4 py-3 text-left text-sm shadow-[inset_0_0_0_1px_var(--line)] hover:bg-fg/[.03]">
+          {value === r.file && <motion.span layoutId="replay-ring" className="pointer-events-none absolute inset-0 rounded-lg shadow-[inset_0_0_0_2px_var(--accent)]" transition={{ type: "spring", stiffness: 420, damping: 36 }} />}
           {r.label}
         </button>
       ))}

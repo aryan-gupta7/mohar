@@ -82,7 +82,7 @@ export function PowerChart({ measured }: { measured: Pt[] }) {
           <path d={d} fill="none" stroke="var(--fg)" strokeWidth={1.75} strokeLinejoin="round" />
           {meas.length > 0 && <path d={meas.map((p, i) => `${i ? "L" : "M"}${X(p.at)},${Y(p.w)}`).join("")} fill="none" stroke="var(--ok)" strokeWidth={1.25} />}
           {meas.map((p) => <circle key={p.at} cx={X(p.at)} cy={Y(p.w)} r={3.5} fill="var(--card)" stroke="var(--ok)" strokeWidth={1.5} />)}
-          {live && last && <circle cx={Math.min(M.l + iw, X(now))} cy={Y(last.w)} r={4} fill="var(--fg)" />}
+          {live && last && <circle cx={Math.min(M.l + iw, X(now))} cy={Y(last.w)} r={4} fill="var(--accent)" />}
           {hp && hover !== null && <g><line x1={X(hp.at)} x2={X(hp.at)} y1={M.t} y2={M.t + ih} stroke="var(--faint)" /><circle cx={X(hp.at)} cy={Y(hp.w)} r={4} fill="var(--card)" stroke="var(--fg)" strokeWidth={1.75} /></g>}
         </svg>
       </div>

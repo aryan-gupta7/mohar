@@ -87,7 +87,7 @@ export function Permissions() {
       </table></div>
 
       <div className="mt-6 text-sm font-medium">Try an edit</div>
-      <div className="mt-3 flex flex-wrap gap-2">{PRESETS.map((p) => <button key={p.label} disabled={!E || busy} onClick={() => { setWho(p.who); setKey(p.key); run(p.who, p.key); }} className="rounded-full px-3 py-1.5 text-xs shadow-[inset_0_0_0_1px_var(--line)] hover:bg-fg/5 disabled:opacity-40">{p.label}</button>)}</div>
+      <div className="mt-3 flex flex-wrap gap-2">{PRESETS.map((p) => <button key={p.label} disabled={!E || busy} onClick={() => { setWho(p.who); setKey(p.key); run(p.who, p.key); }} className="px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.06em] shadow-[inset_0_0_0_1px_var(--line)] hover:bg-fg hover:text-bg disabled:opacity-40">{p.label}</button>)}</div>
       <div className="mt-3 grid gap-2 sm:grid-cols-3">
         <select aria-label="Account to test as" value={who} onChange={(e) => setWho(e.target.value)} className={inputCls}>{personas.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</select>
         <select aria-label="Record" value={key} onChange={(e) => setKey(e.target.value)} className={inputCls}>{TABLE.map((t) => <option key={t.key}>{t.key}</option>)}</select>

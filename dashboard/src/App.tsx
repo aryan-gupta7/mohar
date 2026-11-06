@@ -84,13 +84,13 @@ function Shell() {
   const live = s.mode === "replay" ? "bg-warn" : s.mode === "live" || s.chain.status === "ok" ? "bg-ok" : s.chain.status === "error" ? "bg-bad" : "bg-faint";
   return (
     <div className="min-h-full">
-      <header className="sticky top-0 z-10 bg-bg/85 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b border-line bg-bg/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-4xl items-center gap-6 px-4">
-          <a href="#" onClick={(e) => { e.preventDefault(); history.pushState(null, "", location.pathname + location.search); setPage(""); window.scrollTo(0, 0); }} className="flex items-center gap-2 text-[15px] font-semibold tracking-tight"><span className="h-2.5 w-2.5 rounded-full bg-fg" />mohar</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); history.pushState(null, "", location.pathname + location.search); setPage(""); window.scrollTo(0, 0); }} className="flex items-center gap-2 font-mono text-[12px] font-medium uppercase tracking-[0.14em]"><span className="h-2.5 w-2.5 bg-accent" />Mohar</a>
           <nav aria-label="Pages" className="-mx-2 flex flex-1 gap-1 overflow-x-auto">
-            {PAGES.map((p) => <button key={p.id} aria-current={page === p.id ? "page" : undefined} onClick={() => go(p.id)} className={`rounded-full px-3 py-1.5 text-sm transition-colors ${page === p.id ? "bg-fg/[.07] text-fg" : "text-mute hover:text-fg"}`}>{p.label}</button>)}
+            {PAGES.map((p) => <button key={p.id} aria-current={page === p.id ? "page" : undefined} onClick={() => go(p.id)} className={`border-b-2 px-3 py-2 font-mono text-[12px] uppercase tracking-[0.08em] transition-colors ${page === p.id ? "border-accent text-fg" : "border-transparent text-mute hover:text-fg"}`}>{p.label}</button>)}
           </nav>
-          <span title={s.mode === "replay" ? "Replay" : s.mode === "live" ? "Live hardware" : s.chain.status === "ok" ? "Chain connected" : s.chain.status === "error" ? "Chain unreachable" : "Not connected"} className={`h-2 w-2 shrink-0 rounded-full ${live}`} />
+          <span title={s.mode === "replay" ? "Replay" : s.mode === "live" ? "Live hardware" : s.chain.status === "ok" ? "Chain connected" : s.chain.status === "error" ? "Chain unreachable" : "Not connected"} className={`h-2 w-2 shrink-0 ${live}`} />
           <button aria-label="Toggle theme" onClick={() => s.setSettings({ theme: dark ? "light" : "dark" })} className="text-mute hover:text-fg">{dark ? <Sun size={16} /> : <Moon size={16} />}</button>
         </div>
       </header>

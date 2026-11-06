@@ -4,6 +4,7 @@ import { Card, Empty, ErrorBox, H, ModePill, Page, Stat, Tag, ago, fmtKwh, short
 import { usePipeline } from "../components/Pipeline";
 import { Odometer } from "../components/motion";
 import { PowerChart } from "../components/PowerChart";
+import { Meter3D } from "../landing/Meter3D";
 
 export const useWindows = () => {
   const { evs } = useStore();
@@ -25,22 +26,21 @@ export function Overview() {
   return (
     <Page title={s.settings.ensName} aside={<>{s.mode === "replay" && <Tag k="Replay" />}{stale && <Tag k="Stale" title="No line from the device for over 90 s" />}</>}>
       {s.chain.status === "error" && <ErrorBox title="Cannot read the chain">{s.chain.error}. Chain values may be old (last good read {ago(s.chain.lastOkAt ?? 0, s.now)}).</ErrorBox>}
-      {s.ids.from === "none" && <Card><div className="text-sm font-medium">No meter connected</div><p className="mt-1 text-sm text-mute">Add the ledger address, or paste a setup link, to read this meter from the chain.</p><a href="#settings" className="mt-4 inline-flex rounded-full bg-accent px-4 py-2 text-sm font-medium text-bg">Connect a meter</a></Card>}
+      {s.ids.from === "none" && <Card><div className="text-sm font-medium">No meter connected</div><p className="mt-1 text-sm text-mute">Add the ledger address, or paste a setup link, to read this meter from the chain.</p><a href="#settings" className="mt-4 inline-flex bg-accent px-4 py-2.5 font-mono text-[12px] font-medium uppercase tracking-[0.08em] text-white">Connect a meter</a></Card>}
 
-      <Card className="py-8">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div>
-            <div className="text-sm text-mute">Energy counted</div>
-            <div className="num mt-2 text-7xl font-semibold leading-none">{live !== undefined ? <Odometer value={kwh(live).toFixed(3)} /> : "—"}<span className="ml-2 text-xl font-normal text-mute">kWh</span></div>
-            <div className="mt-3 text-sm text-mute">{deviceSeen ? `Device heard ${ago(deviceSeen, s.now)}` : L ? `From the chain · report #${L.lastSeq}${lastRow?.time ? ` · ${ago(lastRow.time * 1000, s.now)}` : ""}` : "Not connected"}{deviceSeen && L ? ` · ${fmtKwh(L.lastTotal)} kWh confirmed on-chain` : ""}</div>
-          </div>
-          <div className="text-right"><ModePill mode={mode} />{L?.hold && <div className="mt-1 text-xs text-warn">Inspection hold set</div>}</div>
+      <div className="surface grid md:grid-cols-[1fr_260px]">
+        <div className="p-6 md:p-8">
+          <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-mute">Energy counted</div>
+          <div className="num mt-3 text-6xl font-semibold leading-none md:text-7xl">{live !== undefined ? <Odometer value={kwh(live).toFixed(3)} /> : "—"}<span className="ml-2 text-xl font-normal text-mute">kWh</span></div>
+          <div className="mt-4 text-sm text-mute">{deviceSeen ? `Device heard ${ago(deviceSeen, s.now)}` : L ? `From the chain · report #${L.lastSeq}${lastRow?.time ? ` · ${ago(lastRow.time * 1000, s.now)}` : ""}` : "Not connected"}{deviceSeen && L ? ` · ${fmtKwh(L.lastTotal)} kWh confirmed on-chain` : ""}</div>
+          <div className="mt-6 flex items-center gap-4"><ModePill mode={mode} />{L?.hold && <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-warn">Inspection hold set</span>}</div>
         </div>
-      </Card>
+        <div className="relative h-56 border-t border-line md:h-auto md:border-l md:border-t-0"><Meter3D compact kwh={live !== undefined ? kwh(live) : 0} watts={lastW ? lastW.avgW : s.meter?.watts} /></div>
+      </div>
 
-      <div className="grid grid-cols-2 gap-8 px-1">
-        <Stat label="Credit" value={L ? creditText(L) : "—"} unit={L ? "pulses" : undefined} note="demo credit" />
-        <Stat label="Arrears" value={L ? arrearsText(L) : "—"} unit={L ? "pulses" : undefined} tone={L && L.arrears > 0n ? "text-warn" : ""} />
+      <div className="grid grid-cols-2 border-l border-t border-line">
+        <div className="border-b border-r border-line p-5"><Stat label="Credit" value={L ? creditText(L) : "—"} unit={L ? "pulses" : undefined} note="demo credit" /></div>
+        <div className="border-b border-r border-line p-5"><Stat label="Arrears" value={L ? arrearsText(L) : "—"} unit={L ? "pulses" : undefined} tone={L && L.arrears > 0n ? "text-warn" : ""} /></div>
       </div>
 
       <Card><PowerChart measured={W.map((w) => ({ at: w.t, w: w.avgW }))} /></Card>
