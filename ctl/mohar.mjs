@@ -159,11 +159,11 @@ async function externals() {
   // The hotspot's name comes from the git-ignored secrets.h, never from tracked code.
   const secretsFile = path.join(ROOT, "firmware/mohar/src/secrets.h");
   const ssid = fs.existsSync(secretsFile) ? (fs.readFileSync(secretsFile, "utf8").match(/MOHAR_WIFI_SSID\s+"([^"]*)"/) ?? [])[1] : undefined;
-  const wifi = ssid ? sh("nmcli", ["-t", "-f", "SSID,CHAN,FREQ", "dev", "wifi", "list", "--rescan", "no"]).split("\n").find((l) => l.startsWith(ssid + ":")) : undefined;
+  const wifi = ssid ? sh("nmcli", ["-t", "-f", "SSID,CHAN,FREQ", "dev", "wifi", "list", "--rescan", "yes"], { timeout: 15000 }).split("\n").find((l) => l.startsWith(ssid + ":")) : undefined;
   if (!wifi) rows.push({ name: "Hotspot for the ESP", up: false, detail: "not visible from the laptop" });
   else {
     const chan = Number(wifi.split(":")[1]);
-    rows.push({ name: "Hotspot for the ESP", up: chan <= 14, warn: chan > 14, detail: chan <= 14 ? `2.4 GHz, channel ${chan}` : `5 GHz (channel ${chan}): the ESP8266 can NOT join. Switch the hotspot to 2.4 GHz` });
+    rows.push({ name: "Hotspot for the ESP", up: chan <= 14, warn: chan > 14, detail: chan <= 14 ? `2.4 GHz, channel ${chan}${chan >= 12 ? " (high 2.4 GHz channel: fine for the ESP8266, but if it won't join, set the phone to channel 1, 6 or 11)" : ""}` : `5 GHz (channel ${chan}): the ESP8266 can NOT join. Switch the hotspot to 2.4 GHz` });
   }
   const pub = await rpc("https://altmempool.forshtat.com", "eth_blockNumber");
   rows.push({ name: "Public devnet (EF)", up: pub !== undefined, detail: pub ? `block ${parseInt(pub, 16)}` : "unreachable" });
