@@ -20,7 +20,7 @@ Checked against `events/mumbai/prizes/` (ethereum-foundation.md, ens.md, 0g.md).
 | ENSv2 central, not cosmetic | ✅ | Fleet registry, permissioned resolver, role-based edits, rejected-edit demo |
 | Functional, not hard-coded | ✅ | **Fixed Sat.** The name now holds the current ledger, paymaster, account, key root and pub seed, taken from the account itself. The dashboard finds the meter from the name alone; the key check shows Match. Manual addresses remain only as a labelled testing fallback |
 | `agent-endpoint[web]` | ⚠️ | Cleared (was a placeholder). Set it to the live URL once there is one: `node ens/03-point-to-live.ts <account> <ledger> <paymaster> 1337 <url>` |
-| Link to a live demo | ✅ | Deployed on Vercel: https://mohar-pearl.vercel.app/ (root directory `dashboard`) |
+| Link to a live demo | ✅ | Deployed on Vercel: https://mohar-ethmumbai.vercel.app/ (root directory `dashboard`) |
 | Open source on GitHub | ✅ | |
 | Name term | ⚠️ | `mohar.eth` was registered for 28 days; fine for judging |
 
@@ -41,7 +41,7 @@ Checked against `events/mumbai/prizes/` (ethereum-foundation.md, ens.md, 0g.md).
 | Project name, short description | ✅ README |
 | Public repo with README and setup | ✅ |
 | Demo video under 3 minutes | ❌ yours |
-| Live demo link | ✅ https://mohar-pearl.vercel.app/ |
+| Live demo link | ✅ https://mohar-ethmumbai.vercel.app/ |
 | Contract deployment addresses | ✅ README |
 | Team names with Telegram and X | ❌ yours |
 | Where AI was used | ✅ README |
