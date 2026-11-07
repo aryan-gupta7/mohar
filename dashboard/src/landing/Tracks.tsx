@@ -169,7 +169,7 @@ function OgScene({ q }: { q: number }) {
         {[0, 1, 2, 3, 4].map((i) => <rect key={i} x={i * 24} y="14" width="16" height="16" fill="var(--fg)" />)}
         <line x1="120" x2="160" y1="22" y2="22" stroke="var(--fg)" /><Box x={160} y={0} w={180} h={44}><text x="12" y="27" fill="var(--fg)">0G Storage root</text></Box>
         <line x1="250" x2="250" y1="44" y2="84" stroke="var(--fg)" /><Box x={160} y={84} w={180} h={44}><text x="12" y="27" fill="var(--fg)">ENS · mohar.log</text></Box>
-        <text y="170" fill="var(--fg)" fontWeight="700">Replay: 23 of 23 records match the chain.</text>
+        <text y="170" fill="var(--fg)" fontWeight="700">Replay: 70 of 70 records match the chain.</text>
         <text y="190" fill="var(--mute)">A one-watt edit shows up as MISMATCH.</text>
       </g>
     </svg>
@@ -199,7 +199,7 @@ export function Tracks() {
         use="A real 0G model call sits inside the device's decision loop. Its answer can make the device more careful, and every episode is logged to 0G Storage."
         reqs={[
           { ask: "A 0G call inside the decision loop", did: "The ESP8266 calls qwen3.8-flash itself over TLS. A 0G INSPECT set a hold on the public ledger.", proof: "live-run-public.json" },
-          { ask: "Episode log with a request ID per decision", did: "Every report carries its request ID. Reports are batched to 0G Storage; replay verifies proofs and matches 23 of 23 records.", proof: "0g-4.json" },
+          { ask: "Episode log with a request ID per decision", did: "Every report carries its request ID. Reports are batched to 0G Storage; replay verifies proofs and matches 70 of 70 records.", proof: "0g-4.json · 0g-5-current-ledger.json" },
           { ask: "Safe stop if 0G is unreachable", did: "No valid answer means Safe stop with an empty request ID, and no code path invents a decision. Blocking 0G on the board is the one test still open.", proof: "0G3-T4 open · replay log" },
           { ask: "Real hardware", did: "Pico H, ESP8266, status LEDs and a power bank. Model chosen on 19 scenarios, 5 runs each, all correct, p95 1.2 s.", proof: "0g-1-qwen3.8-flash.json" },
         ]}>{(q) => <OgScene q={q} />}</Track>
