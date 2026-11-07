@@ -1,0 +1,41 @@
+06:59:09 EV {"cp":2,"ms":71612,"e":"cp_start"}
+06:59:09 EV {"cp":2,"ms":71612,"e":"window","valid":86,"glitches":0,"stuck":0,"avgW":1612,"peakW":1872,"windowMs":60000,"gapMs":824,"total":30792}
+06:59:16 EV {"cp":2,"ms":78343,"e":"ledger_read","ok":true,"credit":2336593920,"arrears":0,"hold":1,"lastSeq":76,"lastTotal":30748,"tariff":1000000000,"ledgerMode":1,"nonce":80}
+06:59:16 EV {"cp":2,"ms":78347,"e":"local_check","result":"pass"}
+06:59:16 EV {"cp":2,"ms":78352,"e":"ai_request","model":"qwen3.8-flash","provider":"0G Private Computer"}
+06:59:31 EV {"cp":2,"ms":93364,"e":"ai_response","answer":"NONE","rid":"","latencyMs":15002,"http":-1,"why":"http_-1"}
+06:59:31 EV {"cp":2,"ms":93364,"e":"decision","mode":"SAFE_STOP","reason":20,"aiWanted":"SAFE_STOP","ledgerHold":1,"ledgerMode":1,"aiSource":""}
+06:59:31 EV {"cp":2,"ms":93375,"e":"sign_start","nonce":80,"leaf":79}
+06:59:31 EV {"cp":2,"ms":94100,"e":"sign_done","result":"OK","ms":720,"steps":510,"leaf":79,"leavesLeft":176,"resent":0}
+06:59:31 EV {"cp":2,"ms":94120,"e":"submit","transport":"wifi"}
+06:59:42 EV {"cp":2,"ms":104534,"e":"submitted","result":"ok","hash":"0xe89197af112b610716ade9f6c3c542d8e2a59cfd442cdb316a21c49dbebb9fc7"}
+06:59:42 EV {"cp":2,"ms":104534,"e":"cp_end","mode":"SAFE_STOP","totalMs":32923}
+06:59:42 CP mode=SAFE_STOP reason=20 ai=0xe89197af112b610716ade9f6c3c542d8e2a59cfd442cdb316a21c49dbebb9fc7 rid=- seq=77 nonce=80 total=30809 valid=86 glitches=0 stuck=0 avgW=1612 peakW=1872 hold=1 credit=2336593920 intent=OK resent=0 sent=ok ms=32929 heap=35888 stack=2612 tx=0xe89197af112b610716ade9f6c3c542d8e2a59cfd442cdb316a21c49dbebb9fc7
+06:59:42 OK
+07:00:09 EV {"cp":3,"ms":131613,"e":"cp_start"}
+07:00:09 EV {"cp":3,"ms":131613,"e":"window","valid":46,"glitches":0,"stuck":0,"avgW":862,"peakW":1039,"windowMs":60001,"gapMs":1476,"total":30838}
+07:00:17 EV {"cp":3,"ms":139387,"e":"ledger_read","ok":true,"credit":1466136064,"arrears":0,"hold":1,"lastSeq":77,"lastTotal":30809,"tariff":1000000000,"ledgerMode":1,"nonce":81}
+07:00:17 EV {"cp":3,"ms":139391,"e":"local_check","result":"pass"}
+07:00:17 EV {"cp":3,"ms":139396,"e":"ai_request","model":"qwen3.8-flash","provider":"0G Private Computer"}
+07:00:32 EV {"cp":3,"ms":154408,"e":"ai_response","answer":"NONE","rid":"","latencyMs":15003,"http":-1,"why":"http_-1"}
+07:00:32 EV {"cp":3,"ms":154409,"e":"decision","mode":"SAFE_STOP","reason":20,"aiWanted":"SAFE_STOP","ledgerHold":1,"ledgerMode":1,"aiSource":""}
+07:00:32 EV {"cp":3,"ms":154420,"e":"sign_start","nonce":81,"leaf":80}
+07:00:32 EV {"cp":3,"ms":154986,"e":"sign_done","result":"OK","ms":562,"steps":495,"leaf":80,"leavesLeft":175,"resent":0}
+07:00:32 EV {"cp":3,"ms":155007,"e":"submit","transport":"wifi"}
+07:00:42 EV {"cp":3,"ms":165058,"e":"submitted","result":"ok","hash":"0x1145db668fb818c239a4f1604a43ba118cde2b95a4286b00d793ac492d56bb21"}
+07:00:42 EV {"cp":3,"ms":165058,"e":"cp_end","mode":"SAFE_STOP","totalMs":33445}
+07:00:42 CP mode=SAFE_STOP reason=20 ai=0x1145db668fb818c239a4f1604a43ba118cde2b95a4286b00d793ac492d56bb21 rid=- seq=78 nonce=81 total=30856 valid=46 glitches=0 stuck=0 avgW=862 peakW=1039 hold=1 credit=1466136064 intent=OK resent=0 sent=ok ms=33452 heap=35664 stack=2612 tx=0x1145db668fb818c239a4f1604a43ba118cde2b95a4286b00d793ac492d56bb21
+07:00:42 OK
+07:01:09 EV {"cp":4,"ms":191613,"e":"cp_start"}
+07:01:09 EV {"cp":4,"ms":191613,"e":"window","valid":66,"glitches":0,"stuck":0,"avgW":1237,"peakW":1737,"windowMs":60000,"gapMs":1418,"total":30904}
+07:01:16 EV {"cp":4,"ms":198499,"e":"ledger_read","ok":true,"credit":1466136064,"arrears":0,"hold":1,"lastSeq":77,"lastTotal":30809,"tariff":1000000000,"ledgerMode":1,"nonce":81}
+07:01:16 EV {"cp":4,"ms":198503,"e":"local_check","result":"pass"}
+07:01:16 EV {"cp":4,"ms":198508,"e":"ai_request","model":"qwen3.8-flash","provider":"0G Private Computer"}
+07:01:22 EV {"cp":4,"ms":204806,"e":"ai_response","answer":"RUN","rid":"f5fbdf28-df21-4b05-aaf8-9853a852b114","latencyMs":6288,"http":200,"why":""}
+07:01:22 EV {"cp":4,"ms":204807,"e":"decision","mode":"INSPECT","reason":11,"aiWanted":"RUN","ledgerHold":1,"ledgerMode":1,"aiSource":"0g"}
+07:01:22 EV {"cp":4,"ms":204819,"e":"sign_start","nonce":81,"leaf":80}
+07:01:23 EV {"cp":4,"ms":205344,"e":"sign_done","result":"OK","ms":520,"steps":495,"leaf":80,"leavesLeft":175,"resent":1}
+07:01:23 EV {"cp":4,"ms":205364,"e":"submit","transport":"wifi"}
+07:01:29 EV {"cp":4,"ms":211819,"e":"submitted","result":"rejected","hash":"{"jsonrpc":"2.0","id":1,"error":{"message":"Invalid Transact"}
+07:01:29 EV {"cp":4,"ms":211819,"e":"cp_end","mode":"INSPECT","totalMs":20207}
+07:01:29 CP mode=INSPECT reason=11 ai=0g rid=f5fbdf28-df21-4b05-aaf8-9853a852b114 seq=78 nonce=81 total=30856 valid=66 glitches=0 stuck=0 avgW=1237 peakW=1737 hold=1 credit=1466136064 intent=OK resent=1 sent=rejected ms=20213 heap=35776 stack=2612 tx={"jsonrpc":"2.0","id":1,"error":{"message":"Invalid Transact
