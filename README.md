@@ -76,7 +76,7 @@ Sepolia (ENS): the `mohar.eth` subregistry `0x53AD330F425412DCFFf888d58d7CB21f28
 
 ## Dashboard
 
-[dashboard/](dashboard/) is a static site (Vite, React, TypeScript): no backend, no trackers, no secrets in the browser. `/` is the entry page that explains the method; `#overview` is the working dashboard for the demo meter. It finds the meter from its ENS name (no addresses in the code), reads the devnet over RPC, and with a board plugged in over USB (desktop Chrome or Edge) it shows the live pipeline. Without a board it works from the chain alone. `.github/workflows/pages.yml` publishes it with GitHub Pages (set Pages > Source to GitHub Actions).
+[dashboard/](dashboard/) is a static site (Vite, React, TypeScript): no backend, no trackers, no secrets in the browser. `/` is the entry page that explains the method; `#overview` is the working dashboard for the demo meter. It finds the meter from its ENS name (no addresses in the code), reads the devnet over RPC, and with a board plugged in over USB (desktop Chrome or Edge) it shows the live pipeline. Without a board it works from the chain alone. It is deployed on Vercel from the `dashboard/` folder (framework Vite, root directory `dashboard`): https://mohar-pearl.vercel.app/.
 
 ## Honest limits
 
