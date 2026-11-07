@@ -1,0 +1,16 @@
+{
+ "test": "0G3-T4 and T5 on the real ESP8266 (dev firmware, root 0x9aa7f234\u2026), public devnet, current ledger 0x3fde\u20265741",
+ "how": "firmware/tools/zg_safe_stop_test.py; `zgblock on` points the 0G call at an unroutable address, `zgblock off` restores it",
+ "T4": {
+  "result": "PASS",
+  "observed": "ai_request, then after 15,003 ms (the call's own timeout) ai_response answer NONE, http -1, request id empty; decision SAFE_STOP (reason 20, no decision); signed (leaf 80) and submitted; the report was mined in block 11401 with all four frames ok, ledger mode 3, reason 20, empty request ID, seq 78; the window still counted 46 valid pulses and the running total kept rising (30748 to 30856)",
+  "tx": "0x1145db668fb818c239a4f1604a43ba118cde2b95a4286b00d793ac492d56bb21",
+  "notObserved": "the status LED (set to solid by the same code path; check by eye when filming)"
+ },
+ "T5": {
+  "result": "PASS",
+  "observed": "after zgblock off, the next checkpoint got answer RUN from 0G with a real request ID (f5fbdf28-df21-4b05-aaf8-9853a852b114, 6.3 s); the decision moved off SAFE_STOP to INSPECT because the ledger hold was still set, which is the intended rule (the AI cannot clear a hold)",
+  "note": "that checkpoint's submission was rejected as a resend of the previous, still unmined report (resent=1): the sequence-number issue recorded in docs/track-check.md"
+ },
+ "log": "docs/evidence/0g3-t4-t5-board-run.log"
+}

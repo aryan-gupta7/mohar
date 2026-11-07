@@ -31,7 +31,7 @@ Checked against `events/mumbai/prizes/` (ethereum-foundation.md, ens.md, 0g.md).
 | A 0G call inside the decision loop | ✅ | Board calls `qwen3.8-flash` itself; every recent report carries a real request ID |
 | Episode log on 0G Storage with a request ID per decision | ✅ | **Refreshed Sat.** 70 reports of the current ledger in three batches, all matching the chain with real IDs; `mohar.log` points at the newest root. `evidence/0g-5-current-ledger.json` |
 | Replayable simulation, or live hardware demo at the booth | ⚠️ | `uploader/replay.ts` replays the real log. The dashboard's recorded runs are synthesised and labelled Replay. Plan the booth demo |
-| Safe stop if 0G is unreachable, no fake decision | ⚠️ | **T7 passed**: the release firmware has no code path that invents a decision. **T4 (block 0G) and T5 (restore) are still open**: they need the dev firmware on the ESP8266 plugged into a computer (`zgblock on`), and the board is currently on power only |
+| Safe stop if 0G is unreachable, no fake decision | ✅ | **T4, T5 and T7 passed on Sat.** Blocking 0G: after the 15 s timeout the board chose `SAFE_STOP`, and that report was mined with an empty request ID while pulses were still counted. Restoring 0G: a fresh answer with a real request ID. The release firmware has no code path that invents a decision. `evidence/0g3-t4-t5-board-run.json` |
 | Real hardware | ✅ | Eligible for the real-hardware prize |
 
 ## Submission items (all tracks)

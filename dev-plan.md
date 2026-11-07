@@ -62,7 +62,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 17 | [ENS-3](#ens-3-discovery-and-permission-demo) | Discovery and permission demo | Fri 22:00 | ✅ Done (dashboard Identity page dry-runs edits against the live resolver) |
 | 18 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 22:00 | ✅ Done Fri ~15:20 (T1, T3, T4-equivalent; T2, T5 open) |
 | 19 | [ENS-4](#ens-4-the-device-reads-its-policy-from-ens) | Device reads ENS policy | Sat 00:00 | Optional |
-| 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | ✅ T1–T3, T6 on the public devnet Fri ~15:45; T4, T5, T8, T9 open; T7 passed Sat |
+| 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | ✅ T1–T3, T6 on the public devnet Fri ~15:45; T4, T5, T7 passed Sat on the real board; T8, T9 open |
 | 21 | [0G-4](#0g-4-episode-log-and-replay) | Episode log and replay | Sat 03:00 | ✅ Done Fri ~16:20 on real data (4 of 4 records match the chain) |
 | 22 | [REL-1](#rel-1-full-rehearsal) | Full rehearsal, following the [demo story](#demo-story) | Sat 05:30 | |
 | 23 | [REL-2](#rel-2-submission) | Submission | **Sat 08:00** | |
@@ -1124,8 +1124,8 @@ Also seen: **a fixed check fires without calling 0G** (a glitching line gave `IN
 | 0G3-T1 | Pico normal | 0G says run; LED shows `RUN`; `RUN` report on-chain with the real request ID |
 | 0G3-T2 | Pico surge: above the sanctioned load, below the meter's limit, so no local check fires | **0G says inspect, and the LED changes to `INSPECT`.** Hold set on-chain |
 | 0G3-T3 | After T2, back to normal | 0G says run, but the device stays `INSPECT` until the operator clears the hold |
-| 0G3-T4 | Block 0G's address | `SAFE_STOP` within the timeout; LED solid; `requestId` empty; pulses still counted |
-| 0G3-T5 | Restore access | Leaves `SAFE_STOP` only after a fresh valid decision |
+| 0G3-T4 | Block 0G's address | `SAFE_STOP` within the timeout; LED solid; `requestId` empty; pulses still counted. **Passed Sat on the real board:** 15 s timeout, `SAFE_STOP` mined with an empty request ID, pulses still counted ([evidence](docs/evidence/0g3-t4-t5-board-run.json)); the LED was not watched |
+| 0G3-T5 | Restore access | Leaves `SAFE_STOP` only after a fresh valid decision. **Passed Sat:** the next checkpoint got a real 0G `RUN` (request ID in the evidence) and moved to `INSPECT` because the hold was set |
 | 0G3-T6 | Credit zero, 0G says run | Stays `CREDIT_STOP`: AI can't override credit |
 | 0G3-T7 | Inspect release firmware and logs | No code path invents a decision. **Passed Sat:** the release build has no injection strings or blackhole address; failures return `ZG_NONE`, which becomes `SAFE_STOP` with an empty request ID ([evidence](docs/evidence/0g3-t7-release-inspection.json)) |
 | 0G3-T8 | 30-minute run | No resets; all reports mined; counts still match the Pico |
