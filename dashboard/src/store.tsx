@@ -5,7 +5,7 @@ import { getBlockNumber, getChainId, getReceipt, getTxStatus, readAccountRoot, r
 import { resolveName, UserError, type Resolved } from "./lib/ens";
 
 export type Settings = { chainRpc: string; ensName: string; manualLedger: string; manualAccount: string; manualPaymaster: string; theme: "dark" | "light" };
-const DEFAULTS: Settings = { chainRpc: "http://127.0.0.1:18545", ensName: "meter-001.mohar.eth", manualLedger: "", manualAccount: "", manualPaymaster: "", theme: "light" };
+const DEFAULTS: Settings = { chainRpc: "https://altmempool.forshtat.com", ensName: "meter-001.mohar.eth", manualLedger: "", manualAccount: "", manualPaymaster: "", theme: "light" };
 const load = (): Settings => {
   try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem("mohar.settings") ?? "{}"), ...Object.fromEntries(new URLSearchParams(location.search)) } as Settings; } catch { return DEFAULTS; }
 };
