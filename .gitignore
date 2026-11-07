@@ -21,6 +21,9 @@ firmware/**/secrets.h
 # OS and editor
 .DS_Store
 *.log
+# ...except the recorded runs the dashboard replays
+!dashboard/public/replay/*.log
+!dashboard/replay/*.log
 devnet/genesis.local.json
 dashboard/node_modules/
 dashboard/dist/

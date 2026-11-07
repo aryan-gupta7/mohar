@@ -1,0 +1,28 @@
++0 KEY READY root=0x6c0937ea06ed23562708791235b395d11e0888eccf5c6271fb79e4c254687701 pubSeed=0x0a2886f4dcbaff6c44092ce15806b2c8 ms=5 source=loaded
++300 METER {"event":"load","mode":"glitch","watts":900,"pulses":0,"glitches":0,"wh":0,"auto":false}
++2000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":2,"glitches":2,"wh":0.625,"auto":false}
++4000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":4,"glitches":4,"wh":1.25,"auto":false}
++6000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":6,"glitches":6,"wh":1.875,"auto":false}
++8000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":8,"glitches":8,"wh":2.5,"auto":false}
++10000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":10,"glitches":10,"wh":3.125,"auto":false}
++12000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":12,"glitches":12,"wh":3.75,"auto":false}
++14000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":14,"glitches":14,"wh":4.375,"auto":false}
++16000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":16,"glitches":16,"wh":5,"auto":false}
++18000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":18,"glitches":18,"wh":5.625,"auto":false}
++20000 METER {"event":"tick","mode":"glitch","watts":900,"pulses":20,"glitches":20,"wh":6.25,"auto":false}
++21000 EV {"cp":1,"ms":73000,"e":"cp_start"}
++21150 EV {"cp":1,"ms":73150,"e":"window","valid":19,"glitches":9,"stuck":0,"avgW":905,"peakW":1010,"windowMs":20000,"gapMs":3500,"total":20}
++22050 EV {"cp":1,"ms":74050,"e":"ledger_read","ok":true,"credit":500000000000,"arrears":0,"hold":0,"lastSeq":3,"lastTotal":200,"tariff":1000000000,"ledgerMode":0,"nonce":4}
++22060 EV {"cp":1,"ms":74060,"e":"local_check","result":"glitch"}
++22065 EV {"cp":1,"ms":74065,"e":"decision","mode":"INSPECT","reason":2,"aiWanted":"INSPECT","ledgerHold":0,"ledgerMode":0,"aiSource":"none"}
++22085 EV {"cp":1,"ms":74085,"e":"sign_start","nonce":4,"leaf":3}
++22605 EV {"cp":1,"ms":520,"e":"sign_done","result":"OK","steps":498,"leaf":3,"leavesLeft":252,"resent":0}
++22615 EV {"cp":1,"ms":74615,"e":"submit","transport":"wifi"}
++25415 EV {"cp":1,"ms":77415,"e":"submitted","result":"ok","hash":"0x00007bbc00007bbc00007bbc00007bbc00007bbc00007bbc00007bbc00007bbc"}
++25420 EV {"cp":1,"ms":77420,"e":"cp_end","mode":"INSPECT","totalMs":4500}
++25460 CP mode=INSPECT reason=2 ai=none rid=- seq=4 nonce=4 total=20
++31420 REPLAY-CHAIN {"receipts":{"0x00007bbc00007bbc00007bbc00007bbc00007bbc00007bbc00007bbc00007bbc":{"blockNumber":"0x4b4","frameReceipts":[{"status":"0x1","gasUsed":"0x124f8"},{"status":"0x1","gasUsed":"0x1d84"},{"status":"0x1","gasUsed":"0x8408"},{"status":"0x1","gasUsed":"0x2d96"}]}},"ledger":{"credit":"480000000000","hold":true,"lastSeq":4,"lastTotal":20,"tariff":"1000000000","arrears":"0","lastMode":1,"ledgerMode":0}}
++33420 METER {"event":"tick","mode":"glitch","watts":900,"pulses":22,"glitches":20,"wh":6.875,"auto":false}
++35420 METER {"event":"tick","mode":"glitch","watts":900,"pulses":24,"glitches":20,"wh":7.5,"auto":false}
++37420 METER {"event":"tick","mode":"glitch","watts":900,"pulses":26,"glitches":20,"wh":8.125,"auto":false}
++39420 METER {"event":"tick","mode":"glitch","watts":900,"pulses":28,"glitches":20,"wh":8.75,"auto":false}

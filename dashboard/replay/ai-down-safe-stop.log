@@ -1,0 +1,30 @@
++0 KEY READY root=0x6c0937ea06ed23562708791235b395d11e0888eccf5c6271fb79e4c254687701 pubSeed=0x0a2886f4dcbaff6c44092ce15806b2c8 ms=5 source=loaded
++300 METER {"event":"load","mode":"normal","watts":900,"pulses":0,"glitches":0,"wh":0,"auto":false}
++2000 METER {"event":"tick","mode":"normal","watts":900,"pulses":2,"glitches":0,"wh":0.625,"auto":false}
++4000 METER {"event":"tick","mode":"normal","watts":900,"pulses":4,"glitches":0,"wh":1.25,"auto":false}
++6000 METER {"event":"tick","mode":"normal","watts":900,"pulses":6,"glitches":0,"wh":1.875,"auto":false}
++8000 METER {"event":"tick","mode":"normal","watts":900,"pulses":8,"glitches":0,"wh":2.5,"auto":false}
++10000 METER {"event":"tick","mode":"normal","watts":900,"pulses":10,"glitches":0,"wh":3.125,"auto":false}
++12000 METER {"event":"tick","mode":"normal","watts":900,"pulses":12,"glitches":0,"wh":3.75,"auto":false}
++14000 METER {"event":"tick","mode":"normal","watts":900,"pulses":14,"glitches":0,"wh":4.375,"auto":false}
++16000 METER {"event":"tick","mode":"normal","watts":900,"pulses":16,"glitches":0,"wh":5,"auto":false}
++18000 METER {"event":"tick","mode":"normal","watts":900,"pulses":18,"glitches":0,"wh":5.625,"auto":false}
++20000 METER {"event":"tick","mode":"normal","watts":900,"pulses":20,"glitches":0,"wh":6.25,"auto":false}
++21000 EV {"cp":1,"ms":73000,"e":"cp_start"}
++21150 EV {"cp":1,"ms":73150,"e":"window","valid":18,"glitches":0,"stuck":0,"avgW":898,"peakW":990,"windowMs":20000,"gapMs":3600,"total":20}
++22050 EV {"cp":1,"ms":74050,"e":"ledger_read","ok":true,"credit":500000000000,"arrears":0,"hold":0,"lastSeq":4,"lastTotal":260,"tariff":1000000000,"ledgerMode":0,"nonce":5}
++22060 EV {"cp":1,"ms":74060,"e":"local_check","result":"pass"}
++22065 EV {"cp":1,"ms":74065,"e":"ai_request","model":"qwen3.8-flash","provider":"0G Private Computer"}
++42065 EV {"cp":1,"ms":94065,"e":"ai_response","answer":"NONE","rid":"","latencyMs":0,"http":-1,"why":"http_-1"}
++42070 EV {"cp":1,"ms":94070,"e":"decision","mode":"SAFE_STOP","reason":20,"aiWanted":"SAFE_STOP","ledgerHold":0,"ledgerMode":0,"aiSource":"http_-1"}
++42090 EV {"cp":1,"ms":94090,"e":"sign_start","nonce":5,"leaf":4}
++42610 EV {"cp":1,"ms":520,"e":"sign_done","result":"OK","steps":498,"leaf":4,"leavesLeft":251,"resent":0}
++42620 EV {"cp":1,"ms":94620,"e":"submit","transport":"wifi"}
++45420 EV {"cp":1,"ms":97420,"e":"submitted","result":"ok","hash":"0x00009aab00009aab00009aab00009aab00009aab00009aab00009aab00009aab"}
++45425 EV {"cp":1,"ms":97425,"e":"cp_end","mode":"SAFE_STOP","totalMs":4500}
++45465 CP mode=SAFE_STOP reason=20 ai=none rid=- seq=5 nonce=5 total=20
++51425 REPLAY-CHAIN {"receipts":{"0x00009aab00009aab00009aab00009aab00009aab00009aab00009aab00009aab":{"blockNumber":"0x4b5","frameReceipts":[{"status":"0x1","gasUsed":"0x124f8"},{"status":"0x1","gasUsed":"0x1d84"},{"status":"0x1","gasUsed":"0x8408"},{"status":"0x1","gasUsed":"0x2d96"}]}},"ledger":{"credit":"480000000000","lastSeq":5,"lastTotal":20,"tariff":"1000000000","arrears":"0","lastMode":3,"ledgerMode":0}}
++53425 METER {"event":"tick","mode":"normal","watts":900,"pulses":22,"glitches":0,"wh":6.875,"auto":false}
++55425 METER {"event":"tick","mode":"normal","watts":900,"pulses":24,"glitches":0,"wh":7.5,"auto":false}
++57425 METER {"event":"tick","mode":"normal","watts":900,"pulses":26,"glitches":0,"wh":8.125,"auto":false}
++59425 METER {"event":"tick","mode":"normal","watts":900,"pulses":28,"glitches":0,"wh":8.75,"auto":false}
