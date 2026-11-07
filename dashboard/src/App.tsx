@@ -42,7 +42,7 @@ function Settings() {
       setD({ ...d, ...p }); setNote("Filled in. Press Connect."); setLink("");
     } catch { setNote("That isn't a link."); }
   };
-  const connect = () => { setSettings({ ...d, forceManual: d.manualLedger ? "1" : d.forceManual } as any); setNote("Connecting…"); };
+  const connect = () => { setSettings({ ...d } as any); setNote("Connecting…"); };
   const share = () => {
     const q = new URLSearchParams(); for (const [k, v] of Object.entries(d)) if (v) q.set(k, v);
     navigator.clipboard?.writeText(`${location.origin}${location.pathname}?${q}#overview`).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
@@ -57,8 +57,10 @@ function Settings() {
       </Card>
       <Card>
         <H>Meter</H>
+        <p className="mb-4 text-sm text-mute">The meter is found from its ENS name. These addresses are a fallback for when the name has no records.</p>
         <div className="grid gap-4 sm:grid-cols-3">{field("manualLedger", "Ledger", "0x…")}{field("manualAccount", "Account", "0x…")}{field("manualPaymaster", "Paymaster", "0x…")}</div>
-        <div className="mt-5 flex flex-wrap items-center gap-2"><Button onClick={connect} disabled={!d.manualLedger || !d.chainRpc}>Connect</Button><Button variant="ghost" onClick={share}>{copied ? "Copied" : "Copy link"}</Button></div>
+        <div className="mt-5 flex flex-wrap items-center gap-2"><Button onClick={connect} disabled={!d.chainRpc}>Connect</Button><Button variant="ghost" onClick={share}>{copied ? "Copied" : "Copy link"}</Button></div>
+        <label className="mt-4 flex items-center gap-2 text-sm text-mute"><input type="checkbox" checked={d.forceManual === "1"} onChange={(e) => setD({ ...d, forceManual: e.target.checked ? "1" : "" })} />Testing only: use these addresses instead of the meter's ENS name</label>
         {chain.error && <div className="mt-3 text-xs text-bad">{chain.error}</div>}
         {note && <div className="mt-3 text-xs text-mute">{note}</div>}
         <div className="mt-5 flex gap-2"><input aria-label="Setup link" value={link} onChange={(e) => setLink(e.target.value)} placeholder="Or paste a dashboard link" className={inputCls} /><Button variant="ghost" onClick={apply} disabled={!link}>Fill in</Button></div>

@@ -1,0 +1,14 @@
+{
+ "what": "meter-001.mohar.eth re-pointed to the current deployment",
+ "tx": "0xb1500de0d555766e17a0c5d66ed816de4ebb25929dccaddb4bbf25d97b403501",
+ "network": "Sepolia",
+ "records": {
+  "addr(chain 1337)": "0x7eb63c0acd9ef3e494b5de676f63feaaed522291",
+  "mohar.ledger": "0x3fdec3e95601c36b4b9d5ad9dec10dbee4ba5741",
+  "mohar.paymaster": "0x3f98eb9ed81bf51cda95f7d6fab4ad322dcf5164",
+  "mohar.pq.root": "0x9aa7f2346845314ab2cd907d1b71b2a989f2220cab294f1aa85638278a47dd1c",
+  "mohar.pq.pubSeed": "0xc21ddea02f7266e741b306548d00af90",
+  "agent-endpoint[web]": "(cleared: the old value was a placeholder, https://mohar.invalid/dashboard)"
+ },
+ "check": "root and pubSeed were read from the account's own root() and pubSeed(); mohar.operator equals the ledger's operator()"
+}

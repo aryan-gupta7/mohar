@@ -1,5 +1,7 @@
 // Points meter-001.mohar.eth at the live contracts on the Mohar devnet that the board reports to.
-// Usage: node ens/03-point-to-live.ts <account> <ledger> <paymaster> [chainId=1337] [dashboardUrl]
+// Usage: node ens/03-point-to-live.ts <account> <ledger> <paymaster> [chainId=1337] [dashboardUrl|none]
+// Also copies the account's own root() and pubSeed() into mohar.pq.root / mohar.pq.pubSeed (read from MOHAR_RPC, default the public devnet),
+// so the name can never advertise a different key than the account holds. "none" clears agent-endpoint[web].
 // Signed by the owner (the deployer key). Replaces the placeholders ENS-2 left. Reads back through the Universal Resolver.
 import { createWalletClient, encodeFunctionData, http, parseAbi, toBytes, bytesToHex, namehash, type Address, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -26,12 +28,20 @@ let resolver: Address = "0x0000000000000000000000000000000000000000";
 for (let i = 0; i < 10 && /^0x0+$/.test(resolver); i++) resolver = await client.readContract({ address: FLEET_REGISTRY, abi: REG, functionName: "getResolver", args: ["meter-001"] } as any) as Address;
 if (/^0x0+$/.test(resolver)) throw new Error("meter-001 has no resolver");
 const name = dns(NAME);
+const DEVNET = process.env.MOHAR_RPC ?? "https://altmempool.forshtat.com";
+const ethCall = async (to: string, data: string) => (await (await fetch(DEVNET, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to, data }, "latest"] }) })).json()).result as Hex;
+const pqRoot = await ethCall(account, "0xebf0c717");                       // root()
+const pqSeed = ("0x" + (await ethCall(account, "0x63e71ad4")).slice(2, 34)) as Hex; // pubSeed(): the first 16 bytes
+if (!/^0x[0-9a-f]{64}$/i.test(pqRoot)) throw new Error(`could not read root() from ${account} on ${DEVNET}: ${pqRoot}`);
+console.log("account root", pqRoot, "pubSeed", pqSeed);
 const calls: Hex[] = [
+  encodeFunctionData({ abi: RES, functionName: "setText", args: [name, "mohar.pq.root", pqRoot] }),
+  encodeFunctionData({ abi: RES, functionName: "setText", args: [name, "mohar.pq.pubSeed", pqSeed] }),
   encodeFunctionData({ abi: RES, functionName: "setAddress", args: [name, 0x80000000n | BigInt(chainId), account as Hex] }),
   encodeFunctionData({ abi: RES, functionName: "setText", args: [name, "mohar.chainId", chainId] }),
   encodeFunctionData({ abi: RES, functionName: "setText", args: [name, "mohar.ledger", ledger] }),
   encodeFunctionData({ abi: RES, functionName: "setText", args: [name, "mohar.paymaster", paymaster] }),
-  ...(dashboard ? [encodeFunctionData({ abi: RES, functionName: "setText", args: [name, "agent-endpoint[web]", dashboard] })] : []),
+  ...(dashboard ? [encodeFunctionData({ abi: RES, functionName: "setText", args: [name, "agent-endpoint[web]", dashboard === "none" ? "" : dashboard] })] : []),
 ];
 const hash = await wallet.writeContract({ address: resolver, abi: RES, functionName: "multicall", args: [calls] });
 const receipt = await client.waitForTransactionReceipt({ hash });

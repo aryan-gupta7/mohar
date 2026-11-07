@@ -1,55 +1,53 @@
 # Track requirements check
 
-Checked against `events/mumbai/prizes/` (ethereum-foundation.md, ens.md, 0g.md) on Sat. ✅ done · ⚠️ open · ❌ missing.
+Checked against `events/mumbai/prizes/` (ethereum-foundation.md, ens.md, 0g.md). Updated Sat after the ENS re-point and the 0G refresh. ✅ done · ⚠️ open · ❌ missing.
 
 ## Ethereum Foundation: frame transaction alternative mempool
 
 | Requirement | Status | Note |
 |---|---|---|
-| Real alt mempool usage: a link to an admitted transaction on the devnet explorer, or code that submits one | ✅ / ⚠️ | Hash and code exist (EF-2, `signer/tools/ef2.ts`). The explorer keeps history in memory only: **save a screenshot of the admitted transaction**, and record a fresh admitted hash from the current deployment in `docs/evidence/` |
-| Falls in a listed area | ✅ | Something only an alt mempool allows: daily quota paymaster (flexible state access) and a hash-based wallet |
-| Team can explain the design, code and trade-offs | ✅ | mechanism.md sections 2 to 8; budget finding stated in the README |
-| Public repo | ⚠️ | Not pushed yet. `LICENSE` (MIT) exists |
-| One EF prize per project | ✅ | Enter the alt mempool prize only |
+| Real alt mempool usage: a link to an admitted transaction, or code that submits one | ✅ | [Admitted report from the board](https://explorer.altmempool.wtf/tx/0x5648ba4ac3c546525b465dbc17a09f9df3c25ad279943017f691b78c08c8e54c?node=https%3A%2F%2Faltmempool.forshtat.com%2Frpc): "Every rule passed", paymaster as payer, mined. Screenshot `evidence/explorer-admitted-report.png`, receipt `evidence/ef-live-report.json`. Code: `signer/tools/ef2.ts` |
+| A listed area | ✅ | Something only an alt mempool allows: quota paymaster (flexible state access) and a hash-based wallet |
+| Team can explain design, code, trade-offs | ✅ | mechanism.md; budget finding in the README |
+| Public repo, open-source licence | ✅ | Public, MIT |
+| One EF prize per project | ✅ | Alt mempool only |
 
 ## ENS: Best Use of ENSv2
 
 | Requirement | Status | Note |
 |---|---|---|
-| Built on ENSv2 on mainnet or Sepolia | ✅ | Sepolia |
-| ENSv2 features central | ✅ | Subname registry, permissioned resolver, role-based edits, rejected-edit demo |
-| Demo functional, not hard-coded | ❌ | **The live ENS records point to an old deployment**: `mohar.ledger` `0xde1a…`, `mohar.paymaster` `0xee22…`, account `0xdfa2…`, and `mohar.pq.root` is the fixed test-seed root. The working demo reads the new contracts through manual addresses (`forceManual`), which bypasses ENS. Re-run `ens/03-point-to-live.ts` with the current ledger, account, paymaster and the board's real root and pub seed, then demo with the name only |
-| `agent-endpoint[web]` | ❌ | Still `https://mohar.invalid/dashboard`. Set it to the live demo URL |
-| Link to a live demo | ❌ | Needs hosting (REL-2) |
-| Code open source on GitHub | ⚠️ | Push the repo |
-| Agents as namespaces (bonus) | ✅ | The device has its own name, resolver and permissions |
-| Name term | ⚠️ | `mohar.eth` was registered for 28 days: fine for judging, note the expiry |
+| ENSv2 on mainnet or Sepolia | ✅ | Sepolia |
+| ENSv2 central, not cosmetic | ✅ | Fleet registry, permissioned resolver, role-based edits, rejected-edit demo |
+| Functional, not hard-coded | ✅ | **Fixed Sat.** The name now holds the current ledger, paymaster, account, key root and pub seed, taken from the account itself. The dashboard finds the meter from the name alone; the key check shows Match. Manual addresses remain only as a labelled testing fallback |
+| `agent-endpoint[web]` | ⚠️ | Cleared (was a placeholder). Set it to the live URL once there is one: `node ens/03-point-to-live.ts <account> <ledger> <paymaster> 1337 <url>` |
+| Link to a live demo | ⚠️ | Runs locally. `.github/workflows/pages.yml` publishes the dashboard on GitHub Pages once Pages is switched to "GitHub Actions" |
+| Open source on GitHub | ✅ | |
+| Name term | ⚠️ | `mohar.eth` was registered for 28 days; fine for judging |
 
 ## 0G: Physical AI, agents with a body
 
 | Requirement | Status | Note |
 |---|---|---|
-| A 0G call inside the decision loop | ✅ | Board calls `qwen3.8-flash` itself; live run on the public devnet |
-| Episode log on 0G Storage with a request ID per decision | ⚠️ | Pipeline works (23 of 23 match). The root in ENS covers reports 19 to 22 of the **old** ledger. Upload a new batch for the current deployment and update `mohar.log` |
-| Replayable simulation or a live hardware demo at the 0G booth | ⚠️ | Replay tool exists. The dashboard's recorded runs are synthesised logs, labelled Replay. Plan the booth demo |
-| Safe-stop fallback if 0G is unreachable, and no fake decision | ⚠️ | Built, but **0G3-T4 (block 0G, expect `SAFE_STOP` with empty request ID), T5 (restore) and T7 (release firmware has no path that invents a decision) are still open.** This is the disqualifier item: run them and record the output |
+| A 0G call inside the decision loop | ✅ | Board calls `qwen3.8-flash` itself; every recent report carries a real request ID |
+| Episode log on 0G Storage with a request ID per decision | ✅ | **Refreshed Sat.** 70 reports of the current ledger in three batches, all matching the chain with real IDs; `mohar.log` points at the newest root. `evidence/0g-5-current-ledger.json` |
+| Replayable simulation, or live hardware demo at the booth | ⚠️ | `uploader/replay.ts` replays the real log. The dashboard's recorded runs are synthesised and labelled Replay. Plan the booth demo |
+| Safe stop if 0G is unreachable, no fake decision | ⚠️ | **T7 passed**: the release firmware has no code path that invents a decision. **T4 (block 0G) and T5 (restore) are still open**: they need the dev firmware on the ESP8266 plugged into a computer (`zgblock on`), and the board is currently on power only |
 | Real hardware | ✅ | Eligible for the real-hardware prize |
-| Not "0G only for logs" | ✅ | A 0G answer changes device state and LED |
 
 ## Submission items (all tracks)
 
 | Item | Status |
 |---|---|
-| Project name and short description | ✅ README |
-| Public GitHub repo with README and setup | ⚠️ README done; push, and have someone else follow the setup (REL1-T6) |
-| Demo video under 3 minutes | ❌ |
-| Live demo link | ❌ Host `dashboard/dist` |
-| Contract deployment addresses | ✅ README (current deployment; update after any redeploy) |
-| Team names with Telegram and X | ❌ |
+| Project name, short description | ✅ README |
+| Public repo with README and setup | ✅ |
+| Demo video under 3 minutes | ❌ yours |
+| Live demo link | ⚠️ local only; Pages workflow added |
+| Contract deployment addresses | ✅ README |
+| Team names with Telegram and X | ❌ yours |
 | Where AI was used | ✅ README |
 
-## Other open items
+## Found Sat
 
-- Reports stopped for about 40 minutes on Sat 05:02 (last report #47 at 04:22). The chain, quota and keys are healthy, so the board lost Wi-Fi or power. Check before the demo.
+- **Duplicate report numbers.** The firmware numbers a report as the ledger's confirmed last seq plus one. A report takes about 50 s to be mined and checkpoints are 30 to 60 s apart, so some reports reuse a seq and revert in the ledger frame (3 of the last ~26). Each wastes a one-time key and a quota slot, and that window's data is lost. Needs a firmware change (track the last submitted seq, or skip a checkpoint while one is unconfirmed) and a reflash.
+- Reports paused for about 40 minutes earlier; they resumed on their own.
 - `dashboard/test/e2e.py` still targets the old page names.
-- DEV-7 T5 and EF-3 (laptop off) need a person at the hardware.

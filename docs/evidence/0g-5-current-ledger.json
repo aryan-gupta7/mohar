@@ -1,0 +1,25 @@
+{
+ "ledger": "0x3fdec3e95601c36b4b9d5ad9dec10dbee4ba5741",
+ "rpc": "https://altmempool.forshtat.com",
+ "uploadedAt": "2026-11-07",
+ "batches": [
+  {
+   "seq": "1-30",
+   "root": "0xff5e18b1fe83ed17b27fc0c14a7f574c2661883a4adeabf5bbd5a80a637def4b",
+   "tx": "0x6894400b3037f46c83e2f8e53ebcfa479997aab86a56d04919da95ea87a73da7"
+  },
+  {
+   "seq": "31-60",
+   "root": "0xec22f4914325a2af35210b7b778ab2f4c21a9bbda313d5cd61abd427bb94483a",
+   "tx": "0xb512f39ca5a8e6e635a152ea864e7eaea68f31e8ad8b55b1a5e457932a306ff7"
+  },
+  {
+   "seq": "61-70",
+   "root": "0xe51f1e0353d6b536749b0109386f195e479a1146dc7b39b7f5330b2c4d6c8239",
+   "tx": "0x34a82372ea102322f7f9dab27b7d69474010a7686875a534d5786ba2624bc1dc"
+  }
+ ],
+ "replay": "all 70 records match the chain, each with a real 0G request ID (UUID)",
+ "ens": "mohar.log = 0g://0xe51f1e03\u2026 (newest batch), set by the restricted uploader key, tx 0x5892ec7e7c8191196ff28d5d6cad98b3d6ea1173a7518261515189c50387a36f",
+ "gasPaid0G": "about 0.0038 for the last batch"
+}

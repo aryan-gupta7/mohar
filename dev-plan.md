@@ -62,7 +62,7 @@ The phases run in this order. A target is the planned finish, and each assumes w
 | 17 | [ENS-3](#ens-3-discovery-and-permission-demo) | Discovery and permission demo | Fri 22:00 | ✅ Done (dashboard Identity page dry-runs edits against the live resolver) |
 | 18 | [0G-2](#0g-2-the-device-calls-0g) | Device calls 0G | Fri 22:00 | ✅ Done Fri ~15:20 (T1, T3, T4-equivalent; T2, T5 open) |
 | 19 | [ENS-4](#ens-4-the-device-reads-its-policy-from-ens) | Device reads ENS policy | Sat 00:00 | Optional |
-| 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | ✅ T1–T3, T6 on the public devnet Fri ~15:45; T4, T5, T7, T8, T9 open |
+| 20 | [0G-3](#0g-3-decision-loop-and-safe-stop) | Decision loop, device state and LED | Sat 00:30 | ✅ T1–T3, T6 on the public devnet Fri ~15:45; T4, T5, T8, T9 open; T7 passed Sat |
 | 21 | [0G-4](#0g-4-episode-log-and-replay) | Episode log and replay | Sat 03:00 | ✅ Done Fri ~16:20 on real data (4 of 4 records match the chain) |
 | 22 | [REL-1](#rel-1-full-rehearsal) | Full rehearsal, following the [demo story](#demo-story) | Sat 05:30 | |
 | 23 | [REL-2](#rel-2-submission) | Submission | **Sat 08:00** | |
@@ -1127,7 +1127,7 @@ Also seen: **a fixed check fires without calling 0G** (a glitching line gave `IN
 | 0G3-T4 | Block 0G's address | `SAFE_STOP` within the timeout; LED solid; `requestId` empty; pulses still counted |
 | 0G3-T5 | Restore access | Leaves `SAFE_STOP` only after a fresh valid decision |
 | 0G3-T6 | Credit zero, 0G says run | Stays `CREDIT_STOP`: AI can't override credit |
-| 0G3-T7 | Inspect release firmware and logs | No code path invents a decision |
+| 0G3-T7 | Inspect release firmware and logs | No code path invents a decision. **Passed Sat:** the release build has no injection strings or blackhole address; failures return `ZG_NONE`, which becomes `SAFE_STOP` with an empty request ID ([evidence](docs/evidence/0g3-t7-release-inspection.json)) |
 | 0G3-T8 | 30-minute run | No resets; all reports mined; counts still match the Pico |
 | 0G3-T9 | Key count | Reports stay within 256 leaves across the demo and practice; a fresh key is planned before the demo |
 

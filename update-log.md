@@ -273,6 +273,13 @@ Every step, in order, with what happened. Times are IST. Newest entries go at th
 - Every claim on it comes from mechanism.md or dev-plan.md. Where a test is still open (0G3-T4, blocking 0G on the board) the page says so. The `#overview` route and the rest of the dashboard are unchanged.
 - Style: square corners, paper and ink with one orange accent, hairlines, no glow or gradients. Motion ideas from UIarc (In-view title wipe) and OriginKit (3D text unfold, Scroll progress outline), written for this page.
 
+### Sat, ENS and 0G brought up to the current deployment
+- **ENS was stale.** `meter-001.mohar.eth` still pointed at the Friday deployment (ledger `0xde1a…`) and advertised the fixed test-seed key root, while the board reports to ledger `0x3fde…` with a different key. The demo was bypassing ENS through manual addresses. `ens/03-point-to-live.ts` now also copies the account's own `root()` and `pubSeed()` into the records, and was run for the current account, ledger and paymaster (Sepolia tx `0xb1500de0…`). The dashboard now resolves the meter from the name alone and the key check shows Match. The placeholder `agent-endpoint[web]` (`mohar.invalid`) was cleared. Evidence: `docs/evidence/ens-5-repoint.json`.
+- **0G Storage log refreshed** for the current ledger: 70 reports in three batches, every record matches the chain and carries a real 0G request ID; `mohar.log` points at the newest root. Evidence: `docs/evidence/0g-5-current-ledger.json`.
+- **0G3-T7 passed:** release firmware compiled (not flashed) and inspected, see `docs/evidence/0g3-t7-release-inspection.json`. **0G3-T4 and T5 stay open:** they need the dev firmware on the ESP8266, plugged into a computer, to run `zgblock on`.
+- **EF evidence:** a report the board sent itself is admitted ("every rule passed") and mined with the paymaster as payer; explorer screenshot and receipt saved (`explorer-admitted-report.png`, `ef-live-report.json`).
+- **Found: duplicate sequence numbers.** 3 of the last ~26 reports reverted in the ledger frame (`StaleSeq`). The firmware sets `seq = ledger lastSeq + 1` from a confirmed read, but the previous report takes about 50 s to be mined while checkpoints are 30 to 60 s apart, so the next report reuses the same seq and reverts. Each one still burns a one-time key and a quota slot. Fix not yet made (needs a reflash): track the last submitted seq locally, or skip a checkpoint while one is unconfirmed.
+
 ---
 
 ## Current state (Fri 17:30)

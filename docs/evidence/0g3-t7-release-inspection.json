@@ -1,0 +1,6 @@
+{
+ "test": "0G3-T7: no code path invents a decision (release firmware)",
+ "method": "pio run -e release (compile only), then strings on firmware.elf; source inspection of zerog.cpp and machine.cpp",
+ "result": "release: no 'dev-injected', 'injected_failure', 'zgblock', 'keygen-fixed' or the blackhole address; the only 'inject' strings are BearSSL symbols. dev build: all present.",
+ "source": "zerog_decide returns ZG_NONE on any non-200 reply, missing content or non-allowlisted word; machine.cpp turns ZG_NONE into SAFE_STOP with an empty request ID; the injection branch is under #ifdef MOHAR_DEV"
+}
